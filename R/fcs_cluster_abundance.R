@@ -1,4 +1,4 @@
-fcs_cluster_abundance <- function(fcs_join_obj,
+fcs_calculate_abundance <- function(fcs_join_obj,
                                   report_algorithm = c("leiden","flowsom","louvain","phenograph"),
                                   report_as = c("frequency", "fraction"))
 {
