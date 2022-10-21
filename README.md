@@ -42,7 +42,7 @@ The dimension reduction and clustering steps do offer methods to run the calcula
 
 - [Python](https://www.python.org/downloads/) # Check the "Add to Path" box during installation. The Python installation should come with pip.
 - [UMAP](https://github.com/lmcinnes/umap)
-- [pynndescent](https://github.com/lmcinnes/pynndescent) # Required to use this package's UMAP-in-Python functionality
+- [pynndescent](https://github.com/lmcinnes/pynndescent) # Required to use this package's UMAP-by-Python functionality
 - [Leiden](https://github.com/vtraag/leidenalg)
 - [scipy](https://pypi.org/project/scipy/)
 - [numpy](https://pypi.org/project/numpy/)
