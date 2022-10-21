@@ -1,6 +1,6 @@
 # FCSimple
 
-Tools for the analysis of multidimensional FCS-based data sets. This is in active development. Bugs are likely. Tasks that are currently supported include: 
+Tools for the analysis of multidimensional FCS-based data sets. This is in active development. Bugs are likely and documentation will come later. Tasks that are currently supported include: 
 
 ```
 fcs_join # Use for concatenation of multiple FCS files (can also take a single FCS file) and formatting of package-wide list object
