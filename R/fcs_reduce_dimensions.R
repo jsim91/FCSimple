@@ -17,8 +17,7 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
                         n_threads = ceiling(detectCores()/2), verbose = TRUE)
       colnames(map) <- c("UMAP1","UMAP2")
     } else if(tolower(language)=="python") {
-      # requires pip install scipy, pynndescent, numpy, numba, tqdm
-      capture_dir <- system.file(package = "FCSimple")
+      capture_dir <- system.file(package = "FCSimple") # points to package location
       write.csv(fcs_join_obj[["data"]], file = paste0(capture_dir,"/py/__python_umap_input__.csv"), row.names = FALSE)
       system(command = paste0("python ",paste0(capture_dir,"/py/run_umap.py")," ",paste0(capture_dir,"/py/__python_umap_input__.csv")," ",capture_dir))
       map <- read.csv(paste0(capture_dir,"/py/__tmp_umap__.csv"), check.names = FALSE)
