@@ -26,7 +26,7 @@ install_github("jsim91/FCSimple")
 # Current dependencies include:
 
 - [flowCore](https://www.bioconductor.org/packages/release/bioc/html/flowCore.html)
-- [ncdfFLow](https://www.bioconductor.org/packages/release/bioc/html/ncdfFlow.html)
+- [ncdfFlow](https://www.bioconductor.org/packages/release/bioc/html/ncdfFlow.html)
 - [flowWorkspace](https://www.bioconductor.org/packages/release/bioc/html/flowWorkspace.html)
 - [uwot](https://github.com/jlmelville/uwot)
 - [Rtsne](https://github.com/jkrijthe/Rtsne)
@@ -38,7 +38,7 @@ install_github("jsim91/FCSimple")
 - [Rphenograph](https://github.com/JinmiaoChenLab/Rphenograph)
 
 
-The dimension reduction and clustering steps do offer methods to run the calculations through Python, however no knowledge of the Python language is required. These functions will call Python in the background and results will be transferred to the R environment. The reticulate package is not required. Users may edit the included python scripts if they want to alter the default Python behavior. To take davantage of Python-supported methods, these Python dependencies are required:
+The dimension reduction and clustering steps do offer methods to run the calculations through Python, however no knowledge of the Python language is required. These functions will call Python in the background and results will be transferred to the R environment. The reticulate package is not required. Users may edit the included python scripts if they want to alter the default Python behavior. To take advantage of Python-supported methods, these items are required:
 
 - [Python](https://www.python.org/downloads/) # Check the "Add to Path" box during installation. The Python installation should come with pip.
 - [umap](https://github.com/lmcinnes/umap) # umap has its own set of dependencies, see link
