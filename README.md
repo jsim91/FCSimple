@@ -41,9 +41,9 @@ install_github("jsim91/FCSimple")
 The dimension reduction and clustering steps do offer methods to run the calculations in Python, however no knowledge of Python is required. These functions will call Python in the background and results will be transferred to the R environment. The reticulate package is not required. Users may edit the included python scripts if they want to alter the default Python behavior. To take davantage of Python-supported methods, these dependencies are required:
 
 - [Python](https://www.python.org/downloads/) # Check the "Add to Path" box during installation. The Python installation should come with pip.
-- [UMAP](https://github.com/lmcinnes/umap)
+- [umap](https://github.com/lmcinnes/umap)
 - [pynndescent](https://github.com/lmcinnes/pynndescent) # Required to use this package's UMAP-by-Python functionality
-- [Leiden](https://github.com/vtraag/leidenalg)
+- [leidenalg](https://github.com/vtraag/leidenalg)
 - [scipy](https://pypi.org/project/scipy/)
 - [numpy](https://pypi.org/project/numpy/)
 - [pandas](https://pypi.org/project/pandas/)
