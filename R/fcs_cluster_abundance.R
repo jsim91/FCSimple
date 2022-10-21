@@ -34,7 +34,7 @@ fcs_cluster_abundance <- function(fcs_join_obj,
   return(fcs_join_obj)
 }
 
-fcs_report_frequency <- function(fcs_join_obj,
+fcs_report_abundance <- function(fcs_join_obj,
                                  report_algorithm = c("leiden","flowsom","louvain","phenograph"))
 {
   return(fcs_join_obj[[tolower(report_algorithm)]][["abundance"]])
