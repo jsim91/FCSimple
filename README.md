@@ -26,7 +26,7 @@ install_github("jsim91/FCSimple")
 # Current dependencies include:
 
 - [flowCore](https://www.bioconductor.org/packages/release/bioc/html/flowCore.html)
-- [ncdfFLow](https://www.bioconductor.org/packages/release/bioc/html/ncdfFlow.html)
+- [ncdfFlow](https://www.bioconductor.org/packages/release/bioc/html/ncdfFlow.html)
 - [flowWorkspace](https://www.bioconductor.org/packages/release/bioc/html/flowWorkspace.html)
 - [uwot](https://github.com/jlmelville/uwot)
 - [Rtsne](https://github.com/jkrijthe/Rtsne)
