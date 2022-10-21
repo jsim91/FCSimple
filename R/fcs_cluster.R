@@ -37,7 +37,7 @@ fcs_cluster <- function(fcs_join_obj,
                                                settings = list(method = 'la.RBConfigurationVertexPartition',
                                                                resolution_parameter = leiden_louvain_resolution,
                                                                seed = 123))
-      } else if(algorithm=="louvain") {
+      } else if(tolower(algorithm)=="louvain") {
         fcs_join_obj[["louvain"]] <- list(clusters = cluster_numbers,
                                                function_call = "graph_obj.community_multilevel()") # left off here
       }
