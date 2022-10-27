@@ -24,12 +24,12 @@ fcs_cluster <- function(fcs_join_obj,
     sm <- Matrix::sparseMatrix(i=i_input,j=j_input,dims=c(nrow(adj_search),nrow(adj_search)))
     if(tolower(language)=="python") {
       capture_dir <- system.file(package = "FCSimple") # points to package location
-      Matrix::writeMM(obj = sm, file = paste0(capture_dir,"/inst/python/__python_cl_input__.mtx"))
+      Matrix::writeMM(obj = sm, file = paste0(capture_dir,"/python/__python_cl_input__.mtx"))
 
-      system(command = paste0("python ",paste0(capture_dir,"/inst/python/run_cluster.py")," ",paste0(capture_dir,"/inst/python/__python_cl_input__.mtx")," ",capture_dir," ",tolower(algorithm)," ",leiden_louvain_resolution))
-      map <- read.csv(paste0(capture_dir,"/inst/python/__tmp_cl__.csv"), check.names = FALSE)
-      if (file.exists(paste0(capture_dir,"/inst/python/__tmp_cl__.csv"))) {
-        file.remove(paste0(capture_dir,"/inst/python/__tmp_cl__.csv"))
+      system(command = paste0("python ",paste0(capture_dir,"/python/run_cluster.py")," ",paste0(capture_dir,"/python/__python_cl_input__.mtx")," ",capture_dir," ",tolower(algorithm)," ",leiden_louvain_resolution))
+      map <- read.csv(paste0(capture_dir,"/python/__tmp_cl__.csv"), check.names = FALSE)
+      if (file.exists(paste0(capture_dir,"/python/__tmp_cl__.csv"))) {
+        file.remove(paste0(capture_dir,"/python/__tmp_cl__.csv"))
       }
       cluster_numbers <- map[,1]
       if(algorithm=="leiden") {
