@@ -63,11 +63,11 @@ fcs_cluster <- function(fcs_join_obj,
       require(FlowSOM)
       require(flowCore)
       som_fcs <- new(Class = "flowFrame", exprs = fcs_join_obj[["data"]])
-      som <- FlowSOM::FlowSOM(input = som_fcs, compensate = FALSE, transform = FALSE, silent = TRUE, nClus = som_nClus)
+      som <- FlowSOM::FlowSOM(input = som_fcs, compensate = FALSE, transform = FALSE, silent = TRUE, nClus = flowsom_nClus)
       som_meta <- FlowSOM::GetMetaclusters(fsom = som)
       fcs_join_obj[["flowsom"]] <- list(clusters = som_meta,
                                              settings = list(compensate = FALSE, transform = FALSE,
-                                                             silent = TRUE, nClus = som_nClus))
+                                                             silent = TRUE, nClus = flowsom_nClus))
       } else if(tolower(algorithm)=="phenograph") {
         require(Rphenograph)
       phenog <- Rphenograph::Rphenograph(data = fcs_join_obj[["data"]], k = phenograph_k)
