@@ -7,7 +7,7 @@ import os
 in_file = sys.argv[1]
 out_file = sys.argv[2]
 algo = sys.argv[3]
-cl_res = sys.argv[4]
+cl_res = float(sys.argv[4])
 
 adjm = mmread(in_file)
 
