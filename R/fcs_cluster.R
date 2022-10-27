@@ -26,10 +26,13 @@ fcs_cluster <- function(fcs_join_obj,
       capture_dir <- system.file(package = "FCSimple") # points to package location
       Matrix::writeMM(obj = sm, file = paste0(capture_dir,"/python/__python_cl_input__.mtx"))
 
-      system(command = paste0("python ",paste0(capture_dir,"/python/run_cluster.py")," ",paste0(capture_dir,"/python/__python_cl_input__.mtx")," ",capture_dir," ",tolower(algorithm)," ",leiden_louvain_resolution))
+      system(command = paste0("python ",paste0(capture_dir,"/python/run_cluster.py")," ",paste0(capture_dir,"/python/__python_cl_input__.mtx")," ",capture_dir,"/python ",tolower(algorithm)," ",leiden_louvain_resolution))
       map <- read.csv(paste0(capture_dir,"/python/__tmp_cl__.csv"), check.names = FALSE)
       if (file.exists(paste0(capture_dir,"/python/__tmp_cl__.csv"))) {
         file.remove(paste0(capture_dir,"/python/__tmp_cl__.csv"))
+      }
+      if (file.exists(paste0(capture_dir,"/python/__python_cl_input__.mtx"))) {
+        file.remove(paste0(capture_dir,"/python/__python_cl_input__.mtx"))
       }
       cluster_numbers <- map[,1]
       if(algorithm=="leiden") {
