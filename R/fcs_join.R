@@ -1,4 +1,18 @@
-fcs_join <- function(files, use_ncdf = FALSE, apply_transform = TRUE, instrument_type = c("cytof","flow"), use_descriptive_column_names = TRUE, transform_function = NULL, transform_type = c("asinh","biexp","hyperlog"), asinh_transform_factor = 5, biexp_transform_pos = 4.5, biexp_transform_neg = 0, biexp_transform_width = -10, hyperlog_transform_T = 100000, hyperlog_transform_M = 5, hyperlog_transform_W = 0.01, hyperlog_transform_A = 2,transform_per_channel = FALSE) {
+fcs_join <- function(files, use_ncdf = FALSE,
+                     apply_transform = TRUE,
+                     instrument_type = c("cytof","flow"),
+                     use_descriptive_column_names = TRUE,
+                     transform_function = NULL,
+                     transform_type = c("asinh","biexp","hyperlog"),
+                     asinh_transform_factor = 5,
+                     biexp_transform_pos = 4.5,
+                     biexp_transform_neg = 0,
+                     biexp_transform_width = -10,
+                     hyperlog_transform_T = 100000,
+                     hyperlog_transform_M = 5,
+                     hyperlog_transform_W = 0.01,
+                     hyperlog_transform_A = 2,
+                     transform_per_channel = FALSE) {
   if(!transform_per_channel) {
     if(length(instrument_type)>1) {
       warning(paste0("Consider specifying 'instrument_type'. Default use is 'cytof'. If inputs are from a flow cytometer, use 'flow'. Using ",instrument_type[1]," for now."))
@@ -27,7 +41,7 @@ fcs_join <- function(files, use_ncdf = FALSE, apply_transform = TRUE, instrument
       if(is.null(asinh_transform_factor)) {
         asinh_transform_factor <- 5
       }
-      transform_function <- transformList(colnames(fs), function(x) return(asinh(x/asinh_transform_factor)))
+      transform_function <- transformList(flowCore::colnames(fs), function(x) return(asinh(x/asinh_transform_factor)))
       if(use_ncdf) {
         fst <- ncdfFlow::transform(fs, transform_function)
       } else {
@@ -45,7 +59,7 @@ fcs_join <- function(files, use_ncdf = FALSE, apply_transform = TRUE, instrument
         if(is.null(asinh_transform_factor)) {
           asinh_transform_factor <- 200
         }
-        transform_function <- flowCore::transformList(colnames(fs), function(x) return(asinh(x/asinh_transform_factor)))
+        transform_function <- flowCore::transformList(flowCore::colnames(fs), function(x) return(asinh(x/asinh_transform_factor)))
         fst <- flowCore::transform(fs, transform_function)
         for(i in 1:length(fst)) {
           if(i==1) {
@@ -76,10 +90,10 @@ fcs_join <- function(files, use_ncdf = FALSE, apply_transform = TRUE, instrument
         if(any(!is.numeric(hyperlog_transform_T), !is.numeric(hyperlog_transform_M), !is.numeric(hyperlog_transform_W), !is.numeric(hyperlog_transform_A))) {
           stop("error in argument(s) 'hyperlog_transform_.': values must be numeric")
         }
-        transform_FUN <- flowCore::hyperlogtGml2(parameters = colnames(fs), T = hyperlog_transform_T,
+        transform_FUN <- flowCore::hyperlogtGml2(parameters = flowCore::colnames(fs), T = hyperlog_transform_T,
                                                  M = hyperlog_transform_M, W = hyperlog_transform_W,
                                                  A = hyperlog_transform_A)
-        transform_function <- flowCore::transformList(colnames(fs), transform_FUN)
+        transform_function <- flowCore::transformList(flowCore::colnames(fs), transform_FUN)
         fst <- flowCore::transform(fs, transform_function)
         for(i in 1:length(fst)) {
           if(i==1) {
