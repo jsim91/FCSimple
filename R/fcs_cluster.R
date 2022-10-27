@@ -58,23 +58,23 @@ fcs_cluster <- function(fcs_join_obj,
                                                                weights = NULL))
       }
     }
-  }
-  if(tolower(algorithm)=="flowsom") {
-    require(FlowSOM)
-    require(flowCore)
-    som_fcs <- new(Class = "flowFrame", exprs = fcs_join_obj[["data"]])
-    som <- FlowSOM::FlowSOM(input = som_fcs, compensate = FALSE, transform = FALSE, silent = TRUE, nClus = som_nClus)
-    som_meta <- FlowSOM::GetMetaclusters(fsom = som)
-    fcs_join_obj[["flowsom"]] <- list(clusters = som_meta,
-                                           settings = list(compensate = FALSE, transform = FALSE,
-                                                           silent = TRUE, nClus = som_nClus))
-  }
-  if(tolower(algorithm)=="phenograph") {
-    require(Rphenograph)
-    phenog <- Rphenograph::Rphenograph(data = fcs_join_obj[["data"]], k = phenograph_k)
-    phcl <- membership(phenog[[2]])
-    fcs_join_obj[["phenograph"]] <- list(clusters = phcl,
-                                           settings = list(k = phenograph_k))
+  } else {
+    if(tolower(algorithm)=="flowsom") {
+      require(FlowSOM)
+      require(flowCore)
+      som_fcs <- new(Class = "flowFrame", exprs = fcs_join_obj[["data"]])
+      som <- FlowSOM::FlowSOM(input = som_fcs, compensate = FALSE, transform = FALSE, silent = TRUE, nClus = som_nClus)
+      som_meta <- FlowSOM::GetMetaclusters(fsom = som)
+      fcs_join_obj[["flowsom"]] <- list(clusters = som_meta,
+                                             settings = list(compensate = FALSE, transform = FALSE,
+                                                             silent = TRUE, nClus = som_nClus))
+      } else if(tolower(algorithm)=="phenograph") {
+        require(Rphenograph)
+      phenog <- Rphenograph::Rphenograph(data = fcs_join_obj[["data"]], k = phenograph_k)
+      phcl <- membership(phenog[[2]])
+      fcs_join_obj[["phenograph"]] <- list(clusters = phcl,
+                                             settings = list(k = phenograph_k))
+      }
   }
   return(fcs_join_obj)
 }
