@@ -1,19 +1,4 @@
-fcs_join <- function(files,
-                     use_ncdf = FALSE,
-                     apply_transform = TRUE,
-                     instrument_type = c("cytof","flow"),
-                     use_descriptive_column_names = TRUE,
-                     transform_function = NULL,
-                     transform_type = c("asinh","biexp","hyperlog"),
-                     asinh_transform_factor = 5,
-                     biexp_transform_pos = 4.5,
-                     biexp_transform_neg = 0,
-                     biexp_transform_width = -10,
-                     hyperlog_transform_T = 100000,
-                     hyperlog_transform_M = 5,
-                     hyperlog_transform_W = 0.01,
-                     hyperlog_transform_A = 2,
-                     transform_per_channel = FALSE) {
+fcs_join <- function(files, use_ncdf = FALSE, apply_transform = TRUE, instrument_type = c("cytof","flow"), use_descriptive_column_names = TRUE, transform_function = NULL, transform_type = c("asinh","biexp","hyperlog"), asinh_transform_factor = 5, biexp_transform_pos = 4.5, biexp_transform_neg = 0, biexp_transform_width = -10, hyperlog_transform_T = 100000, hyperlog_transform_M = 5, hyperlog_transform_W = 0.01, hyperlog_transform_A = 2,transform_per_channel = FALSE) {
   if(!transform_per_channel) {
     if(length(instrument_type)>1) {
       warning(paste0("Consider specifying 'instrument_type'. Default use is 'cytof'. If inputs are from a flow cytometer, use 'flow'. Using ",instrument_type[1]," for now."))
