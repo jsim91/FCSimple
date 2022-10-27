@@ -18,11 +18,11 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
       colnames(map) <- c("UMAP1","UMAP2")
     } else if(tolower(language)=="python") {
       capture_dir <- system.file(package = "FCSimple") # points to package location
-      write.csv(fcs_join_obj[["data"]], file = paste0(capture_dir,"/py/__python_umap_input__.csv"), row.names = FALSE)
-      system(command = paste0("python ",paste0(capture_dir,"/py/run_umap.py")," ",paste0(capture_dir,"/py/__python_umap_input__.csv")," ",capture_dir))
-      map <- read.csv(paste0(capture_dir,"/py/__tmp_umap__.csv"), check.names = FALSE)
-      if (file.exists(paste0(capture_dir,"/py/__tmp_umap__.csv"))) {
-        file.remove(paste0(capture_dir,"/py/__tmp_umap__.csv"))
+      write.csv(fcs_join_obj[["data"]], file = paste0(capture_dir,"/inst/python/__python_umap_input__.csv"), row.names = FALSE)
+      system(command = paste0("python ",paste0(capture_dir,"/inst/python/run_umap.py")," ",paste0(capture_dir,"/inst/python/__python_umap_input__.csv")," ",capture_dir))
+      map <- read.csv(paste0(capture_dir,"/inst/python/__tmp_umap__.csv"), check.names = FALSE)
+      if (file.exists(paste0(capture_dir,"/inst/python/__tmp_umap__.csv"))) {
+        file.remove(paste0(capture_dir,"/inst/python/__tmp_umap__.csv"))
       }
     } else {
       stop("error in argument 'language': use 'R' or 'Python'")
