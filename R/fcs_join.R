@@ -122,7 +122,7 @@ fcs_join <- function(files,
         print("Unable to use descriptive column names. Using original names.")
       }
     }
-    if(length(grep("DATE|date|Date",names(x@description)))!=0) {
+    if(length(grep("DATE|date|Date",names(fs[[1]]@description)))!=0) {
       run_dates <- flowCore::fsApply(fs, function(x) return(x@description[[grep("DATE|date|Date",names(x@description))[1]]]))
       return(list(data = tmp_data,
                   source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow))),
