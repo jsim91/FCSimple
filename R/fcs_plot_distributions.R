@@ -1,7 +1,8 @@
 fcs_plot_distributions <- function(fcs_join_obj,
                                    separate_by = c("none", "date"),
                                    plot_element = c("cluster","total"),
-                                   plot_algorithm = c("leiden","flowsom","louvain","phenograph"))
+                                   plot_algorithm = c("leiden","flowsom","louvain","phenograph"),
+                                   plot_palette = NULL)
 {
   if(separate_by=="date") {
     if(!"run_date" %in% names(fcs_join_obj)){
@@ -32,9 +33,12 @@ fcs_plot_distributions <- function(fcs_join_obj,
       data_split[[i]]$cluster <- fcs_join_obj[[tolower(plot_algorithm)]]$clusters
     }
   }
+  plot_set <- lapply(X = data_split, FUN = fcs_plot_help, sep_by = separate_by,
+                     plt_el = plot_element, plt_algo = tolower(plot_algorithm),
+                     plt_pal = plot_palette)
 }
 
-fcs_plot_help <- function(input_data)
+fcs_plot_help <- function(input_data, sep_by, plt_el, plt_algo, plt_pal)
 {
 
 }
