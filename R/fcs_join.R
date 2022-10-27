@@ -1,10 +1,10 @@
 fcs_join <- function(files,
                      use_ncdf = FALSE,
                      apply_transform = TRUE,
-                     instrument_type = "cytof", # c("cytof","flow")
+                     instrument_type = "cytof",
                      use_descriptive_column_names = TRUE,
                      transform_function = NULL,
-                     transform_type = "asinh", # c("asinh","biexp","hyperlog")
+                     transform_type = "asinh",
                      asinh_transform_factor = 5,
                      biexp_transform_pos = 4.5,
                      biexp_transform_neg = 0,
