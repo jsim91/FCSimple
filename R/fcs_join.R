@@ -13,8 +13,7 @@ fcs_join <- function(files,
                      hyperlog_transform_M = 5,
                      hyperlog_transform_W = 0.01,
                      hyperlog_transform_A = 2,
-                     transform_per_channel = FALSE) # Not supported currently. Allow user to preview channel distributions and make changes with preview plots and input() using shiny interface.
-{
+                     transform_per_channel = FALSE) {
   if(!transform_per_channel) {
     if(length(instrument_type)>1) {
       warning(paste0("Consider specifying 'instrument_type'. Default use is 'cytof'. If inputs are from a flow cytometer, use 'flow'. Using ",instrument_type[1]," for now."))
