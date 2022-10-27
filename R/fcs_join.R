@@ -27,7 +27,7 @@ fcs_join <- function(files, use_ncdf = FALSE, apply_transform = TRUE, instrument
       if(is.null(asinh_transform_factor)) {
         asinh_transform_factor <- 5
       }
-      transform_function <- flowCore::transformList(colnames(fs), function(x) return(asinh(x/asinh_transform_factor)))
+      transform_function <- transformList(colnames(fs), function(x) return(asinh(x/asinh_transform_factor)))
       if(use_ncdf) {
         fst <- ncdfFlow::transform(fs, transform_function)
       } else {
