@@ -39,7 +39,7 @@ fcs_join <- function(files,
     } else {
       fs <- flowCore::read.flowSet(files = files, truncate_max_range = FALSE)
     }
-    if(is.null(transform_function)) {
+    if(tolower(instrument_type)=="cytof") {
       if(is.null(asinh_transform_factor)) {
         asinh_transform_factor <- 5
       }
@@ -122,10 +122,15 @@ fcs_join <- function(files,
         print("Unable to use descriptive column names. Using original names.")
       }
     }
-    run_dates <- flowCore::fsApply(fs, function(x) return(x@description[[grep("DATE|date|Date",names(x@description))]]))
-    return(list(data = tmp_data,
-                source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow))),
-                run_date = ifelse(length(run_dates)>0,run_dates,NULL)))
+    if(length(grep("DATE|date|Date",names(x@description)))!=0) {
+      run_dates <- flowCore::fsApply(fs, function(x) return(x@description[[grep("DATE|date|Date",names(x@description))[1]]]))
+      return(list(data = tmp_data,
+                  source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow))),
+                  run_date = ifelse(length(run_dates)>0,run_dates,NULL)))
+    } else {
+      return(list(data = tmp_data,
+                  source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))))
+    }
   } else {
     require(flowCore)
     fs <- flowCore::read.flowSet(files = files, truncate_max_range = FALSE)
