@@ -24,6 +24,9 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
       if (file.exists(paste0(capture_dir,"/python/__tmp_umap__.csv"))) {
         file.remove(paste0(capture_dir,"/python/__tmp_umap__.csv"))
       }
+      if (file.exists(paste0(capture_dir,"/python/__python_umap_input__.csv"))) {
+        file.remove(paste0(capture_dir,"/python/__python_umap_input__.csv"))
+      }
     } else {
       stop("error in argument 'language': use 'R' or 'Python'")
     }
