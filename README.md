@@ -32,7 +32,6 @@ install_github("jsim91/FCSimple")
 - [Rtsne](https://github.com/jkrijthe/Rtsne)
 - [FNN](https://cran.r-project.org/web/packages/FNN/index.html)
 - [Matrix](https://cran.r-project.org/web/packages/Matrix/index.html)
-- [leiden](https://github.com/TomKellyGenetics/leiden)
 - [igraph](https://cran.r-project.org/web/packages/igraph/index.html)
 - [FlowSOM](https://bioconductor.org/packages/release/bioc/html/FlowSOM.html)
 - [Rphenograph](https://github.com/JinmiaoChenLab/Rphenograph)
@@ -47,7 +46,7 @@ The dimension reduction and clustering steps do offer methods to run the calcula
 - [scipy](https://pypi.org/project/scipy/)
 - [numpy](https://pypi.org/project/numpy/)
 - [pandas](https://pypi.org/project/pandas/)
-- [igraph](https://pypi.org/project/igraph/) # Louvain is run using igraph
+- [igraph](https://pypi.org/project/igraph/)
 
 
 # Usage
