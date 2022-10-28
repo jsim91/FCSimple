@@ -55,8 +55,8 @@ fcs_cluster <- function(fcs_join_obj,
                                                                seed = 123))
       } else if(tolower(algorithm)=="louvain") {
         require(igraph)
-        G <- igraph::graph.adjacency(adjmatrix = sm)
-        louv <- igraph::cluster_louvain(graph = G, weights = NULL, resolution = leiden_louvain_resolution)
+        G <- igraph::graph.adjacency(adjmatrix = sm, mode = "undirected")
+        louv <- igraph::cluster_louvain(graph = G, weights = NA, resolution = leiden_louvain_resolution)
         fcs_join_obj[["louvain"]] <- list(clusters = louv$membership,
                                                settings = list(resolution = leiden_louvain_resolution,
                                                                weights = NULL))

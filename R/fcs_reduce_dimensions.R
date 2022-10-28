@@ -19,6 +19,7 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
     } else if(tolower(language)=="python") {
       capture_dir <- system.file(package = "FCSimple") # points to package location
       write.csv(fcs_join_obj[["data"]], file = paste0(capture_dir,"/python/__python_umap_input__.csv"), row.names = FALSE)
+
       system(command = paste0("python ",paste0(capture_dir,"/python/run_umap.py")," ",paste0(capture_dir,"/python/__python_umap_input__.csv")," ",capture_dir,"/python"))
       map <- read.csv(paste0(capture_dir,"/python/__tmp_umap__.csv"), check.names = FALSE)
       if (file.exists(paste0(capture_dir,"/python/__tmp_umap__.csv"))) {
