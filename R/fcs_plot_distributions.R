@@ -4,6 +4,7 @@ fcs_plot_distributions <- function(fcs_join_obj,
                                    plot_algorithm = c("leiden","flowsom","louvain","phenograph"),
                                    plot_palette = NULL)
 {
+  require(ggpubr)
   if(separate_by=="date") {
     if(!"run_date" %in% names(fcs_join_obj)){
       print("Unable to find run date. Using separate_by = 'none' instead.")
@@ -14,7 +15,7 @@ fcs_plot_distributions <- function(fcs_join_obj,
       obj_data$date <- batch
     }
   }
-  if("batch" %in% obj_data) {
+  if("date" %in% colnames(obj_data)) {
     data_split <- vector("list", length = ncol(obj_data)-1)
     names(data_split) <- colnames(obj_data)[1:(ncol(obj_data)-1)]
     for(i in 1:length(data_split)) {
@@ -23,7 +24,11 @@ fcs_plot_distributions <- function(fcs_join_obj,
     }
   } else {
     data_split <- vector("list", length = ncol(obj_data))
-    data_split[[i]] <- data.frame(val1 = obj_data[,which(colnames(obj_data)==names(data_split)[i])])
+    names(data_split) <- colnames(obj_data)
+    for(i in 1:length(data_split)) {
+      data_split[[i]] <- data.frame(val1 = obj_data[,which(colnames(obj_data)==names(data_split)[i])])
+      colnames(data_split[[i]]) <- colnames(obj_data)[i]
+    }
   }
   if(tolower(plot_element) == "cluster") {
     if(!tolower(plot_algorithm) %in% c("leiden","flowsom","louvain","phenograph")) {
@@ -33,12 +38,37 @@ fcs_plot_distributions <- function(fcs_join_obj,
       data_split[[i]]$cluster <- fcs_join_obj[[tolower(plot_algorithm)]]$clusters
     }
   }
-  plot_set <- lapply(X = data_split, FUN = fcs_plot_help, sep_by = separate_by,
-                     plt_el = plot_element, plt_algo = tolower(plot_algorithm),
-                     plt_pal = plot_palette)
+  if(separate_by == "none") {
+    if(plot_element == "cluster") {
+
+    } else if(plot_element == "total") {
+      plot_set <- lapply(X = data_split, FUN = plot_none_total)
+      ggsave(filename = paste0(getwd(),"/concatenated_panel_distributions_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
+             plot = ggpubr::ggarrange(plotlist = plot_set, nrow = ceiling(sqrt(length(plot_set))),
+                                                     ncol = ceiling(sqrt(length(plot_set)))), device = "pdf",
+             width = ceiling(sqrt(length(plot_set)))*2.25, height = ceiling(sqrt(length(plot_set)))*2.25, units = "in",
+             dpi = 900)
+    }
+  } else if(separate_by == "date") {
+    if(plot_element == "cluster") {
+
+    } else if(plot_element == "total") {
+
+    }
+  }
 }
 
-fcs_plot_help <- function(input_data, sep_by, plt_el, plt_algo, plt_pal)
+plot_none_total <- function(input_data)
 {
-
+  xval <- density(input_data[,1])$x; yval <- density(input_data[,])$y
+  dens_data <- data.frame(xval = xval, yval = yval)
+  plt1 <- ggplot(data = dens_data, mapping = aes(x = xval, y = yval)) +
+    geom_ribbon(mapping = aes(ymin = 0, ymax = yval), color = "grey", alpha = 0.5) +
+    geom_line(lwd = 0.3) +
+    theme_minimal() +
+    ggtitle(colnames(input_data)[1]) +
+    theme(axis.text.y = element_blank(),
+          axis.title = element_blank(),
+          plot.title = element_text(hjust = 0.5))
+  return(plt1)
 }
