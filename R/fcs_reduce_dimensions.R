@@ -35,8 +35,8 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
     if(tolower(language)=="r") {
       require(Rtsne)
       require(parallel)
-      map_input <- Rtsne::normalize_input(fcs_join_obj[["data"]])
-      map_calculate <- Rtsne::Rtsne(X = map_input, check_duplicates = FALSE, max_iter = 2000, normalize = FALSE,
+      # map_input <- Rtsne::normalize_input(fcs_join_obj[["data"]])
+      map_calculate <- Rtsne::Rtsne(X = fcs_join_obj[["data"]], check_duplicates = FALSE, max_iter = 2000, normalize = FALSE,
                                     stop_lying_iter = 700, mom_switch_iter = 700,
                                     eta = round(nrow(map_input)/12),
                                     num_threads = ceiling(detectCores()/2))
