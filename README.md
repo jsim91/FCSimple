@@ -46,7 +46,7 @@ The dimension reduction and clustering steps do offer methods to run the calcula
 - [scipy](https://pypi.org/project/scipy/)
 - [numpy](https://pypi.org/project/numpy/)
 - [pandas](https://pypi.org/project/pandas/)
-- [igraph](https://pypi.org/project/igraph/) # Louvain is run using igraph
+- [igraph](https://pypi.org/project/igraph/)
 
 
 # Usage
