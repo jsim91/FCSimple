@@ -40,10 +40,11 @@ fcs_cluster <- function(fcs_join_obj,
         fcs_join_obj[["leiden"]] <- list(clusters = cluster_numbers,
                                          settings = list(method = 'la.RBConfigurationVertexPartition',
                                                          resolution_parameter = leiden_louvain_resolution,
-                                                         seed = 123))
+                                                         seed = 123, language = language))
       } else if(tolower(algorithm)=="louvain") {
         fcs_join_obj[["louvain"]] <- list(clusters = cluster_numbers,
-                                               function_call = "graph_obj.community_multilevel()") # left off here
+                                          settings = list(function_call = "graph_obj.community_multilevel()",
+                                                          language = language)) # left off here
       }
       return(fcs_join_obj)
     } else if(tolower(language)=="r") {
@@ -54,13 +55,13 @@ fcs_cluster <- function(fcs_join_obj,
         leid <- igraph::cluster_leiden(graph = G, objective_function = "modularity", weights = NA, resolution_parameter = leiden_louvain_resolution, )
         fcs_join_obj[["leiden"]] <- list(clusters = leid$membership,
                                          settings = list(resolution_parameter = leiden_louvain_resolution,
-                                                         weights = NA, seed = 123))
+                                                         weights = NA, seed = 123, language = language))
       } else if(tolower(algorithm)=="louvain") {
         set.seed(123)
         louv <- igraph::cluster_louvain(graph = G, weights = NA, resolution = leiden_louvain_resolution)
         fcs_join_obj[["louvain"]] <- list(clusters = louv$membership,
-                                               settings = list(resolution = leiden_louvain_resolution,
-                                                               weights = NA, seed = 123))
+                                          settings = list(resolution = leiden_louvain_resolution,
+                                                          weights = NA, seed = 123, language = language))
       }
     }
   } else {
@@ -71,14 +72,14 @@ fcs_cluster <- function(fcs_join_obj,
       som <- FlowSOM::FlowSOM(input = som_fcs, compensate = FALSE, transform = FALSE, silent = TRUE, nClus = flowsom_nClus)
       som_meta <- FlowSOM::GetMetaclusters(fsom = som)
       fcs_join_obj[["flowsom"]] <- list(clusters = som_meta,
-                                             settings = list(compensate = FALSE, transform = FALSE,
-                                                             silent = TRUE, nClus = flowsom_nClus))
+                                        settings = list(compensate = FALSE, transform = FALSE,
+                                                        silent = TRUE, nClus = flowsom_nClus))
       } else if(tolower(algorithm)=="phenograph") {
         require(Rphenograph)
       phenog <- Rphenograph::Rphenograph(data = fcs_join_obj[["data"]], k = phenograph_k)
       phcl <- membership(phenog[[2]])
       fcs_join_obj[["phenograph"]] <- list(clusters = phcl,
-                                             settings = list(k = phenograph_k))
+                                           settings = list(k = phenograph_k))
       }
   }
   return(fcs_join_obj)
