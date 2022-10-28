@@ -48,6 +48,11 @@ fcs_cluster <- function(fcs_join_obj,
       return(fcs_join_obj)
     } else if(tolower(language)=="r") {
       if(tolower(algorithm)=="leiden") {
+        system(command = "conda init")
+        system(command = "conda create -n r-reticulate")
+        system(command = "conda environment r-reticulate installed")
+        system(command = "pip install numpy")
+        system(command = "pip install leidenalg")
         require(leiden)
         leid <- leiden::leiden(object = sm, resolution_parameter = leiden_louvain_resolution, seed = 123)
         fcs_join_obj[["leiden"]] <- list(clusters = leid,
