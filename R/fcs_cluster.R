@@ -47,25 +47,30 @@ fcs_cluster <- function(fcs_join_obj,
       }
       return(fcs_join_obj)
     } else if(tolower(language)=="r") {
+      G <- igraph::graph.adjacency(adjmatrix = sm, mode = "undirected")
+      require(igraph)
       if(tolower(algorithm)=="leiden") {
-        system(command = "conda init")
-        system(command = "conda create -n r-reticulate")
-        system(command = "conda environment r-reticulate installed")
-        system(command = "pip install numpy")
-        system(command = "pip install leidenalg")
-        require(reticulate)
-        require(leiden)
-        leid <- leiden::leiden(object = sm, resolution_parameter = leiden_louvain_resolution, seed = 123)
-        fcs_join_obj[["leiden"]] <- list(clusters = leid,
-                                               settings = list(resolution_parameter = leiden_louvain_resolution,
-                                                               seed = 123))
+        # system(command = "conda init")
+        # system(command = "conda create -n r-reticulate")
+        # system(command = "conda environment r-reticulate installed")
+        # system(command = "pip install numpy")
+        # system(command = "pip install leidenalg")
+        # library(reticulate)
+        # library(leiden)
+        # leid <- leiden::leiden(object = sm, resolution_parameter = leiden_louvain_resolution, seed = 123)
+        set.seed(123)
+        leid <- igraph::cluster_leiden(graph = G, objective_function = "CPM", weights = NA, resolution_parameter = leiden_louvain_resolution, )
+        fcs_join_obj[["leiden"]] <- list(clusters = leid$membership,
+                                         settings = list(resolution_parameter = leiden_louvain_resolution,
+                                                         weights = NA, seed = 123))
       } else if(tolower(algorithm)=="louvain") {
-        require(igraph)
-        G <- igraph::graph.adjacency(adjmatrix = sm, mode = "undirected")
+        # require(igraph)
+        # G <- igraph::graph.adjacency(adjmatrix = sm, mode = "undirected")
+        set.seed(123)
         louv <- igraph::cluster_louvain(graph = G, weights = NA, resolution = leiden_louvain_resolution)
         fcs_join_obj[["louvain"]] <- list(clusters = louv$membership,
                                                settings = list(resolution = leiden_louvain_resolution,
-                                                               weights = NULL))
+                                                               weights = NA, seed = 123))
       }
     }
   } else {
