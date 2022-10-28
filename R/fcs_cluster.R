@@ -38,9 +38,9 @@ fcs_cluster <- function(fcs_join_obj,
       cluster_numbers <- map[,1]
       if(algorithm=="leiden") {
         fcs_join_obj[["leiden"]] <- list(clusters = cluster_numbers,
-                                               settings = list(method = 'la.RBConfigurationVertexPartition',
-                                                               resolution_parameter = leiden_louvain_resolution,
-                                                               seed = 123))
+                                         settings = list(method = 'la.RBConfigurationVertexPartition',
+                                                         resolution_parameter = leiden_louvain_resolution,
+                                                         seed = 123))
       } else if(tolower(algorithm)=="louvain") {
         fcs_join_obj[["louvain"]] <- list(clusters = cluster_numbers,
                                                function_call = "graph_obj.community_multilevel()") # left off here
