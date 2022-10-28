@@ -44,16 +44,16 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
       colnames(map) <- c("tSNE1","tSNE2")
     } else if(tolower(language)=="python") {
       warning("unsupported argument inputs 'language' + 'algorithm': tsne in python not supported. Using R for now.")
+      require(Rtsne)
+      require(parallel)
+      # map_input <- Rtsne::normalize_input(fcs_join_obj[["data"]])
+      map_calculate <- Rtsne::Rtsne(X = fcs_join_obj[["data"]], check_duplicates = FALSE, max_iter = 2000, normalize = FALSE,
+                                    stop_lying_iter = 700, mom_switch_iter = 700,
+                                    eta = round(nrow(map_input)/12),
+                                    num_threads = ceiling(detectCores()/2))
+      map <- map_calculate[["Y"]]
+      colnames(map) <- c("tSNE1","tSNE2")
     }
-    require(Rtsne)
-    require(parallel)
-    # map_input <- Rtsne::normalize_input(fcs_join_obj[["data"]])
-    map_calculate <- Rtsne::Rtsne(X = fcs_join_obj[["data"]], check_duplicates = FALSE, max_iter = 2000, normalize = FALSE,
-                                  stop_lying_iter = 700, mom_switch_iter = 700,
-                                  eta = round(nrow(map_input)/12),
-                                  num_threads = ceiling(detectCores()/2))
-    map <- map_calculate[["Y"]]
-    colnames(map) <- c("tSNE1","tSNE2")
   }
   if(tolower(algorithm)=="umap") {
     if(tolower(language)=="r") {
@@ -72,8 +72,6 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
                                           settings = list(language = "R", check_duplicates = FALSE, max_iter = 2000,
                                                           normalize = FALSE, stop_lying_iter = 700, mom_switch_iter = 700,
                                                           eta = round(nrow(map_input)/12), num_threads = ceiling(detectCores()/2)))
-    } else if(tolower(language)=="python") {
-      stop("not supported (yet)")
     }
   }
   return(fcs_join_obj)
