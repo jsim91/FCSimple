@@ -2,7 +2,7 @@ fcs_cluster <- function(fcs_join_obj,
                         language = c("R","Python"),
                         algorithm = c("leiden","flowsom","louvain","phenograph"),
                         leiden_louvain_resolution = 1,
-                        flowsom_nClus = 20,
+                        flowsom_nClus = 15,
                         phenograph_k = 30,
                         adjacency_knn = 30)
 {
