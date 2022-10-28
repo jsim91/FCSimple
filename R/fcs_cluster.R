@@ -51,7 +51,7 @@ fcs_cluster <- function(fcs_join_obj,
       require(igraph)
       if(tolower(algorithm)=="leiden") {
         set.seed(123)
-        leid <- igraph::cluster_leiden(graph = G, objective_function = "CPM", weights = NA, resolution_parameter = leiden_louvain_resolution, )
+        leid <- igraph::cluster_leiden(graph = G, objective_function = "modularity", weights = NA, resolution_parameter = leiden_louvain_resolution, )
         fcs_join_obj[["leiden"]] <- list(clusters = leid$membership,
                                          settings = list(resolution_parameter = leiden_louvain_resolution,
                                                          weights = NA, seed = 123))
