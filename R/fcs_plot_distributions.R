@@ -1,5 +1,5 @@
 fcs_plot_distributions <- function(fcs_join_obj,
-                                   separate_by = c("none", "date"),
+                                   separate_by = c("none", "date", "cluster"),
                                    plot_element = c("cluster","total"),
                                    plot_algorithm = c("leiden","flowsom","louvain","phenograph"),
                                    plot_palette = NULL)
@@ -30,7 +30,7 @@ fcs_plot_distributions <- function(fcs_join_obj,
       colnames(data_split[[i]]) <- colnames(obj_data)[i]
     }
   }
-  if(tolower(plot_element) == "cluster") {
+  if(tolower(separate_by) == "cluster") {
     if(!tolower(plot_algorithm) %in% c("leiden","flowsom","louvain","phenograph")) {
       stop(paste0("error in argument 'plot_algorithm': clusters not found for ",tolower(plot_algorithm)," not found in 'fcs_join_obj'"))
     }
@@ -39,26 +39,25 @@ fcs_plot_distributions <- function(fcs_join_obj,
     }
   }
   if(separate_by == "none") {
-    if(plot_element == "cluster") {
-
-    } else if(plot_element == "total") {
-      plot_set <- lapply(X = data_split, FUN = plot_none_total)
-      ggsave(filename = paste0(getwd(),"/concatenated_panel_distributions_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
-             plot = ggpubr::ggarrange(plotlist = plot_set, nrow = ceiling(sqrt(length(plot_set))),
-                                                     ncol = ceiling(sqrt(length(plot_set)))), device = "pdf",
-             width = ceiling(sqrt(length(plot_set)))*2.25, height = ceiling(sqrt(length(plot_set)))*2.25, units = "in",
-             dpi = 900)
-    }
+    plot_set <- lapply(X = data_split, FUN = plot_none)
+    ggsave(filename = paste0(getwd(),"/concatenated_panel_distributions_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
+           plot = ggpubr::ggarrange(plotlist = plot_set, nrow = ceiling(sqrt(length(plot_set))),
+                                    ncol = ceiling(sqrt(length(plot_set)))), device = "pdf",
+           width = ceiling(sqrt(length(plot_set)))*2.5, height = ceiling(sqrt(length(plot_set)))*2.5, units = "in",
+           dpi = 900)
   } else if(separate_by == "date") {
-    if(plot_element == "cluster") {
-
-    } else if(plot_element == "total") {
-
-    }
+    plot_set <- lapply(X = data_split, FUN = plot_date)
+    ggsave(filename = paste0(getwd(),"/panel_distributions_by_batch_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
+           plot = ggpubr::ggarrange(plotlist = plot_set, nrow = ceiling(sqrt(length(plot_set))),
+                                    ncol = ceiling(sqrt(length(plot_set))), legend = "bottom", common.legend = TRUE),
+           device = "pdf", width = ceiling(sqrt(length(plot_set)))*2.5, height = ceiling(sqrt(length(plot_set)))*2.5,
+           units = "in", dpi = 900)
+  } else if(separate_by == "cluster") {
+    ""
   }
 }
 
-plot_none_total <- function(input_data)
+plot_none <- function(input_data)
 {
   xval <- density(input_data[,1])$x; yval <- density(input_data[,])$y
   dens_data <- data.frame(xval = xval, yval = yval)
@@ -71,4 +70,23 @@ plot_none_total <- function(input_data)
           axis.title = element_blank(),
           plot.title = element_text(hjust = 0.5))
   return(plt1)
+}
+
+plot_date <- function(input_data)
+{
+  capture_channel <- colnames(input_data)[1]
+  colnames(input_data)[1] <- "tmp"
+  plt1 <- ggplot(data = input_data, mapping = aes(x = tmp, group = batch)) +
+    geom_density(lwd = 0.5) +
+    theme_minimal() +
+    ggtitle(capture_channel) +
+    theme(axis.text.y = element_blank(),
+          axis.title = element_blank(),
+          plot.title = element_text(hjust = 0.5))
+  return(plt1)
+}
+
+plot_cluster <- function()
+{
+  ""
 }
