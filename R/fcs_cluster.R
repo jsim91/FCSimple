@@ -53,13 +53,13 @@ fcs_cluster <- function(fcs_join_obj,
       if(tolower(algorithm)=="leiden") {
         set.seed(123)
         leid <- igraph::cluster_leiden(graph = G, objective_function = "modularity", weights = NA, resolution_parameter = leiden_louvain_resolution, )
-        fcs_join_obj[["leiden"]] <- list(clusters = leid$membership,
+        fcs_join_obj[["leiden"]] <- list(clusters = factor(leid$membership),
                                          settings = list(resolution_parameter = leiden_louvain_resolution,
                                                          weights = NA, seed = 123, language = language))
       } else if(tolower(algorithm)=="louvain") {
         set.seed(123)
         louv <- igraph::cluster_louvain(graph = G, weights = NA, resolution = leiden_louvain_resolution)
-        fcs_join_obj[["louvain"]] <- list(clusters = louv$membership,
+        fcs_join_obj[["louvain"]] <- list(clusters = factor(louv$membership),
                                           settings = list(resolution = leiden_louvain_resolution,
                                                           weights = NA, seed = 123, language = language))
       }

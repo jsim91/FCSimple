@@ -7,6 +7,10 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm = "leiden",
                                 fold_method_name = "difference", group_names = NULL,
                                 heatmap_title = "")
 {
+  if(!tolower(algorithm) %in% names(fcs_join_obj)) {
+    stop("error in argument 'algorithm': algorithm not found in fcs_join_obj. Try 'View(fcs_join_obj)'")
+  }
+
   require(CATALYST)
   require(ComplexHeatmap)
   require(circlize)
