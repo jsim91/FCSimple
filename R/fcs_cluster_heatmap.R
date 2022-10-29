@@ -50,8 +50,8 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm,
                                                       grid_width=unit(0.6,"cm"),title_position="topleft",
                                                       labels_gp=gpar(fontsize=11),title_gp=gpar(fontsize=11)),
                             row_names_gp=gpar(fontsize=13,fontface="bold"),column_names_gp=gpar(fontsize=12,fontface="bold"),
-                            row_gap=unit(1,"mm"),column_gap=unit(1,"mm"),row_dend_gp=gpar(lwd=1.5),row_dend_width=unit(1,"cm"),
-                            column_dend_gp = gpar(lwd=1.5), column_dend_height = unit(1,"cm")) +
+                            row_gap=unit(1,"mm"),column_gap=unit(1,"mm"),row_dend_gp=gpar(lwd=1.33),row_dend_width=unit(1,"cm"),
+                            column_dend_gp = gpar(lwd=1.33), column_dend_height = unit(1,"cm")) +
     ranno1 + ranno2
   fcs_join_obj[[paste0(tolower(algorithm),"_heatmap")]] <- list(heatmap = heatmap_output,
                                                                 heatmap_tile_data = backend.matrix,
@@ -64,6 +64,6 @@ fcs_plot_heatmap <- function(fcs_join_obj, algorithm, outdir = getwd())
   ggsave(filename = paste0(outdir,"/",tolower(algorithm),"_cluster_heatmap_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
          plot = grid::grid.grabExpr(draw(fcs_join_obj[[paste0(tolower(algorithm),"_heatmap")]][["heatmap"]])),
          device = "pdf", width = (ncol(fcs_join_obj[[paste0(tolower(algorithm),"_heatmap")]][["heatmap_tile_data"]])*0.33)+2.25,
-         height = (nrow(fcs_join_obj[[paste0(tolower(algorithm),"_heatmap")]][["heatmap_tile_data"]])*0.33)+2.25,
+         height = (nrow(fcs_join_obj[[paste0(tolower(algorithm),"_heatmap")]][["heatmap_tile_data"]])*0.3)+2.25,
          units = "in", dpi = 900)
 }
