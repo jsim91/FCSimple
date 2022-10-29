@@ -53,7 +53,7 @@ fcs_plot_distributions <- function(fcs_join_obj,
            device = "pdf", width = ceiling(sqrt(length(plot_set)))*2.5, height = ceiling(sqrt(length(plot_set)))*2.5,
            units = "in", dpi = 900)
   } else if(separate_by == "cluster") {
-    ""
+    "" # should take similar form to what I did for the AHRI group
   }
 }
 
@@ -86,7 +86,16 @@ plot_date <- function(input_data)
   return(plt1)
 }
 
-plot_cluster <- function()
+plot_cluster <- function(input_data)
 {
-  ""
+  capture_channel <- colnames(input_data)[1]
+  colnames(input_data)[1] <- "tmp"
+  plt1 <- ggplot(data = input_data, mapping = aes(x = tmp, group = batch)) +
+    geom_density(lwd = 0.5) +
+    theme_minimal() +
+    ggtitle(capture_channel) +
+    theme(axis.text.y = element_blank(),
+          axis.title = element_blank(),
+          plot.title = element_text(hjust = 0.5))
+  return(plt1)
 }
