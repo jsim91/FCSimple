@@ -46,19 +46,15 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm,
   ranno1 <- rowAnnotation(`Cluster\nSize`=anno_barplot(pop.freq,border=F,width=unit(1.75, "cm"),
                                                        axis_param=list(gp=gpar(fontsize=9)), axis = TRUE),
                           annotation_name_gp=gpar(fontsize=10,fontface="bold"), name = "Cluster\nSize")
-  # ranno1 <- rowAnnotation(`Cluster\nSize`=anno_barplot(pop.freq,border=F,width=unit(1.75, "cm"),
-  #                                                      axis_param=list(gp=gpar(fontsize=9), at = 0, labels = ""),
-  #                                                      axis = TRUE, just = "center", location = unit(0.5, "npc"), show_name = TRUE),
-  #                         annotation_name_gp=gpar(fontsize=10,fontface="bold"), annotation_name_rot = 0, name = "Cluster\nSize")
   ranno2 <- rowAnnotation(frequency=anno_text(paste0(size_anno_nums,"%"),
                                               gp=gpar(fontsize=10,fontface="bold")))
   backend.matrix <- backend.matrix[order(as.numeric(row.names(backend.matrix))),]
   heatmap_output <- Heatmap(backend.matrix,col=color.map.fun,
                             row_names_side="left",
-                            #name="median\nscaled\nexpression",
+                            name="median\nscaled\nexpression",
                             heatmap_legend_param=list(at=c(0,0.2,0.4,0.6,0.8,1),legend_height=unit(3,"cm"),
                                                       grid_width=unit(0.6,"cm"),title_position="topleft",
-                                                      labels_gp=gpar(fontsize=11),title_gp=gpar(fontsize=11,fontface="bold")),
+                                                      labels_gp=gpar(fontsize=11),title_gp=gpar(fontsize=11)),
                             row_names_gp=gpar(fontsize=13,fontface="bold"),column_names_gp=gpar(fontsize=12,fontface="bold"),
                             row_gap=unit(1,"mm"),column_gap=unit(1,"mm"),row_dend_gp=gpar(lwd=1.5),row_dend_width=unit(1,"cm"),
                             column_dend_gp = gpar(lwd=1.5), column_dend_height = unit(1,"cm")) +
