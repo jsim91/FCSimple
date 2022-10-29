@@ -61,9 +61,9 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm,
 
 fcs_plot_heatmap <- function(fcs_join_obj, algorithm, outdir = getwd())
 {
-  ggsave(filename = paste0(outdir,"/",tolower(algorithm),"cluster_heatmap_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
+  ggsave(filename = paste0(outdir,"/",tolower(algorithm),"_cluster_heatmap_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
          plot = grid::grid.grabExpr(draw(fcs_join_obj[[paste0(tolower(algorithm),"_heatmap")]][["heatmap"]])),
-         device = "pdf", width = (ncol(fcs_join_obj[[paste0(tolower(algorithm),"_heatmap")]][["heatmap_tile_data"]])*0.5)+2.5,
-         height = (nrow(fcs_join_obj[[paste0(tolower(algorithm),"_heatmap")]][["heatmap_tile_data"]])*0.5)+2.5,
+         device = "pdf", width = (ncol(fcs_join_obj[[paste0(tolower(algorithm),"_heatmap")]][["heatmap_tile_data"]])*0.33)+2.25,
+         height = (nrow(fcs_join_obj[[paste0(tolower(algorithm),"_heatmap")]][["heatmap_tile_data"]])*0.33)+2.25,
          units = "in", dpi = 900)
 }
