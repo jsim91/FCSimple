@@ -2,6 +2,7 @@ fcs_plot_distributions <- function(fcs_join_obj,
                                    separate_by = c("none", "date", "cluster"),
                                    plot_element = c("cluster","total"),
                                    plot_algorithm = c("leiden","flowsom","louvain","phenograph"),
+                                   outdir = getwd(),
                                    plot_palette = NULL)
 {
   require(ggpubr)
@@ -40,14 +41,14 @@ fcs_plot_distributions <- function(fcs_join_obj,
   }
   if(separate_by == "none") {
     plot_set <- lapply(X = data_split, FUN = plot_none)
-    ggsave(filename = paste0(getwd(),"/concatenated_panel_distributions_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
+    ggsave(filename = paste0(outdir,"/concatenated_panel_distributions_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
            plot = ggpubr::ggarrange(plotlist = plot_set, nrow = ceiling(sqrt(length(plot_set))),
                                     ncol = ceiling(sqrt(length(plot_set)))), device = "pdf",
            width = ceiling(sqrt(length(plot_set)))*2.5, height = ceiling(sqrt(length(plot_set)))*2.5, units = "in",
            dpi = 900)
   } else if(separate_by == "date") {
     plot_set <- lapply(X = data_split, FUN = plot_date)
-    ggsave(filename = paste0(getwd(),"/panel_distributions_by_batch_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
+    ggsave(filename = paste0(outdir,"/panel_distributions_by_batch_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
            plot = ggpubr::ggarrange(plotlist = plot_set, nrow = ceiling(sqrt(length(plot_set))),
                                     ncol = ceiling(sqrt(length(plot_set))), legend = "bottom", common.legend = TRUE),
            device = "pdf", width = ceiling(sqrt(length(plot_set)))*2.5, height = ceiling(sqrt(length(plot_set)))*2.5,

@@ -59,5 +59,17 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm,
                             row_gap=unit(1,"mm"),column_gap=unit(1,"mm"),row_dend_gp=gpar(lwd=1.5),row_dend_width=unit(1,"cm"),
                             column_dend_gp = gpar(lwd=1.5), column_dend_height = unit(1,"cm")) +
     ranno1 + ranno2
-  return(list(heatmap = heatmap_output, heatmap_tile_data = backend.matrix, population_size = pop.freq))
+  fcs_join_obj[[paste0(tolower(algorithm),"_heatmap")]] <- list(heatmap = heatmap_output,
+                                                                heatmap_tile_data = backend.matrix,
+                                                                population_size = pop.freq)
+  return(fcs_join_obj)
+}
+
+fcs_plot_heatmap <- function(fcs_join_obj, algorithm, outdir = getwd())
+{
+  ggsave(filename = paste0(outdir,"/panel_distributions_by_batch_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
+         plot = fcs_join_obj[[paste0(tolower(algorithm),"_heatmap")]][["heatmap"]],
+         device = "pdf", width = (ncol(fcs_join_obj[[paste0(tolower(algorithm),"_heatmap")]][["heatmap_tile_data"]])*0.5)+2.5,
+         height = (nrow(fcs_join_obj[[paste0(tolower(algorithm),"_heatmap")]][["heatmap_tile_data"]])*0.5)+2.5,
+         units = "in", dpi = 900)
 }
