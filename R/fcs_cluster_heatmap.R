@@ -1,11 +1,5 @@
 fcs_cluster_heatmap <- function(fcs_join_obj, algorithm,
-                                heatmap_color_palette = rev(RColorBrewer::brewer.pal(11, "RdYlBu")),
-                                fold_method = "median", heatmap_intensity_method = "median",
-                                tile_data = NULL, include_colnames = TRUE,
-                                cl_rows = TRUE, cl_cols = TRUE, show_legend = TRUE,
-                                scale_local = NULL,
-                                fold_method_name = "difference", group_names = NULL,
-                                heatmap_title = "")
+                                heatmap_color_palette = rev(RColorBrewer::brewer.pal(11, "RdYlBu")))
 {
   if(!tolower(algorithm) %in% names(fcs_join_obj)) {
     stop("error in argument 'algorithm': algorithm not found in fcs_join_obj. Try 'View(fcs_join_obj)'")
