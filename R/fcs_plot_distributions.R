@@ -54,7 +54,7 @@ fcs_plot_distributions <- function(fcs_join_obj,
            device = "pdf", width = ceiling(sqrt(length(plot_set)))*2.5, height = ceiling(sqrt(length(plot_set)))*2.5,
            units = "in", dpi = 900)
   } else if(separate_by == "cluster") {
-    "" # should take similar form to what I did for the AHRI group
+    "" # should take similar form to what I did for the AHRI group, per page ncol = 2, nrow = 1, height by number clusters
   }
 }
 
