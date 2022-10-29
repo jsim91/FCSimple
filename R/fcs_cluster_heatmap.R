@@ -1,4 +1,4 @@
-fcs_cluster_heatmap <- function(fcs_join_obj, algorithm = "leiden",
+fcs_cluster_heatmap <- function(fcs_join_obj, algorithm,
                                 heatmap_color_palette = rev(RColorBrewer::brewer.pal(11, "RdYlBu")),
                                 fold_method = "median", heatmap_intensity_method = "median",
                                 tile_data = NULL, include_colnames = TRUE,
