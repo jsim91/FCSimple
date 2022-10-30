@@ -60,7 +60,7 @@ fcs_plot_distribution <- function(fcs_join_obj,
     ggsave(filename = paste0(outdir,"/panel_distributions_by_cluster_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
            plot = ggpubr::ggarrange(plotlist = plot_set, nrow = ceiling(sqrt(length(plot_set))),
                                     ncol = ceiling(sqrt(length(plot_set))), legend = "bottom", common.legend = TRUE),
-           device = "pdf", width = ceiling(sqrt(length(plot_set)))*2.5, height = ceiling(sqrt(length(plot_set)))*5,
+           device = "pdf", width = ceiling(sqrt(length(plot_set)))*3, height = ceiling(sqrt(length(plot_set)))*9,
            units = "in", dpi = 900)
   }
 }
@@ -85,7 +85,7 @@ plot_date <- function(input_data)
   capture_channel <- colnames(input_data)[1]
   colnames(input_data)[1] <- "tmp"
   plt1 <- ggplot(data = input_data, mapping = aes(x = tmp, group = batch)) +
-    geom_density(lwd = 0.5) +
+    geom_density(lwd = 0.3) +
     theme_minimal() +
     ggtitle(capture_channel) +
     theme(axis.text.y = element_blank(),
@@ -99,7 +99,7 @@ plot_cluster <- function(input_data)
   capture_channel <- colnames(input_data)[1]
   colnames(input_data)[1] <- "tmp"
   plt1 <- ggplot(data = input_data, mapping = aes(x = tmp, y = cluster)) +
-    geom_density_ridges(lwd = 0.5) +
+    geom_density_ridges(lwd = 0.3) +
     theme_minimal() +
     ggtitle(capture_channel) +
     theme(axis.text.y = element_blank(),
