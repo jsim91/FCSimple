@@ -6,6 +6,9 @@ fcs_plot_distribution <- function(fcs_join_obj,
                                   plot_palette = NULL)
 {
   require(ggpubr)
+  require(ggplot2)
+  require(ggridges)
+
   obj_data <- fcs_join_obj[["data"]]
   if(separate_by=="date") {
     if(!"run_date" %in% names(fcs_join_obj)){
@@ -35,12 +38,12 @@ fcs_plot_distribution <- function(fcs_join_obj,
       stop(paste0("error in argument 'plot_algorithm': clusters not found for ",tolower(plot_algorithm)," not found in 'fcs_join_obj'"))
     }
     for(i in 1:length(data_split)) {
-      data_split[[i]]$cluster <- fcs_join_obj[[tolower(plot_algorithm)]]$clusters
+      data_split[[i]]$cluster <- factor(fcs_join_obj[[tolower(plot_algorithm)]]$clusters)
     }
   }
   if(separate_by == "none") {
     plot_set <- lapply(X = data_split, FUN = plot_none)
-    ggsave(filename = paste0(outdir,"/concatenated_panel_distributions_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
+    ggsave(filename = paste0(outdir,"/panel_distributions_concatenation_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
            plot = ggpubr::ggarrange(plotlist = plot_set, nrow = ceiling(sqrt(length(plot_set))),
                                     ncol = ceiling(sqrt(length(plot_set)))), device = "pdf",
            width = ceiling(sqrt(length(plot_set)))*2.5, height = ceiling(sqrt(length(plot_set)))*2.5, units = "in",
@@ -53,7 +56,12 @@ fcs_plot_distribution <- function(fcs_join_obj,
            device = "pdf", width = ceiling(sqrt(length(plot_set)))*2.5, height = ceiling(sqrt(length(plot_set)))*2.5,
            units = "in", dpi = 900)
   } else if(separate_by == "cluster") {
-    "" # should take similar form to what I did for the AHRI group, per page ncol = 2, nrow = 1, height by number clusters
+    plot_set <- lapply(X = data_split, FUN = plot_cluster)
+    ggsave(filename = paste0(outdir,"/panel_distributions_by_cluster_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
+           plot = ggpubr::ggarrange(plotlist = plot_set, nrow = ceiling(sqrt(length(plot_set))),
+                                    ncol = ceiling(sqrt(length(plot_set))), legend = "bottom", common.legend = TRUE),
+           device = "pdf", width = 8, height = ceiling(sqrt(length(plot_set)))*2.5,
+           units = "in", dpi = 900)
   }
 }
 
@@ -90,8 +98,8 @@ plot_cluster <- function(input_data)
 {
   capture_channel <- colnames(input_data)[1]
   colnames(input_data)[1] <- "tmp"
-  plt1 <- ggplot(data = input_data, mapping = aes(x = tmp, group = batch)) +
-    geom_density(lwd = 0.5) +
+  plt1 <- ggplot(data = input_data, mapping = aes(x = tmp, y = cluster)) +
+    geom_density_ridges(lwd = 0.5) +
     theme_minimal() +
     ggtitle(capture_channel) +
     theme(axis.text.y = element_blank(),
