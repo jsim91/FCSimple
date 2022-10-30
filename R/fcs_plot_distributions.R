@@ -60,7 +60,7 @@ fcs_plot_distribution <- function(fcs_join_obj,
     ggsave(filename = paste0(outdir,"/panel_distributions_by_cluster_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
            plot = ggpubr::ggarrange(plotlist = plot_set, nrow = ceiling(sqrt(length(plot_set))),
                                     ncol = ceiling(sqrt(length(plot_set))), legend = "bottom", common.legend = TRUE),
-           device = "pdf", width = 8, height = ceiling(sqrt(length(plot_set)))*2.5,
+           device = "pdf", width = ceiling(sqrt(length(plot_set)))*2.5, height = ceiling(sqrt(length(plot_set)))*5,
            units = "in", dpi = 900)
   }
 }
