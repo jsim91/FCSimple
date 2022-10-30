@@ -13,7 +13,7 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
     ggrastr::geom_point_rast(alpha = point_alpha) +
     geom("shadowtext", x = xval, y = yval, label = names(xval), size = 5) +
     theme_void()
-  ggsave(filename = paste0(outdir,"/",tolower(algorithm),"_",tolower(reduction),"_cluster_labels_",
+  ggsave(filename = paste0(outdir,"/",tolower(algorithm),"_",tolower(reduction),"_labeled_",
                            strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
          plot = plt_reduction, device = "pdf", width = 10, height = 10,
          units = "in", dpi = 900)
