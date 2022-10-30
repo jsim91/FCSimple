@@ -1,6 +1,6 @@
 fcs_plot_distribution <- function(fcs_join_obj,
                                   separate_by = c("none", "date", "cluster"),
-                                  plot_element = c("cluster","total"),
+                                  plot_element = c("cluster","total"), # this argument is unnecessary; remove
                                   plot_algorithm = c("leiden","flowsom","louvain","phenograph"),
                                   outdir = getwd(),
                                   plot_palette = NULL)
