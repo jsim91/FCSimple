@@ -1,5 +1,9 @@
 fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha = 0.1, outdir = getwd())
 {
+  require(ggplot2)
+  require(shadowtext)
+  require(ggrastr)
+
   reduction_coords <- fcs_join_obj[[tolower(reduction)]][["coordinates"]]
   cluster_numbers <- as.numeric(as.character(fcs_join_obj[[tolower(algorithm)]][["clusters"]]))
   uclus <- unique(cluster_numbers)[order(unique(cluster_numbers))]
