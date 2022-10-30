@@ -15,7 +15,7 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
   plt_reduction <- ggplot(data = reduction_coords, mapping = aes_string(x = colnames(reduction_coords)[1],
                                                                         y = colnames(reduction_coords)[2])) +
     ggrastr::geom_point_rast(alpha = point_alpha) +
-    geom("shadowtext", x = xval, y = yval, label = names(xval), size = 5) +
+    annotate("shadowtext", x = xval, y = yval, label = names(xval), size = 5) +
     theme_void()
   ggsave(filename = paste0(outdir,"/",tolower(algorithm),"_",tolower(reduction),"_labeled_",
                            strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
