@@ -6,12 +6,11 @@ fcs_plot_distribution <- function(fcs_join_obj,
                                   plot_palette = NULL)
 {
   require(ggpubr)
+  obj_data <- fcs_join_obj[["data"]]
   if(separate_by=="date") {
     if(!"run_date" %in% names(fcs_join_obj)){
       print("Unable to find run date. Using separate_by = 'none' instead.")
-      obj_data <- fcs_join_obj[["data"]]
     } else {
-      obj_data <- fcs_join_obj[["data"]]
       batch <- fcs_join_obj[["run_date"]]
       obj_data$date <- batch
     }
