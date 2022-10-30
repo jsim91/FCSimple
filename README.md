@@ -8,6 +8,8 @@ fcs_reduce_dimensions # Use after running fcs_join() to produce low dimension re
 fcs_cluster # Use after running fcs_join() to partition the data into discrete clusters using the Leiden, Louvain, FlowSOM, or Phenograph algorithms.
 fcs_calculate_abundance # Use after running fcs_cluster() to calculate cluster abundance, either as fraction (0-1) or frequency (0-100)
 fcs_report_abundance # Use after running fcs_calculate_abundance() to report calculated cluster abundance values
+fcs_cluster_heatmap # Use after running fcs_cluster() to create a heatmap object that describes the cluster expression
+fcs_plot_heatmap # Use after running fcs_cluster_heatmap() to render the cluster heatmap as a pdf
 
 # more to come
 ```
@@ -35,7 +37,12 @@ install_github("jsim91/FCSimple")
 - [igraph](https://cran.r-project.org/web/packages/igraph/index.html)
 - [FlowSOM](https://bioconductor.org/packages/release/bioc/html/FlowSOM.html)
 - [Rphenograph](https://github.com/JinmiaoChenLab/Rphenograph)
-
+- [ComplexHeatmap](https://github.com/jokergoo/ComplexHeatmap)
+- [circlize](https://cran.r-project.org/web/packages/circlize/index.html)
+- [CATALYST](https://www.bioconductor.org/packages/release/bioc/html/CATALYST.html)
+- [ggpubr](https://cran.r-project.org/web/packages/ggpubr/index.html)
+- [ggplot2](https://cran.r-project.org/web/packages/ggplot2/index.html)
+- [shadowtext](https://cran.r-project.org/web/packages/shadowtext/index.html)
 
 The dimension reduction and clustering steps do offer methods to run the calculations through Python, however no knowledge of the Python language is required. These functions will call Python in the background and results will be transferred to the R environment. The reticulate package is not required. Users may edit the included python scripts if they want to alter the default Python behavior. To take advantage of Python-supported methods, these items are required:
 
