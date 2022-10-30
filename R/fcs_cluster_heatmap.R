@@ -8,6 +8,7 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm,
   require(CATALYST)
   require(ComplexHeatmap)
   require(circlize)
+  require(grid)
 
   event_source <- fcs_join_obj[["source"]]
   cluster_numbers <- as.numeric(fcs_join_obj[[tolower(algorithm)]][["clusters"]])
@@ -20,7 +21,7 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm,
   cluster_numbers <- as.character(cluster_numbers)
   row.names(backend.matrix) <- unique(cluster_numbers)[order(unique(cluster_numbers))]
   colnames(backend.matrix) <- colnames(global.t)
-  for(i in 1:nrow(backend.matrix)){
+  for(i in 1:nrow(backend.matrix)) {
     get.clus <- which(cluster_numbers==row.names(backend.matrix)[i])
     for(j in 1:ncol(backend.matrix)){
       backend.matrix[i,j] <- median(global.t[get.clus,j])
@@ -31,7 +32,7 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm,
   color.map.fun = circlize::colorRamp2(seq(min(z),max(z), l = n <- 100), colorRampPalette(hm_pal)(n))
   ncell <- rep(NA,times=length(unique(cluster_numbers)))
   names(ncell) <- unique(cluster_numbers)[order(as.numeric(unique(cluster_numbers)))]
-  for(i in 1:length(ncell)){
+  for(i in 1:length(ncell)) {
     ncell[i] <- sum(cluster_numbers==names(ncell)[i])
   }
   pop.freq <- matrix(data=ncell,ncol=1)
