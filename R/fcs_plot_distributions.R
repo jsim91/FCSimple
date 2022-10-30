@@ -1,9 +1,9 @@
-fcs_plot_distributions <- function(fcs_join_obj,
-                                   separate_by = c("none", "date", "cluster"),
-                                   plot_element = c("cluster","total"),
-                                   plot_algorithm = c("leiden","flowsom","louvain","phenograph"),
-                                   outdir = getwd(),
-                                   plot_palette = NULL)
+fcs_plot_distribution <- function(fcs_join_obj,
+                                  separate_by = c("none", "date", "cluster"),
+                                  plot_element = c("cluster","total"),
+                                  plot_algorithm = c("leiden","flowsom","louvain","phenograph"),
+                                  outdir = getwd(),
+                                  plot_palette = NULL)
 {
   require(ggpubr)
   if(separate_by=="date") {
