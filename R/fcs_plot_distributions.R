@@ -1,6 +1,5 @@
 fcs_plot_distribution <- function(fcs_join_obj,
                                   separate_by = c("none", "date", "cluster"),
-                                  plot_element = c("cluster","total"), # this argument is unnecessary; remove
                                   plot_algorithm = c("leiden","flowsom","louvain","phenograph"),
                                   outdir = getwd(),
                                   plot_palette = NULL)
@@ -47,21 +46,21 @@ fcs_plot_distribution <- function(fcs_join_obj,
            plot = ggpubr::ggarrange(plotlist = plot_set, nrow = ceiling(sqrt(length(plot_set))),
                                     ncol = ceiling(sqrt(length(plot_set)))), device = "pdf",
            width = ceiling(sqrt(length(plot_set)))*2.5, height = ceiling(sqrt(length(plot_set)))*2.5, units = "in",
-           dpi = 900)
+           dpi = 900, limitsize = FALSE)
   } else if(separate_by == "date") {
     plot_set <- lapply(X = data_split, FUN = plot_date)
     ggsave(filename = paste0(outdir,"/panel_distributions_by_batch_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
            plot = ggpubr::ggarrange(plotlist = plot_set, nrow = ceiling(sqrt(length(plot_set))),
                                     ncol = ceiling(sqrt(length(plot_set))), legend = "bottom", common.legend = TRUE),
            device = "pdf", width = ceiling(sqrt(length(plot_set)))*2.5, height = ceiling(sqrt(length(plot_set)))*2.5,
-           units = "in", dpi = 900)
+           units = "in", dpi = 900, limitsize = FALSE)
   } else if(separate_by == "cluster") {
     plot_set <- lapply(X = data_split, FUN = plot_cluster)
     ggsave(filename = paste0(outdir,"/panel_distributions_by_cluster_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
            plot = ggpubr::ggarrange(plotlist = plot_set, nrow = ceiling(sqrt(length(plot_set))),
                                     ncol = ceiling(sqrt(length(plot_set))), legend = "bottom", common.legend = TRUE),
            device = "pdf", width = ceiling(sqrt(length(plot_set)))*3, height = ceiling(sqrt(length(plot_set)))*9,
-           units = "in", dpi = 900)
+           units = "in", dpi = 900, limitsize = FALSE)
   }
 }
 
@@ -102,8 +101,9 @@ plot_cluster <- function(input_data)
     geom_density_ridges(lwd = 0.3) +
     theme_minimal() +
     ggtitle(capture_channel) +
-    theme(axis.text.y = element_blank(),
-          axis.title = element_blank(),
+    theme(axis.text.y = element_text(),
+          axis.title.x = element_blank(),
           plot.title = element_text(hjust = 0.5))
   return(plt1)
 }
+
