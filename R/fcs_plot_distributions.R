@@ -48,6 +48,9 @@ fcs_plot_distribution <- function(fcs_join_obj,
            width = ceiling(sqrt(length(plot_set)))*2.5, height = ceiling(sqrt(length(plot_set)))*2.5, units = "in",
            dpi = 900, limitsize = FALSE)
   } else if(separate_by == "date") {
+    if(!"batch" %in% colnames(data_split[[1]])) {
+      stop("error in argument 'separate_by': no run date found, cannot plot by run date/batch")
+    }
     plot_set <- lapply(X = data_split, FUN = plot_date)
     ggsave(filename = paste0(outdir,"/panel_distributions_by_batch_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
            plot = ggpubr::ggarrange(plotlist = plot_set, nrow = ceiling(sqrt(length(plot_set))),
