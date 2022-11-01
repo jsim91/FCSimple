@@ -36,8 +36,8 @@ fcs_cluster <- function(fcs_join_obj,
         num_neighbors <- adjacency_knn + 1
         sub_data <- vector(mode="list",length=num_core)
         split_sums <- round(seq(from=1,to=nrow(fcs_join_obj[["data"]]),length.out=num_core+1),0)
-        for(i in 1:length(sub_data)){
-          if(i==1){
+        for(i in 1:length(sub_data)) {
+          if(i==1) {
             sub_data[[i]] <- fcs_join_obj[["data"]][1:(split_sums[i+1]),]
           } else {
             sub_data[[i]] <- fcs_join_obj[["data"]][(split_sums[i] + 1):(split_sums[i+1]),]
