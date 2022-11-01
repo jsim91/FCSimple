@@ -7,6 +7,7 @@ fcs_cluster <- function(fcs_join_obj,
                         adjacency_knn = 30,
                         search_method = c("FNN","RANN"))
 {
+  capture_dir <- system.file(package = "FCSimple")
   if(any(length(language)!=1, !tolower(language) %in% c("r","python"))) {
     stop("error in argument 'language': use 'R' or 'Python'")
   }
