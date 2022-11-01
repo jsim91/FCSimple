@@ -28,6 +28,7 @@ fcs_cluster <- function(fcs_join_obj,
         require(RANN)
         require(parallel)
         require(future)
+
         num_core <- ceiling(detectCores()/2)
         options(future.globals.maxSize= Inf)
         future::plan(future::cluster, workers = num_core)
@@ -42,13 +43,13 @@ fcs_cluster <- function(fcs_join_obj,
             sub_data[[i]] <- fcs_join_obj[["data"]][(split_sums[i] + 1):(split_sums[i+1]),]
           }
         }
-        search_out <- future_lapply(sub_data,FUN=function(x){
+        search_out <- future_lapply(sub_data,FUN=function(x) {
           return(RANN::nn2(data=fcs_join_obj[["data"]],query=x,k=num_neighbors,treetype = "kd",searchtype = "standard"))
         })
         future::plan(future::sequential)
 
-        for(i in 1:length(search_out)){
-          if(i==1){
+        for(i in 1:length(search_out)) {
+          if(i==1) {
             search_id <- search_out[[i]][[1]]
           } else {
             search_id <- rbind(search_id,search_out[[i]][[1]])
@@ -69,10 +70,10 @@ fcs_cluster <- function(fcs_join_obj,
       system(command = paste0("python ",paste0(capture_dir,"/python/run_cluster.py")," ",
                               paste0(capture_dir,"/python/__python_cl_input__.mtx")," ",capture_dir,"/python ",tolower(algorithm)," ",leiden_louvain_resolution))
       map <- read.csv(paste0(capture_dir,"/python/__tmp_cl__.csv"), check.names = FALSE)
-      if (file.exists(paste0(capture_dir,"/python/__tmp_cl__.csv"))) {
+      if(file.exists(paste0(capture_dir,"/python/__tmp_cl__.csv"))) {
         file.remove(paste0(capture_dir,"/python/__tmp_cl__.csv"))
       }
-      if (file.exists(paste0(capture_dir,"/python/__python_cl_input__.mtx"))) {
+      if(file.exists(paste0(capture_dir,"/python/__python_cl_input__.mtx"))) {
         file.remove(paste0(capture_dir,"/python/__python_cl_input__.mtx"))
       }
       cluster_numbers <- map[,1]
@@ -116,10 +117,9 @@ fcs_cluster <- function(fcs_join_obj,
                                                         silent = TRUE, nClus = flowsom_nClus))
       } else if(tolower(algorithm)=="phenograph") {
         require(Rphenograph)
-      phenog <- Rphenograph::Rphenograph(data = fcs_join_obj[["data"]], k = phenograph_k)
-      phcl <- membership(phenog[[2]])
-      fcs_join_obj[["phenograph"]] <- list(clusters = phcl,
-                                           settings = list(k = phenograph_k))
+        phenog <- Rphenograph::Rphenograph(data = fcs_join_obj[["data"]], k = phenograph_k)
+        phcl <- membership(phenog[[2]])
+        fcs_join_obj[["phenograph"]] <- list(clusters = phcl, settings = list(k = phenograph_k))
       }
   }
   return(fcs_join_obj)
