@@ -4,7 +4,8 @@ fcs_cluster <- function(fcs_join_obj,
                         leiden_louvain_resolution = 1,
                         flowsom_nClus = 15,
                         phenograph_k = 30,
-                        adjacency_knn = 30)
+                        adjacency_knn = 30,
+                        search_method = c("FNN","RANN"))
 {
   if(any(length(language)!=1, !tolower(language) %in% c("r","python"))) {
     stop("error in argument 'language': use 'R' or 'Python'")
@@ -16,12 +17,51 @@ fcs_cluster <- function(fcs_join_obj,
       adj_search <- fcs_join_obj[["nn_search"]]
       adjacency_knn <- ncol(adj_search)
     } else {
-      adj_search <- FNN::knn.index(data = fcs_join_obj[["data"]], k = adjacency_knn)
-      fcs_join_obj[["nn_search"]] <- adj_search
+      if(tolower(search_method)=="fnn") {
+        adj_search <- FNN::knn.index(data = fcs_join_obj[["data"]], k = adjacency_knn)
+        fcs_join_obj[["nn_search"]] <- adj_search
+        i_input <- rep(1:nrow(adj_search),times=ncol(adj_search))
+        j_input <- as.vector(adj_search)
+        sm <- Matrix::sparseMatrix(i=i_input,j=j_input,dims=c(nrow(adj_search),nrow(adj_search)))
+        Matrix::writeMM(obj = sm, file = paste0(capture_dir,"/python/__python_cl_input__.mtx"))
+      } else if(tolower(search_method)=="rann") {
+        require(RANN)
+        require(parallel)
+        require(future)
+        num_core <- ceiling(detectCores()/2)
+        options(future.globals.maxSize= Inf)
+        future::plan(future::cluster, workers = num_core)
+
+        num_neighbors <- adjacency_knn + 1
+        sub_data <- vector(mode="list",length=num_core)
+        split_sums <- round(seq(from=1,to=nrow(fcs_join_obj[["data"]]),length.out=num_core+1),0)
+        for(i in 1:length(sub_data)){
+          if(i==1){
+            sub_data[[i]] <- fcs_join_obj[["data"]][1:(split_sums[i+1]),]
+          } else {
+            sub_data[[i]] <- fcs_join_obj[["data"]][(split_sums[i] + 1):(split_sums[i+1]),]
+          }
+        }
+        search_out <- future_lapply(sub_data,FUN=function(x){
+          return(RANN::nn2(data=fcs_join_obj[["data"]],query=x,k=num_neighbors,treetype = "kd",searchtype = "standard"))
+        })
+        future::plan(future::sequential)
+
+        for(i in 1:length(search_out)){
+          if(i==1){
+            search_id <- search_out[[i]][[1]]
+          } else {
+            search_id <- rbind(search_id,search_out[[i]][[1]])
+          }
+        }
+
+        nn_idx <- search_id
+        i_input <- rep(1:nrow(nn_idx),times=num_neighbors-1)
+        j_input <- as.vector(nn_idx[,2:num_neighbors])
+        sm <- Matrix::sparseMatrix(i=i_input,j=j_input,dims=c(nrow(nn_idx),nrow(nn_idx)))
+        Matrix::writeMM(obj = sm, file = paste0(capture_dir,"/python/__python_cl_input__.mtx"))
+      }
     }
-    i_input <- rep(1:nrow(adj_search),times=ncol(adj_search))
-    j_input <- as.vector(adj_search)
-    sm <- Matrix::sparseMatrix(i=i_input,j=j_input,dims=c(nrow(adj_search),nrow(adj_search)))
     if(tolower(language)=="python") {
       capture_dir <- system.file(package = "FCSimple") # points to package location
       Matrix::writeMM(obj = sm, file = paste0(capture_dir,"/python/__python_cl_input__.mtx"))
