@@ -139,5 +139,13 @@ fcs_join <- function(files, use_ncdf = FALSE,
         tmp_data <- rbind(tmp_data, flowCore::exprs(object = fs[[i]]))
       }
     }
+    if(nrow(tmp_data)>100000) {
+      set.seed(123)
+      write.csv(x = tmp_data[sample(1:nrow(tmp_data),size=100000,replace=F)], file = "E:/sample_FCS/test_data.csv")
+    } else {
+      write.csv(x = tmp_data,file = "E:/sample_FCS/test_data.csv")
+    }
+    library(shiny)
+    runApp(paste0(system.file(package = "FCSimple"),"/R/app"))
   }
 }
