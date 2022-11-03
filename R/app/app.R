@@ -78,6 +78,6 @@ server <- function(input, output) {
   })
 }
 
-# Run the app ----
+# Run the app ---- # this will be changed later so that the app is called from fcs_join with runApp
 shinyApp(ui = ui, server = server)
 
