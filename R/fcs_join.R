@@ -139,9 +139,17 @@ fcs_join <- function(files, use_ncdf = FALSE,
         tmp_data <- rbind(tmp_data, flowCore::exprs(object = fs[[i]]))
       }
     }
-    if(nrow(tmp_data)>100000) {
+    if(use_descriptive_column_names) {
+      desc_names <- fs[[1]]@parameters@data$desc
+      if(length(desc_names)==ncol(tmp_data)) {
+        colnames(tmp_data) <- desc_names
+      } else {
+        print("Unable to use descriptive column names. Using original names.")
+      }
+    }
+    if(nrow(tmp_data)>50000) {
       set.seed(123)
-      write.csv(x = tmp_data[sample(1:nrow(tmp_data),size=100000,replace=F)], file = "E:/sample_FCS/test_data.csv")
+      write.csv(x = tmp_data[sample(1:nrow(tmp_data),size=50000,replace=F),], file = "E:/sample_FCS/test_data.csv", row.names = FALSE)
     } else {
       write.csv(x = tmp_data,file = "E:/sample_FCS/test_data.csv")
     }
