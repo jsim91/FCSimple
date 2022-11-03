@@ -4,6 +4,13 @@ library(shinythemes)
 library(flowWorkspace)
 library(flowCore)
 
+# to do: store final transform values, insert button that will allow the parameters chosen to be stored;
+# allow user to update these values every time the button is pressed; finally, apply transform to data set
+# and produce an output with the transform values used, allow an option to parse this output for
+# future transform setting on files using identical panels, ensures consistency and streamlines workflow
+# consider a json format or a csv file with columns channel names, and rows parameters, perhaps a row for alternate
+# names, such as fluorochrome + marker or metal + marker to allow for more robust matching of future panels
+
 # Define UI ----
 ui <- fluidPage(theme = shinytheme("yeti"),
                 navbarPage(
