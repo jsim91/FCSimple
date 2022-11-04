@@ -45,6 +45,9 @@ install_github("jsim91/FCSimple")
 - [shadowtext](https://cran.r-project.org/web/packages/shadowtext/index.html)
 - [future](https://cran.r-project.org/web/packages/future/index.html)
 - [RANN](https://cran.r-project.org/web/packages/RANN/RANN.pdf)
+- [shiny](https://cran.r-project.org/web/packages/shiny/index.html)
+- [shinythemes](https://cran.r-project.org/web/packages/shinythemes/index.html)
+- [scales](https://cran.r-project.org/web/packages/scales/index.html)
 
 The dimension reduction and clustering steps do offer methods to run the calculations through Python, however no knowledge of the Python language is required. These functions will call Python in the background and results will be transferred to the R environment. The reticulate package is not required. Users may edit the included python scripts if they want to alter the default Python behavior. To take advantage of Python-supported methods, these items are required:
 
