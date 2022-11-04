@@ -3,6 +3,7 @@ library(shiny)
 library(shinythemes)
 library(flowWorkspace)
 library(flowCore)
+library(scales)
 
 # to do: store final transform values, insert button that will allow the parameters chosen to be stored;
 # allow user to update these values every time the button is pressed; finally, apply transform to data set
@@ -19,18 +20,28 @@ ui <- fluidPage(theme = shinytheme("yeti"),
                            sidebarPanel(
                              uiOutput("channel"),
                              uiOutput("transform_type"),
-                             uiOutput("hyperparameters")
+                             uiOutput("hyperparameters"),
+                             hr(),
+                             actionButton(inputId = "apply_button", label = "apply transform"),
+                             hr(),
+                             uiOutput("channel_x"),
+                             uiOutput("channel_y")
                            ),
                            mainPanel(
-                             plotOutput("densPlot")
+                             plotOutput("densPlot"),
+                             hr(),
+                             plotOutput("biax"),
+                             hr(),
+                             uiOutput("transform_text")
                            )),
                   tabPanel("translate")
-                  )
+                )
 )
 
 # Define server logic ----
 server <- function(input, output) {
-  Data <- read.csv("E:/sample_FCS/test_data.csv", check.names = FALSE)
+  # Data <- read.csv("E:/sample_FCS/test_data.csv", check.names = FALSE)
+  Data <- read.csv("C:/Users/simmonjd/Documents/sample_FCS/test_data.csv", check.names = FALSE)
   output$channel <- renderUI({
     selectInput("channel", h4("channel"), choices = colnames(Data))
   })
@@ -55,6 +66,17 @@ server <- function(input, output) {
       }
     }
   })
+  # output$apply <- renderUI({
+  #   if(!is.null(input$transform_type)) {
+  #     actionButton(inputId = "apply_button", label = "apply")
+  #   }
+  # })
+  output$channel_x <- renderUI({
+    selectInput("channel_x", h5("x-axis channel"), choices = colnames(Data))
+  })
+  output$channel_y <- renderUI({
+    selectInput("channel_y", h5("y-axis channel"), choices = colnames(Data))
+  })
   output$densPlot <- renderPlot({
     if(!is.null(input$channel)) {
       in_data <- Data[,input$channel]
@@ -75,6 +97,21 @@ server <- function(input, output) {
         plot(density(eval(hyperlog_fun)(in_hyperlog)), main = input$channel, xlab = "intensity", ylab = "density")
       }
     }
+  })
+  cur_transf <- reactiveValues(chosen_transform = NULL)
+  observeEvent(input$apply_button, {
+    cur_transf$chosen_transform <- input$transform_type
+  })
+  output$transform_text <- renderText({
+    if(is.null(cur_transf$chosen_transform)) {
+      return()
+    } else {
+      return(cur_transf$chosen_transform)
+    }
+  })
+  output$biax <- renderPlot({
+    plot(x = Data[,input$channel_x], y = Data[,input$channel_y], pch = 19, col = scales::alpha("black", 0.2),
+         xlab = input$channel_x, ylab = input$channel_y, cex = 0.7) # inherit transform chosen and parameter choice/alter the Data directly when transform is applied with button, when button is selected, first take Data back to pre-transform then apply transform
   })
 }
 
