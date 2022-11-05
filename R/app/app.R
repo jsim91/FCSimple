@@ -49,7 +49,6 @@ ui <- fluidPage(theme = shinytheme("yeti"),
                            mainPanel(
                              plotOutput("sample_umap")
                            ))
-                           # actionButton(inputId = "umap_button", label = "calculate sample UMAP"))
                 )
 )
 
