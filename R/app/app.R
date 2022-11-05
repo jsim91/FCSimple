@@ -5,7 +5,7 @@ library(flowWorkspace)
 library(flowCore)
 library(scales)
 
-# to do: store final transform values, insert button that will allow the parameters chosen to be stored;
+# to do: store final transform values, save out transform parameters;
 # allow user to update these values every time the button is pressed; finally, apply transform to data set
 # and produce an output with the transform values used, allow an option to parse this output for future
 # transform setting on files using identical panels, ensures consistency and streamlines workflow consider
@@ -126,35 +126,6 @@ server <- function(input, output) {
       }
     }
   })
-  # observeEvent(input$apply_transform, {
-  #   chosen_channel <- input$channel
-  #   if(input$transform_type=="linear") {
-  #     param_list <- list(algo = input$transform_type)
-  #   } else if(input$transform_type=="asinh") {
-  #     param_list <- list(
-  #       algo = input$transform_type,
-  #       chosen_cof <- input$cofactor
-  #     )
-  #   } else if(input$transform_type=="biexponential") {
-  #     param_list <- list(
-  #       algo = input$transform_type,
-  #       chosen_p <- input$biexp_pos,
-  #       chosen_n <- input$biexp_neg,
-  #       chosen_w <- input$biexp_width
-  #     )
-  #   } else if(input$transform_type=="hyperlog") {
-  #     param_list <- list(
-  #       algo = input$transform_type,
-  #       chosen_t <- input$hyperlog_T,
-  #       chosen_m <- input$hyperlog_M,
-  #       chosen_w <- input$hyperlog_W,
-  #       chosen_a <- input$hyperlog_A
-  #     )
-  #   }
-  #   hold_parameters[[chosen_channel]] <- param_list
-  #   # textLog(paste0(textLog(),"\n",unlist(hold_parameters[[chosen_channel]])))
-  # })
-
   chosen_transf <- eventReactive(input$apply_transform, {
     if(is.null(input$transform_type)) {
       return("")
