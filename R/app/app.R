@@ -4,6 +4,9 @@ library(shinythemes)
 library(flowWorkspace)
 library(flowCore)
 library(scales)
+library(flowCore)
+library(parallel)
+library(uwot)
 
 # to do: store final transform values, save out transform parameters;
 # allow user to update these values every time the button is pressed; finally, apply transform to data set
@@ -38,8 +41,16 @@ ui <- fluidPage(theme = shinytheme("yeti"),
                              uiOutput("transform_text")
                            )),
                   tabPanel("selected transforms",
-                           tableOutput("parameter_df")
-                ))
+                           tableOutput("parameter_df")),
+                  tabPanel("UMAP preview",
+                           sidebarPanel(
+                             actionButton(inputId = "umap_button", label = "calculate sample UMAP"),
+                           ),
+                           mainPanel(
+                             plotOutput("sample_umap")
+                           ))
+                           # actionButton(inputId = "umap_button", label = "calculate sample UMAP"))
+                )
 )
 
 # Define server logic ----
@@ -203,8 +214,47 @@ server <- function(input, output) {
            xlab = input$channel_x, ylab = input$channel_y, cex = 0.7) # inherit transform chosen and parameter choice/alter the Data directly when transform is applied with button, when button is selected, first take Data back to pre-transform then apply transform
     }
   })
+  output$transform_text <- renderText({
+    chosen_transf()
+  })
+  calc_umap <- eventReactive(input$umap_button, {
+    if(is.null(input$transform_type)) {
+      return(NULL)
+    } else {
+      set.seed(123)
+      Data_dynamic <- Data[sample(1:nrow(Data),size=10000,replace=F),]
+      for(i in 1:ncol(param_settings$reactive_data)) {
+        if(any(is.na(param_settings$reactive_data[1,i]),param_settings$reactive_data[1,i]=="linear")) {
+          Data_dynamic[,i] <- Data_dynamic[,i]
+        } else if(param_settings$reactive_data[1,i]=="asinh") {
+          Data_dynamic[,i] <- asinh(Data_dynamic[,i]/as.numeric(param_settings$reactive_data[2,i]))
+        } else if(param_settings$reactive_data[1,i]=="biexponential") {
+          Data_dynamic[,i] <- flowWorkspace::flowjo_biexp(pos = as.numeric(param_settings$reactive_data[3,i]),
+                                                          neg = as.numeric(param_settings$reactive_data[4,i]),
+                                                          widthBasis = as.numeric(param_settings$reactive_data[5,i]))(Data_dynamic[,i])
+        } else if(param_settings$reactive_data[1,i]=="hyperlog") {
+          fs_data <- as.data.frame(Data_dynamic[,i]); colnames(fs_data) <- colnames(Data_dynamic)[i]
+          tmp_fs <- new("flowFrame",exprs=as.matrix(fs_data))
+          transform_FUN <- flowCore::hyperlogtGml2(parameters = flowCore::colnames(tmp_fs)[1],
+                                                   T = as.numeric(param_settings$reactive_data[6,i]),
+                                                   M = as.numeric(param_settings$reactive_data[7,i]),
+                                                   W = as.numeric(param_settings$reactive_data[8,i]),
+                                                   A = as.numeric(param_settings$reactive_data[9,i]))
+          Data_dynamic[,i] <- eval(transform_FUN)(exprs(tmp_fs))
+        }
+      }
+      return(map <- uwot::umap(X = Data_dynamic, init = "spca", min_dist = 0.1, n_threads = parallel::detectCores(), verbose = TRUE))
+    }
+  })
+  output$sample_umap <- renderPlot({ # allow color by channel
+    plot_data <- calc_umap()
+    if(is.null(plot_data)) {
+      plot.new()
+    } else {
+      plot(plot_data)
+    }
+  })
   output$parameter_df <- renderTable(t(param_settings$reactive_data), rownames = TRUE)
-
 }
 
 # Run the app ---- # this will be changed later so that the app is called from fcs_join with runApp
