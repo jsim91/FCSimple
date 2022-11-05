@@ -37,7 +37,7 @@ ui <- fluidPage(theme = shinytheme("yeti"),
                              hr(),
                              uiOutput("transform_text")
                            )),
-                  tabPanel("transform history",
+                  tabPanel("selected transforms",
                            tableOutput("parameter_df")
                 ))
 )
@@ -45,6 +45,7 @@ ui <- fluidPage(theme = shinytheme("yeti"),
 # Define server logic ----
 server <- function(input, output) {
   Data <- read.csv("E:/sample_FCS/test_data.csv", check.names = FALSE)
+  Data_dynamic <- Data
   param_df <- as.data.frame(matrix(data = NA,nrow=9,ncol=ncol(Data)))
   colnames(param_df) <- colnames(Data)
   row.names(param_df) <- c("algo","asinh_cofactor","biexp_pos","biexp_neg","biexp_width",
@@ -132,57 +133,70 @@ server <- function(input, output) {
     } else {
       tmp_transform_choice <- input$transform_type
       if(input$transform_type=="linear") {
-        return(paste0(input$channel,": ",tmp_transform_choice))
+        return(paste0(input$channel,":",tmp_transform_choice))
       } else if(input$transform_type=="asinh") {
         tmp_cof <- input$cofactor
-        return(paste0(input$channel,": ",tmp_transform_choice," - ",tmp_cof))
+        return(paste0(input$channel,":",tmp_transform_choice,",",tmp_cof))
       } else if(input$transform_type=="biexponential") {
         tmp_pos <- input$biexp_pos
         tmp_neg <- input$biexp_neg
         tmp_wid <- (10^input$biexp_width)*-1
-        return(paste0(input$channel,": ",tmp_transform_choice," - ",tmp_pos," - ",tmp_neg," - ",tmp_wid))
+        return(paste0(input$channel,":",tmp_transform_choice,",",tmp_pos,",",tmp_neg,",",tmp_wid))
       } else if(input$transform_type=="hyperlog") {
         tmp_t <- input$hyperlog_T
         tmp_m <- input$hyperlog_M
         tmp_w <- input$hyperlog_W
         tmp_a <- input$hyperlog_A
-        return(paste0(input$channel,": ",tmp_transform_choice," - ",tmp_t," - ",tmp_m," - ",tmp_w," - ",tmp_a))
+        return(paste0(input$channel,":",tmp_transform_choice,",",tmp_t,",",tmp_m,",",tmp_w,",",tmp_a))
       }
     }
   })
   output$transform_text <- renderText({
     chosen_transf()
   })
-  insert_values <- eventReactive(input$apply_transform, {
-    if(is.null(input$transform_type)) {
-      return("")
-    } else {
-      tmp_transform_choice <- input$transform_type
-      if(input$transform_type=="linear") {
-        return(paste0(input$channel,",",tmp_transform_choice))
-      } else if(input$transform_type=="asinh") {
-        tmp_cof <- input$cofactor
-        return(paste0(input$channel,",",tmp_transform_choice,",",tmp_cof))
-      } else if(input$transform_type=="biexponential") {
-        tmp_pos <- input$biexp_pos
-        tmp_neg <- input$biexp_neg
-        tmp_wid <- (10^input$biexp_width)*-1
-        return(paste0(input$channel,",",tmp_transform_choice,",",tmp_pos,",",tmp_neg,",",tmp_wid))
-      } else if(input$transform_type=="hyperlog") {
-        tmp_t <- input$hyperlog_T
-        tmp_m <- input$hyperlog_M
-        tmp_w <- input$hyperlog_W
-        tmp_a <- input$hyperlog_A
-        return(paste0(input$channel,",",tmp_transform_choice,",",tmp_t,",",tmp_m,",",tmp_w,",",tmp_a))
-      }
+  observeEvent(input$apply_transform, {
+    insert_channel <- gsub("\\:((linear|asinh|biexponential|hyperlog)|(linear|asinh|biexponential|hyperlog).+$)","",chosen_transf())
+    col_index <- which(colnames(param_settings$reactive_data)==insert_channel)
+    if(input$transform_type=="linear") { # if transform isn't edited currently, values default to linear, table should reflect this, consider changing default value to asinh
+      param_settings$reactive_data[,col_index] <- c("linear",rep(NA,8))
+    } else if(input$transform_type=="asinh") {
+      param_settings$reactive_data[,col_index] <- c("asinh",input$cofactor,rep(NA,7))
+    } else if(input$transform_type=="biexponential") {
+      param_settings$reactive_data[,col_index] <- c("biexponential",NA,input$biexp_pos,input$biexp_neg,input$biexp_width,rep(NA,4))
+    } else if(input$transform_type=="hyperlog") {
+      param_settings$reactive_data[,col_index] <- c("hyperlog",rep(NA,4),input$hyperlog_T,input$hyperlog_M,input$hyperlog_W,input$hyperlog_A)
     }
   })
-  observeEvent(input$apply_transform, {
-    insert_channel <- gsub(",.*$","",insert_values())
-    col_index <- which(colnames(param_settings$reactive_data)==insert_channel)
-    param_settings$reactive_data[1,col_index] <- insert_values()
-    param_settings$reactive_data <- param_settings$reactive_data
-  })
+
+  # update_2d should be able to draw from param_settings$reactive_data
+  # update_2d <- eventReactive(input$apply_plot, {
+  #   if(is.null(input$transform_type)) {
+  #     return(NULL) # should return the initial plot based on initial values
+  #   } else {
+  #     tmp_transform_choice <- input$transform_type
+  #     if(input$transform_type=="linear") {
+  #       return(paste0(input$channel,": ",tmp_transform_choice))
+  #     } else if(input$transform_type=="asinh") {
+  #       tmp_cof <- input$cofactor
+  #       return(paste0(input$channel,": ",tmp_transform_choice," - ",tmp_cof))
+  #     } else if(input$transform_type=="biexponential") {
+  #       tmp_pos <- input$biexp_pos
+  #       tmp_neg <- input$biexp_neg
+  #       tmp_wid <- (10^input$biexp_width)*-1
+  #       return(paste0(input$channel,": ",tmp_transform_choice," - ",tmp_pos," - ",tmp_neg," - ",tmp_wid))
+  #     } else if(input$transform_type=="hyperlog") {
+  #       tmp_t <- input$hyperlog_T
+  #       tmp_m <- input$hyperlog_M
+  #       tmp_w <- input$hyperlog_W
+  #       tmp_a <- input$hyperlog_A
+  #       return(paste0(input$channel,": ",tmp_transform_choice," - ",tmp_t," - ",tmp_m," - ",tmp_w," - ",tmp_a))
+  #     }
+  #   }
+  # })
+  # output$transform_text <- renderPlot({
+  #   update_2d()
+  # })
+
   output$biax <- renderPlot({
     if(!is.null(input$transform_type)) {
       plot(x = Data[,input$channel_x], y = Data[,input$channel_y], pch = 19, col = scales::alpha("black", 0.2),
@@ -190,6 +204,7 @@ server <- function(input, output) {
     }
   })
   output$parameter_df <- renderTable(t(param_settings$reactive_data), rownames = TRUE)
+
 }
 
 # Run the app ---- # this will be changed later so that the app is called from fcs_join with runApp
