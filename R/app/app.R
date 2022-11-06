@@ -25,7 +25,9 @@ ui <- fluidPage(theme = shinytheme("yeti"),
                              uiOutput("transform_type"),
                              uiOutput("hyperparameters"),
                              hr(),
-                             actionButton(inputId = "apply_transform", label = "apply transform"),
+                             actionButton(inputId = "apply_transform", label = "apply transform to channel"),
+                             hr(),
+                             actionButton(inputId = "apply_transform_all", label = "apply transform to all"),
                              hr(),
                              uiOutput("channel_x"),
                              uiOutput("channel_y"),
@@ -177,8 +179,32 @@ server <- function(input, output) {
       param_settings$reactive_data[,col_index] <- c("hyperlog",rep(NA,4),input$hyperlog_T,input$hyperlog_M,input$hyperlog_W,input$hyperlog_A)
     }
   })
-
-  # update_2d should be able to draw from param_settings$reactive_data
+  observeEvent(input$apply_transform_all, {
+    # insert_channel <- gsub("\\:((linear|asinh|biexponential|hyperlog)|(linear|asinh|biexponential|hyperlog).+$)","",chosen_transf())
+    # col_index <- which(colnames(param_settings$reactive_data)==insert_channel)
+    if(input$transform_type=="linear") { # if transform isn't edited currently, values default to linear, table should reflect this, consider changing default value to asinh
+      param_settings$reactive_data <- param_df
+      param_settings$reactive_data[1,] <- rep("linear",ncol(param_settings$reactive_data))
+    } else if(input$transform_type=="asinh") {
+      param_settings$reactive_data <- param_df
+      param_settings$reactive_data[1,] <- rep("asinh",ncol(param_settings$reactive_data))
+      param_settings$reactive_data[which(row.names(param_settings$reactive_data)=="asinh_cofactor"),] <- rep(input$cofactor,ncol(param_settings$reactive_data))
+    } else if(input$transform_type=="biexponential") {
+      param_settings$reactive_data <- param_df
+      param_settings$reactive_data[1,] <- rep("biexponential",ncol(param_settings$reactive_data))
+      param_settings$reactive_data[which(row.names(param_settings$reactive_data)=="biexp_pos"),] <- rep(input$biexp_pos,ncol(param_settings$reactive_data))
+      param_settings$reactive_data[which(row.names(param_settings$reactive_data)=="biexp_neg"),] <- rep(input$biexp_neg,ncol(param_settings$reactive_data))
+      param_settings$reactive_data[which(row.names(param_settings$reactive_data)=="biexp_width"),] <- rep(input$biexp_width,ncol(param_settings$reactive_data))
+    } else if(input$transform_type=="hyperlog") {
+      param_settings$reactive_data <- param_df
+      param_settings$reactive_data[1,] <- rep("hyperlog",ncol(param_settings$reactive_data))
+      param_settings$reactive_data[which(row.names(param_settings$reactive_data)=="hyperlog_T"),] <- rep(input$hyperlog_T,ncol(param_settings$reactive_data))
+      param_settings$reactive_data[which(row.names(param_settings$reactive_data)=="hyperlog_M"),] <- rep(input$hyperlog_M,ncol(param_settings$reactive_data))
+      param_settings$reactive_data[which(row.names(param_settings$reactive_data)=="hyperlog_W"),] <- rep(input$hyperlog_W,ncol(param_settings$reactive_data))
+      param_settings$reactive_data[which(row.names(param_settings$reactive_data)=="hyperlog_A"),] <- rep(input$hyperlog_A,ncol(param_settings$reactive_data))
+    }
+  })
+  # update_2d should be able to draw from param_settings$reactive_data, or perhaps use the same approach as with calc_umap (defined below) -- similar idea there
   # update_2d <- eventReactive(input$apply_plot, {
   #   if(is.null(input$transform_type)) {
   #     return(NULL) # should return the initial plot based on initial values
@@ -250,7 +276,7 @@ server <- function(input, output) {
     if(is.null(plot_data)) {
       plot.new()
     } else {
-      plot(plot_data)
+      plot(plot_data, pch = 19, col = scales::alpha("black",0.1), cex = 0.7, asp = 1, xlab = "UMAP1", ylab = "UMAP2")
     }
   })
   output$parameter_df <- renderTable(t(param_settings$reactive_data), rownames = TRUE)
