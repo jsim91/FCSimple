@@ -1,5 +1,6 @@
 fcs_join <- function(files, use_ncdf = FALSE,
                      apply_transform = TRUE,
+                     outdir = getwd(),
                      instrument_type = c("cytof","flow"),
                      use_descriptive_column_names = TRUE,
                      transform_function = NULL,
@@ -147,13 +148,22 @@ fcs_join <- function(files, use_ncdf = FALSE,
         print("Unable to use descriptive column names. Using original names.")
       }
     }
+    temp_files <- list.files(path = paste0(system.file(package = "FCSimple"),"/temp_files/"), full.names = TRUE, recursive = TRUE)
+    if(length(temp_files)!=0) { # remove any files present here, make sure folder stays clean
+      file.remove(temp_files)
+
+    }
     if(nrow(tmp_data)>50000) {
       set.seed(123)
-      write.csv(x = tmp_data[sample(1:nrow(tmp_data),size=50000,replace=F),], file = "E:/sample_FCS/test_data.csv", row.names = FALSE)
+      write.csv(x = tmp_data[sample(1:nrow(tmp_data),size=50000,replace=F),],
+                file = paste0(system.file(package = "FCSimple"),"/temp_files/tmp_data.csv"), row.names = FALSE)
     } else {
-      write.csv(x = tmp_data,file = "E:/sample_FCS/test_data.csv")
+      write.csv(x = tmp_data,file = paste0(system.file(package = "FCSimple"),"/temp_files/tmp_data.csv"), row.names = FALSE)
     }
-    library(shiny)
-    runApp(paste0(system.file(package = "FCSimple"),"/R/app"))
+    require(shiny)
+    # runApp(appDir = paste0(system.file(package = "FCSimple"),"/R/app"))
+    runApp(appDir = "E:/FCSimple/FCSimple/inst/transform_app")
+    # shiny::runApp(appDir = file.path(system.file(package = "FCSimple"), "transform_app"))
+    # print("test print")
   }
 }

@@ -1,73 +1,8 @@
 #appR
-library(shiny)
-library(shinythemes)
-library(flowWorkspace)
-library(flowCore)
-library(scales)
-library(flowCore)
-library(parallel)
-library(uwot)
-
-# to do: store final transform values, save out transform parameters;
-# allow user to update these values every time the button is pressed; finally, apply transform to data set
-# and produce an output with the transform values used, allow an option to parse this output for future
-# transform setting on files using identical panels, ensures consistency and streamlines workflow consider
-# a json format or a csv file with columns channel names, and rows parameters, perhaps a row for alternate
-# names, such as fluorochrome + marker or metal + marker to allow for more robust matching of future panels
-
-# Define UI ----
-ui <- fluidPage(theme = shinytheme("yeti"),
-                navbarPage(
-                  "FCSimple Transformer",
-                  tabPanel("Transform",
-                           sidebarPanel(
-                             uiOutput("channel"),
-                             uiOutput("transform_type"),
-                             uiOutput("hyperparameters"),
-                             hr(),
-                             actionButton(inputId = "apply_transform", label = "apply transform to channel"),
-                             hr(),
-                             actionButton(inputId = "apply_transform_all", label = "apply transform to all"),
-                             hr(),
-                             uiOutput("channel_x"),
-                             uiOutput("channel_y"),
-                             actionButton(inputId = "apply_plot", label = "update 2d plot")
-                           ),
-                           mainPanel(
-                             plotOutput("densPlot"),
-                             textOutput("dens_hyperlog_error"),
-                             textOutput("dens_asinh_error"),
-                             hr(),
-                             plotOutput("render_2d_plot")
-                             # hr(),
-                             # uiOutput("transform_text")
-                           )),
-                  tabPanel("Selected Transforms",
-                           tableOutput("parameter_df")),
-                  tabPanel("UMAP Preview",
-                           sidebarPanel(
-                             uiOutput("init_input"),
-                             uiOutput("min_dist_input"),
-                             uiOutput("spread_input"),
-                             uiOutput("neighbors_input"),
-                             actionButton(inputId = "umap_button", label = "calculate sample UMAP"),
-                           ),
-                           mainPanel(
-                             plotOutput("sample_umap")
-                           )),
-                  tabPanel("Finalize",
-                           mainPanel(
-                             column(12, align = "center",
-                               uiOutput("warning_message"),
-                               hr(),
-                               actionButton(inputId = "finalize_transform", label = "finalize transformation choices")
-                             )
-                           ))
-                )
-)
 
 # Define server logic ----
-server <- function(input, output) {
+# server <- function(input, output) {
+function(input,output) {
   Data <- read.csv("E:/sample_FCS/test_data.csv", check.names = FALSE)
   Data_dynamic <- Data
   param_df <- as.data.frame(matrix(data = NA,nrow=9,ncol=ncol(Data)))
@@ -193,12 +128,6 @@ server <- function(input, output) {
   # })
   output$warning_message <- renderText({
     "Clicking finalize will lock in the transform values. Are you sure you want to continue?"
-  })
-  calc_umap <- eventReactive(input$finalize_transform, {
-    "" # placeholder value
-    # this function defines what happens when the finalize button is clicked
-    # transform choices should be passed along and used to apply the transforms to the user's data set
-    # the app should close
   })
   observeEvent(input$apply_transform, {
     insert_channel <- gsub("\\:((linear|asinh|biexponential|hyperlog)|(linear|asinh|biexponential|hyperlog).+$)","",chosen_transf())
@@ -331,9 +260,28 @@ server <- function(input, output) {
       plot(plot_data, pch = 19, col = scales::alpha("black",0.1), cex = 0.7, asp = 1, xlab = "UMAP1", ylab = "UMAP2")
     }
   })
+  finalize <- eventReactive(input$finalize_transform, {
+    # write transform choices to file, include a line to remove files in temp directory before exiting fcj_join function
+    transform_algo_chosen <- param_settings$reactive_data[1,]
+    if(sum(is.na(transform_algo_chosen))!=0) {
+      showModal(modalDialog(
+        title = "Error: no transform selected for one or more channels",
+        "Check 'Selected Transforms' tab. Algo column should not have any NA values.", easyClose = TRUE
+      ))
+    } else {
+      write.csv(param_settings$reactive_data, file = paste0(system.file(package = "FCSimple"),"/temp_files/tmp_transform_values.csv"), row.names = FALSE)
+      showModal(modalDialog(
+        title = "Transformation complete!",
+        "Close app by clicking the X in the top right corner.", easyClose = FALSE)
+      )
+    }
+    # placeholder value
+    # this function defines what happens when the finalize button is clicked
+    # transform choices should be passed along and used to apply the transforms to the user's data set
+    # the app should close
+  })
+  observeEvent(input$finalize_transform, {
+    finalize()
+  })
   output$parameter_df <- renderTable(t(param_settings$reactive_data), rownames = TRUE)
 }
-
-# Run the app ---- # this will be changed later so that the app is called from fcs_join with runApp
-shinyApp(ui = ui, server = server)
-
