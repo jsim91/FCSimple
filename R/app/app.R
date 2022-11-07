@@ -18,8 +18,8 @@ library(uwot)
 # Define UI ----
 ui <- fluidPage(theme = shinytheme("yeti"),
                 navbarPage(
-                  "FCSimple transformer",
-                  tabPanel("transform",
+                  "FCSimple Transformer",
+                  tabPanel("Transform",
                            sidebarPanel(
                              uiOutput("channel"),
                              uiOutput("transform_type"),
@@ -38,18 +38,30 @@ ui <- fluidPage(theme = shinytheme("yeti"),
                              textOutput("dens_hyperlog_error"),
                              textOutput("dens_asinh_error"),
                              hr(),
-                             plotOutput("biax"),
-                             hr(),
-                             uiOutput("transform_text")
+                             plotOutput("render_2d_plot")
+                             # hr(),
+                             # uiOutput("transform_text")
                            )),
-                  tabPanel("selected transforms",
+                  tabPanel("Selected Transforms",
                            tableOutput("parameter_df")),
-                  tabPanel("UMAP preview",
+                  tabPanel("UMAP Preview",
                            sidebarPanel(
+                             uiOutput("init_input"),
+                             uiOutput("min_dist_input"),
+                             uiOutput("spread_input"),
+                             uiOutput("neighbors_input"),
                              actionButton(inputId = "umap_button", label = "calculate sample UMAP"),
                            ),
                            mainPanel(
                              plotOutput("sample_umap")
+                           )),
+                  tabPanel("Finalize",
+                           mainPanel(
+                             column(12, align = "center",
+                               uiOutput("warning_message"),
+                               hr(),
+                               actionButton(inputId = "finalize_transform", label = "finalize transformation choices")
+                             )
                            ))
                 )
 )
@@ -93,6 +105,19 @@ server <- function(input, output) {
   })
   output$channel_y <- renderUI({
     selectInput("channel_y", h5("y-axis channel"), choices = colnames(Data))
+  })
+  output$init_input <- renderUI({
+    selectInput("init_input", h5("UMAP init"), choices = c("spectral","normlaplacian","random","lvrandom","laplacian",
+                                                           "pca","spca","agspectral"), selected = "spca")
+  })
+  output$min_dist_input <- renderUI({
+    numericInput("min_dist_input", h5("UMAP min dist (0.0001 - 3)"), value = 0.1, min = 0.0001, max = 3)
+  })
+  output$spread_input <- renderUI({
+    numericInput("spread_input", h5("UMAP spread (0.25 - 3)"), value = 1, min = 0.25, max = 3)
+  })
+  output$neighbors_input <- renderUI({
+    numericInput("neighbors_input", h5("UMAP neighbors (5 - 200)"), value = 30, min = 5, max = 200)
   })
   output$densPlot <- renderPlot({
     if(!is.null(input$channel)) {
@@ -163,8 +188,17 @@ server <- function(input, output) {
       }
     }
   })
-  output$transform_text <- renderText({
-    chosen_transf()
+  # output$transform_text <- renderText({
+  #   chosen_transf()
+  # })
+  output$warning_message <- renderText({
+    "Clicking finalize will lock in the transform values. Are you sure you want to continue?"
+  })
+  calc_umap <- eventReactive(input$finalize_transform, {
+    "" # placeholder value
+    # this function defines what happens when the finalize button is clicked
+    # transform choices should be passed along and used to apply the transforms to the user's data set
+    # the app should close
   })
   observeEvent(input$apply_transform, {
     insert_channel <- gsub("\\:((linear|asinh|biexponential|hyperlog)|(linear|asinh|biexponential|hyperlog).+$)","",chosen_transf())
@@ -204,43 +238,59 @@ server <- function(input, output) {
       param_settings$reactive_data[which(row.names(param_settings$reactive_data)=="hyperlog_A"),] <- rep(input$hyperlog_A,ncol(param_settings$reactive_data))
     }
   })
-  # update_2d should be able to draw from param_settings$reactive_data, or perhaps use the same approach as with calc_umap (defined below) -- similar idea there
-  # update_2d <- eventReactive(input$apply_plot, {
-  #   if(is.null(input$transform_type)) {
-  #     return(NULL) # should return the initial plot based on initial values
-  #   } else {
-  #     tmp_transform_choice <- input$transform_type
-  #     if(input$transform_type=="linear") {
-  #       return(paste0(input$channel,": ",tmp_transform_choice))
-  #     } else if(input$transform_type=="asinh") {
-  #       tmp_cof <- input$cofactor
-  #       return(paste0(input$channel,": ",tmp_transform_choice," - ",tmp_cof))
-  #     } else if(input$transform_type=="biexponential") {
-  #       tmp_pos <- input$biexp_pos
-  #       tmp_neg <- input$biexp_neg
-  #       tmp_wid <- (10^input$biexp_width)*-1
-  #       return(paste0(input$channel,": ",tmp_transform_choice," - ",tmp_pos," - ",tmp_neg," - ",tmp_wid))
-  #     } else if(input$transform_type=="hyperlog") {
-  #       tmp_t <- input$hyperlog_T
-  #       tmp_m <- input$hyperlog_M
-  #       tmp_w <- input$hyperlog_W
-  #       tmp_a <- input$hyperlog_A
-  #       return(paste0(input$channel,": ",tmp_transform_choice," - ",tmp_t," - ",tmp_m," - ",tmp_w," - ",tmp_a))
-  #     }
-  #   }
-  # })
-  # output$transform_text <- renderPlot({
-  #   update_2d()
-  # })
-
-  output$biax <- renderPlot({
-    if(!is.null(input$transform_type)) {
-      plot(x = Data[,input$channel_x], y = Data[,input$channel_y], pch = 19, col = scales::alpha("black", 0.2),
-           xlab = input$channel_x, ylab = input$channel_y, cex = 0.7) # inherit transform chosen and parameter choice/alter the Data directly when transform is applied with button, when button is selected, first take Data back to pre-transform then apply transform
+  twoD_plot <- eventReactive(input$apply_plot, {
+    if(!is.null(input$channel)) {
+      # x_channel <- input$channel_x; y_channel <- input$channel_y
+      transform_options <- c("linear","asinh","biexponential","hyperlog")
+      xcol <- which(colnames(param_settings$reactive_data)==input$channel_x); ycol <- which(colnames(param_settings$reactive_data)==input$channel_y)
+      in_data_x <- Data[,xcol]; in_data_y <- Data[,ycol]
+      in_hyperlog_x <- matrix(Data[,xcol]); colnames(in_hyperlog_x) <- "tmp_x"
+      in_hyperlog_y <- matrix(Data[,ycol]); colnames(in_hyperlog_y) <- "tmp_y"
+      get_x_transf <- param_settings$reactive_data[1,xcol]; get_y_transf <- param_settings$reactive_data[1,ycol]
+      transf_settings_x <- param_settings$reactive_data[-1,xcol]; transf_settings_y <- param_settings$reactive_data[-1,ycol]
+      if(all(!is.na(get_x_transf),!is.na(get_y_transf))) {
+        if(get_x_transf=="linear") {
+          x_data <- in_data_x
+        } else if(get_x_transf=="asinh") {
+          x_data <- base::asinh(in_data_x/as.numeric(transf_settings_x[1]))
+        } else if(get_x_transf=="biexponential") {
+          biexp_fun_x <- flowWorkspace::flowjo_biexp(pos = as.numeric(transf_settings_x[2]),
+                                                     neg = as.numeric(transf_settings_x[3]),
+                                                     widthBasis = (10^as.numeric(transf_settings_x[4]))*-1)
+          x_data <- biexp_fun_x(in_data_x)
+        } else if(get_x_transf=="hyperlog") {
+          # in the future, make apply transform button unclickable if hyperlogtGml2 function is invalid, see error messages when certain values are selected
+          # consider https://stackoverflow.com/questions/40621393/disabling-buttons-in-shiny
+          hyperlog_fun_x <- flowCore::hyperlogtGml2(parameters = "tmp_x", T = as.numeric(transf_settings_x[5]), M = as.numeric(transf_settings_x[6]),
+                                                    W = as.numeric(transf_settings_x[7]), A = as.numeric(transf_settings_x[8]))
+          x_data <- eval(hyperlog_fun_x)(in_hyperlog_x)
+        }
+        if(get_y_transf=="linear") {
+          y_data <- in_data_y
+        } else if(get_y_transf=="asinh") {
+          y_data <- base::asinh(in_data_y/as.numeric(transf_settings_y[1]))
+        } else if(get_y_transf=="biexponential") {
+          biexp_fun_y <- flowWorkspace::flowjo_biexp(pos = as.numeric(transf_settings_y[2]),
+                                                     neg = as.numeric(transf_settings_y[3]),
+                                                     widthBasis = (10^as.numeric(transf_settings_y[4]))*-1)
+          y_data <- biexp_fun_y(in_data_y)
+        } else if(get_y_transf=="hyperlog") {
+          # in the future, make apply transform button unclickable if hyperlogtGml2 function is invalid, see error messages when certain values are selected
+          # consider https://stackoverflow.com/questions/40621393/disabling-buttons-in-shiny
+          hyperlog_fun_y <- flowCore::hyperlogtGml2(parameters = "tmp_y", T = as.numeric(transf_settings_y[5]), M = as.numeric(transf_settings_y[6]),
+                                                    W = as.numeric(transf_settings_y[7]), A = as.numeric(transf_settings_y[8]))
+          y_data <- eval(hyperlog_fun_y)(in_hyperlog_y)
+        }
+        plot(x = x_data, y = y_data, pch = 19, col = scales::alpha("black", 0.2),
+             xlab = colnames(param_settings$reactive_data)[xcol],
+             ylab = colnames(param_settings$reactive_data)[ycol], cex = 0.7)
+        } else {
+          plot.new()
+        }
     }
   })
-  output$transform_text <- renderText({
-    chosen_transf()
+  output$render_2d_plot <- renderPlot({
+    twoD_plot()
   })
   calc_umap <- eventReactive(input$umap_button, {
     if(is.null(input$transform_type)) {
@@ -268,7 +318,9 @@ server <- function(input, output) {
           Data_dynamic[,i] <- eval(transform_FUN)(exprs(tmp_fs))
         }
       }
-      return(map <- uwot::umap(X = Data_dynamic, init = "spca", min_dist = 0.1, n_threads = parallel::detectCores(), verbose = TRUE))
+      return(map <- uwot::umap(X = Data_dynamic, init = input$init_input, min_dist = input$min_dist_input,
+                               n_threads = parallel::detectCores(), verbose = TRUE,
+                               n_neighbors = input$neighbors_input, spread = input$spread_input))
     }
   })
   output$sample_umap <- renderPlot({ # allow color by channel
