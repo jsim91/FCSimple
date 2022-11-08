@@ -14,6 +14,7 @@ fcs_join <- function(files,
                      hyperlog_transform_A = 2,
                      transform_per_channel = FALSE,
                      downsample_size = c(NA,20000)) {
+  require(flowCore)
   if(!transform_per_channel) {
     if(length(instrument_type)>1) {
       warning(paste0("Consider specifying 'instrument_type'. Default use is 'cytof'. If inputs are from a flow cytometer, use 'flow'. Using ",instrument_type[1]," for now."))
@@ -24,34 +25,30 @@ fcs_join <- function(files,
       transform_type <- transform_type[1]
     }
   }
-  require(flowCore)
-  for(i in 1:length(files)){
-    tmp_fcs <- flowCore::read.FCS(files[i], which.lines = 1)
-    names(files)[i] <- tmp_fcs@description$`$TOT`
-  }
-  fs <- read.flowSet(files = files, which.lines = 1:10)
-  if(!is.na(downsample_size)) {
-    for(i in 1:length(fs)) {
-      set.seed(123)
-      if(as.numeric(names(files)[i])>downsample_size) {
-        set.seed(123)
-        fs[[i]] <- read.FCS(filename = files[i],
-                            which.lines = sample(1:as.numeric(names(files)[i]),size = downsample_size, replace = FALSE),
-                            truncate_max_range = FALSE)
-      } else {
-        fs[[i]] <- read.FCS(filename = files[i], truncate_max_range = FALSE)
-      }
-    }
-  }
-  # if(use_ncdf) {
-  #   require(ncdfFlow)
-  # }
   if(length(x = grep(pattern = "\\.fcs$", x = files, ignore.case = TRUE))!=length(files)) {
     files <- files[grep(pattern = "\\.fcs$", x = files, ignore.case = TRUE)]
     if(length(files)==0) {
       stop("error in argument 'files': No files with extension 'fcs' or 'FCS' found")
     }
   }
+  if(!is.na(downsample_size)) {
+    fcs_list <- vector("list", length = length(files)); names(fcs_list) <- files
+    for(i in 1:length(fcs_list)) {
+      tmp_fcs <- read.FCS(filename = files[i], truncate_max_range = FALSE)
+      if(nrow(tmp_fcs)>downsample_size) {
+        set.seed(123)
+        fcs_list[[i]] <- tmp_fcs[sample(1:nrow(tmp_fcs),downsample_size,replace=FALSE),]
+      } else {
+        fcs_list[[i]] <- tmp_fcs
+      }
+    }
+    fs <- flowSet(fcs_list)
+  } else {
+    fs <- flowCore::read.flowSet(files = files, truncate_max_range = FALSE)
+  }
+  # if(use_ncdf) {
+  #   require(ncdfFlow)
+  # }
   # if(use_ncdf) {
   #   fs <- ncdfFlow::read.ncdfFlowSet(files = files)
   # } else {
@@ -138,7 +135,7 @@ fcs_join <- function(files,
       if(length(desc_names)==ncol(tmp_data)) {
         colnames(tmp_data) <- desc_names
       } else {
-        print("Unable to use descriptive column names. Using original names.")
+        print("Unable to find descriptive column names. Using original names.")
       }
     }
     if(length(grep("DATE|date|Date",names(fs[[1]]@description)))!=0) {
@@ -163,7 +160,7 @@ fcs_join <- function(files,
       if(length(desc_names)==ncol(tmp_data)) {
         colnames(tmp_data) <- desc_names
       } else {
-        print("Unable to use descriptive column names. Using original names.")
+        print("Unable to find descriptive column names. Using original names.")
       }
     }
     temp_files <- list.files(path = paste0(system.file(package = "FCSimple"),"/temp_files/"), full.names = TRUE, recursive = TRUE)
@@ -173,8 +170,8 @@ fcs_join <- function(files,
     }
     if(nrow(tmp_data)>50000) {
       set.seed(123)
-      # write.csv(x = tmp_data[sample(1:nrow(tmp_data),size=50000,replace=F),],
-      #           file = paste0(system.file(package = "FCSimple"),"/temp_files/tmp_data.csv"), row.names = FALSE)
+      write.csv(x = tmp_data[sample(1:nrow(tmp_data),size=50000,replace=F),],
+                file = paste0(system.file(package = "FCSimple"),"/temp_files/tmp_data.csv"), row.names = FALSE)
     } else {
       write.csv(x = tmp_data,file = paste0(system.file(package = "FCSimple"),"/temp_files/tmp_data.csv"), row.names = FALSE)
     }
@@ -197,14 +194,21 @@ fcs_join <- function(files,
       hyper_m <- parameter_settings[7,i]
       hyper_w <- parameter_settings[8,i]
       hyper_a <- parameter_settings[9,i]
+      col_index <- which(colnames(tmp_data)==colnames(parameter_settings)[i])
       if(use_algo=="asinh") {
-        # transform channel by asinh
+        tmp_data[,col_index] <- asinh(tmp_data[,col_index]/cof)
       } else if(use_algo=="biexponential") {
-        # transform channel by biexponential
+        biexp_fun <- flowWorkspace::flowjo_biexp(pos = biexp_pos,
+                                                 neg = biexp_neg,
+                                                 widthBasis = (10^biexp_wid)*-1)
+        tmp_data[,col_index] <- biexp_fun(tmp_data[,col_index])
       } else if(use_algo=="hyperlog") {
-        # transform channel by hyperlog
+        hyperlog_fun <- flowCore::hyperlogtGml2(parameters = colnames(tmp_data)[col_index], T = hyper_t, M = hyper_m,
+                                                W = hyper_w, A = hyper_a)
+        tmp_data[,col_index] <- eval(hyperlog_fun)(tmp_data[,col_index])
       }
     }
-    return("") # return join object
+    return(list(data = tmp_data,
+                source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow))))) # return join object
   }
 }
