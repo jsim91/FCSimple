@@ -14,13 +14,15 @@ fcs_join <- function(files,
                      hyperlog_transform_A = 2,
                      transform_per_channel = FALSE,
                      downsample_size = c(NA,20000)) {
-  if(length(instrument_type)>1) {
-    warning(paste0("Consider specifying 'instrument_type'. Default use is 'cytof'. If inputs are from a flow cytometer, use 'flow'. Using ",instrument_type[1]," for now."))
-    instrument_type <- instrument_type[1]
-  }
-  if(length(transform_type)>1) {
-    warning(paste0("Consider specifying 'transform_type'. Default is 'asinh'. If undesirable, you can specify 'biexp' or 'hyperlog'. Using ",transform_type[1]," for now."))
-    transform_type <- transform_type[1]
+  if(!transform_per_channel) {
+    if(length(instrument_type)>1) {
+      warning(paste0("Consider specifying 'instrument_type'. Default use is 'cytof'. If inputs are from a flow cytometer, use 'flow'. Using ",instrument_type[1]," for now."))
+      instrument_type <- instrument_type[1]
+    }
+    if(length(transform_type)>1) {
+      warning(paste0("Consider specifying 'transform_type'. Default is 'asinh'. If undesirable, you can specify 'biexp' or 'hyperlog'. Using ",transform_type[1]," for now."))
+      transform_type <- transform_type[1]
+    }
   }
   require(flowCore)
   for(i in 1:length(files)){
@@ -181,13 +183,27 @@ fcs_join <- function(files,
     # runApp(appDir = "E:/FCSimple/FCSimple/inst/transform_app")
     shiny::runApp(appDir = file.path(system.file(package = "FCSimple"), "transform_app"))
     parameter_settings <- read.csv(file = paste0(system.file(package = "FCSimple"),"/temp_files/tmp_transform_values.csv"))
-    # temp_files <- list.files(path = paste0(system.file(package = "FCSimple"),"/temp_files/"), full.names = TRUE, recursive = TRUE)
-    # if(length(temp_files)!=0) { # remove any files present here, make sure folder stays clean
-    #   file.remove(temp_files)
-    # }
-    # for(i in 1:ncol(parameter_settings)) {
-    #
-    # }
-    # print("test print")
+    temp_files <- list.files(path = paste0(system.file(package = "FCSimple"),"/temp_files/"), full.names = TRUE, recursive = TRUE)
+    if(length(temp_files)!=0) { # remove any files present here, make sure folder stays clean
+      file.remove(temp_files)
+    }
+    for(i in 1:ncol(parameter_settings)) {
+      use_algo <- parameter_settings[1,i]
+      cof <- parameter_settings[2,i]
+      biexp_pos <- parameter_settings[3,i]
+      biexp_neg <- parameter_settings[4,i]
+      biexp_wid <- parameter_settings[5,i]
+      hyper_t <- parameter_settings[6,i]
+      hyper_m <- parameter_settings[7,i]
+      hyper_w <- parameter_settings[8,i]
+      hyper_a <- parameter_settings[9,i]
+      if(use_algo=="asinh") {
+        # transform channel by asinh
+      } else if(use_algo=="biexponential") {
+        # transform channel by biexponential
+      } else if(use_algo=="hyperlog") {
+        # transform channel by hyperlog
+      }
+    }
   }
 }
