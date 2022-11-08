@@ -271,17 +271,17 @@ function(input,output) {
     } else {
       # write.csv(param_settings$reactive_data, file = paste0(system.file(package = "FCSimple"),"/temp_files/tmp_transform_values.csv"), row.names = FALSE)
       Data_full <- read.csv("E:/sample_FCS/test_data.csv", check.names = FALSE)
-      for(i in 1:ncol(parameter_settings)) {
-        use_algo <- parameter_settings[1,i]
-        cof <- parameter_settings[2,i]
-        biexp_pos <- parameter_settings[3,i]
-        biexp_neg <- parameter_settings[4,i]
-        biexp_wid <- parameter_settings[5,i]
-        hyper_t <- parameter_settings[6,i]
-        hyper_m <- parameter_settings[7,i]
-        hyper_w <- parameter_settings[8,i]
-        hyper_a <- parameter_settings[9,i]
-        col_index <- which(colnames(Data_full)==colnames(parameter_settings)[i])
+      for(i in 1:ncol(param_settings$reactive_data)) {
+        use_algo <- param_settings$reactive_data[1,i]
+        cof <- param_settings$reactive_data[2,i]
+        biexp_pos <- param_settings$reactive_data[3,i]
+        biexp_neg <- param_settings$reactive_data[4,i]
+        biexp_wid <- param_settings$reactive_data[5,i]
+        hyper_t <- param_settings$reactive_data[6,i]
+        hyper_m <- param_settings$reactive_data[7,i]
+        hyper_w <- param_settings$reactive_data[8,i]
+        hyper_a <- param_settings$reactive_data[9,i]
+        col_index <- which(colnames(Data_full)==colnames(param_settings$reactive_data)[i])
         if(use_algo=="asinh") {
           Data_full[,col_index] <- asinh(Data_full[,col_index]/cof)
         } else if(use_algo=="biexponential") {
