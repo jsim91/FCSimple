@@ -175,40 +175,41 @@ fcs_join <- function(files,
     } else {
       write.csv(x = tmp_data,file = paste0(system.file(package = "FCSimple"),"/temp_files/tmp_data.csv"), row.names = FALSE)
     }
+    write.csv(x = tmp_data,file = paste0(system.file(package = "FCSimple"),"/temp_files/full_data.csv"), row.names = FALSE)
     require(shiny)
     # runApp(appDir = paste0(system.file(package = "FCSimple"),"/R/app"))
     # runApp(appDir = "E:/FCSimple/FCSimple/inst/transform_app")
     shiny::runApp(appDir = file.path(system.file(package = "FCSimple"), "transform_app"))
-    parameter_settings <- read.csv(file = paste0(system.file(package = "FCSimple"),"/temp_files/tmp_transform_values.csv"))
-    temp_files <- list.files(path = paste0(system.file(package = "FCSimple"),"/temp_files/"), full.names = TRUE, recursive = TRUE)
-    if(length(temp_files)!=0) { # remove any files present here, make sure folder stays clean
-      file.remove(temp_files)
-    }
-    for(i in 1:ncol(parameter_settings)) {
-      use_algo <- parameter_settings[1,i]
-      cof <- parameter_settings[2,i]
-      biexp_pos <- parameter_settings[3,i]
-      biexp_neg <- parameter_settings[4,i]
-      biexp_wid <- parameter_settings[5,i]
-      hyper_t <- parameter_settings[6,i]
-      hyper_m <- parameter_settings[7,i]
-      hyper_w <- parameter_settings[8,i]
-      hyper_a <- parameter_settings[9,i]
-      col_index <- which(colnames(tmp_data)==colnames(parameter_settings)[i])
-      if(use_algo=="asinh") {
-        tmp_data[,col_index] <- asinh(tmp_data[,col_index]/cof)
-      } else if(use_algo=="biexponential") {
-        biexp_fun <- flowWorkspace::flowjo_biexp(pos = biexp_pos,
-                                                 neg = biexp_neg,
-                                                 widthBasis = (10^biexp_wid)*-1)
-        tmp_data[,col_index] <- biexp_fun(tmp_data[,col_index])
-      } else if(use_algo=="hyperlog") {
-        hyperlog_fun <- flowCore::hyperlogtGml2(parameters = colnames(tmp_data)[col_index], T = hyper_t, M = hyper_m,
-                                                W = hyper_w, A = hyper_a)
-        tmp_data[,col_index] <- eval(hyperlog_fun)(tmp_data[,col_index])
-      }
-    }
-    return(list(data = tmp_data,
-                source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow))))) # return join object
+    # parameter_settings <- read.csv(file = paste0(system.file(package = "FCSimple"),"/temp_files/tmp_transform_values.csv"))
+    # temp_files <- list.files(path = paste0(system.file(package = "FCSimple"),"/temp_files/"), full.names = TRUE, recursive = TRUE)
+    # if(length(temp_files)!=0) { # remove any files present here, make sure folder stays clean
+    #   file.remove(temp_files)
+    # }
+    # for(i in 1:ncol(parameter_settings)) {
+    #   use_algo <- parameter_settings[1,i]
+    #   cof <- parameter_settings[2,i]
+    #   biexp_pos <- parameter_settings[3,i]
+    #   biexp_neg <- parameter_settings[4,i]
+    #   biexp_wid <- parameter_settings[5,i]
+    #   hyper_t <- parameter_settings[6,i]
+    #   hyper_m <- parameter_settings[7,i]
+    #   hyper_w <- parameter_settings[8,i]
+    #   hyper_a <- parameter_settings[9,i]
+    #   col_index <- which(colnames(tmp_data)==colnames(parameter_settings)[i])
+    #   if(use_algo=="asinh") {
+    #     tmp_data[,col_index] <- asinh(tmp_data[,col_index]/cof)
+    #   } else if(use_algo=="biexponential") {
+    #     biexp_fun <- flowWorkspace::flowjo_biexp(pos = biexp_pos,
+    #                                              neg = biexp_neg,
+    #                                              widthBasis = (10^biexp_wid)*-1)
+    #     tmp_data[,col_index] <- biexp_fun(tmp_data[,col_index])
+    #   } else if(use_algo=="hyperlog") {
+    #     hyperlog_fun <- flowCore::hyperlogtGml2(parameters = colnames(tmp_data)[col_index], T = hyper_t, M = hyper_m,
+    #                                             W = hyper_w, A = hyper_a)
+    #     tmp_data[,col_index] <- eval(hyperlog_fun)(tmp_data[,col_index])
+    #   }
+    # }
+    # return(list(data = tmp_data,
+    #             source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow))))) # this all has to happen within the app, app breaks out of function
   }
 }

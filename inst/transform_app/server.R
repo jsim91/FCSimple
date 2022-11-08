@@ -269,12 +269,38 @@ function(input,output) {
         "Check 'Selected Transforms' tab. Algo column should not have any NA values.", easyClose = TRUE
       ))
     } else {
-      write.csv(param_settings$reactive_data, file = paste0(system.file(package = "FCSimple"),"/temp_files/tmp_transform_values.csv"), row.names = FALSE)
+      # write.csv(param_settings$reactive_data, file = paste0(system.file(package = "FCSimple"),"/temp_files/tmp_transform_values.csv"), row.names = FALSE)
+      Data_full <- read.csv("E:/sample_FCS/test_data.csv", check.names = FALSE)
+      for(i in 1:ncol(parameter_settings)) {
+        use_algo <- parameter_settings[1,i]
+        cof <- parameter_settings[2,i]
+        biexp_pos <- parameter_settings[3,i]
+        biexp_neg <- parameter_settings[4,i]
+        biexp_wid <- parameter_settings[5,i]
+        hyper_t <- parameter_settings[6,i]
+        hyper_m <- parameter_settings[7,i]
+        hyper_w <- parameter_settings[8,i]
+        hyper_a <- parameter_settings[9,i]
+        col_index <- which(colnames(Data_full)==colnames(parameter_settings)[i])
+        if(use_algo=="asinh") {
+          Data_full[,col_index] <- asinh(Data_full[,col_index]/cof)
+        } else if(use_algo=="biexponential") {
+          biexp_fun <- flowWorkspace::flowjo_biexp(pos = biexp_pos,
+                                                   neg = biexp_neg,
+                                                   widthBasis = (10^biexp_wid)*-1)
+          Data_full[,col_index] <- biexp_fun(Data_full[,col_index])
+        } else if(use_algo=="hyperlog") {
+          hyperlog_fun <- flowCore::hyperlogtGml2(parameters = colnames(Data_full)[col_index], T = hyper_t, M = hyper_m,
+                                                  W = hyper_w, A = hyper_a)
+          Data_full[,col_index] <- eval(hyperlog_fun)(Data_full[,col_index])
+        }
+      }
       showModal(modalDialog(
         title = "Transformation complete!",
         "Close app by clicking the X in the top right corner.", easyClose = FALSE)
       )
     }
+    stopApp(returnValue = Data_full)
     # placeholder value
     # this function defines what happens when the finalize button is clicked
     # transform choices should be passed along and used to apply the transforms to the user's data set
