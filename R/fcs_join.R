@@ -28,38 +28,45 @@ fcs_join <- function(files, use_ncdf = FALSE,
     tmp_fcs <- flowCore::read.FCS(files[i], which.lines = 1)
     names(files)[i] <- tmp_fcs@description$`$TOT`
   }
-  # new
-  if(use_ncdf) {
-    require(ncdfFlow)
+  fs <- read.flowSet(files = files, which.lines = 1:10)
+  if(!is.na(downsample_size)) {
+    for(i in 1:length(fs)) {
+      set.seed(123)
+      if(as.numeric(names(files)[i])>downsample_size) {
+        set.seed(123)
+        fs[[i]] <- read.FCS(filename = files[i],
+                            which.lines = sample(1:as.numeric(names(files)[i]),size = downsample_size, replace = FALSE),
+                            truncate_max_range = FALSE)
+      } else {
+        fs[[i]] <- read.FCS(filename = files[i], truncate_max_range = FALSE)
+      }
+    }
   }
+  # if(use_ncdf) {
+  #   require(ncdfFlow)
+  # }
   if(length(x = grep(pattern = "\\.fcs$", x = files, ignore.case = TRUE))!=length(files)) {
     files <- files[grep(pattern = "\\.fcs$", x = files, ignore.case = TRUE)]
     if(length(files)==0) {
       stop("error in argument 'files': No files with extension 'fcs' or 'FCS' found")
     }
   }
-  if(use_ncdf) {
-    fs <- ncdfFlow::read.ncdfFlowSet(files = files)
-  } else {
-    fs <- flowCore::read.flowSet(files = files, truncate_max_range = FALSE)
-  }
-  if(!is.na(downsample_size)) {
-    for(i in 1:length(fs)) {
-      set.seed(123)
-      fs[[i]] <- fs[[i]][sample(1:nrow(fs[[i]]),size=downsample_size,replace=F),]
-    }
-  }
+  # if(use_ncdf) {
+  #   fs <- ncdfFlow::read.ncdfFlowSet(files = files)
+  # } else {
+  #   fs <- flowCore::read.flowSet(files = files, truncate_max_range = FALSE)
+  # }
   if(!transform_per_channel) {
     if(tolower(instrument_type)=="cytof") {
       if(is.null(asinh_transform_factor)) {
         asinh_transform_factor <- 5
       }
       transform_function <- transformList(flowCore::colnames(fs), function(x) return(asinh(x/asinh_transform_factor)))
-      if(use_ncdf) {
-        fst <- ncdfFlow::transform(fs, transform_function)
-      } else {
+      # if(use_ncdf) {
+      #   fst <- ncdfFlow::transform(fs, transform_function)
+      # } else {
         fst <- flowCore::transform(fs, transform_function)
-      }
+      # }
       for(i in 1:length(fst)) {
         if(i==1) {
           tmp_data <- flowCore::exprs(fst[[i]])
