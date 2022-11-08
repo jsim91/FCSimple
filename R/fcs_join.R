@@ -205,5 +205,6 @@ fcs_join <- function(files,
         # transform channel by hyperlog
       }
     }
+    return("") # return join object
   }
 }
