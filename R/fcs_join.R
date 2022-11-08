@@ -1,6 +1,5 @@
-fcs_join <- function(files, use_ncdf = FALSE,
+fcs_join <- function(files,
                      apply_transform = TRUE,
-                     outdir = getwd(),
                      instrument_type = c("cytof","flow"),
                      use_descriptive_column_names = TRUE,
                      transform_function = NULL,
