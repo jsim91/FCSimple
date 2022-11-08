@@ -13,31 +13,42 @@ fcs_join <- function(files, use_ncdf = FALSE,
                      hyperlog_transform_M = 5,
                      hyperlog_transform_W = 0.01,
                      hyperlog_transform_A = 2,
-                     transform_per_channel = FALSE) {
+                     transform_per_channel = FALSE,
+                     downsample_size = c(NA,20000)) {
+  if(length(instrument_type)>1) {
+    warning(paste0("Consider specifying 'instrument_type'. Default use is 'cytof'. If inputs are from a flow cytometer, use 'flow'. Using ",instrument_type[1]," for now."))
+    instrument_type <- instrument_type[1]
+  }
+  if(length(transform_type)>1) {
+    warning(paste0("Consider specifying 'transform_type'. Default is 'asinh'. If undesirable, you can specify 'biexp' or 'hyperlog'. Using ",transform_type[1]," for now."))
+    transform_type <- transform_type[1]
+  }
+  require(flowCore)
+  for(i in 1:length(files)){
+    tmp_fcs <- flowCore::read.FCS(files[i], which.lines = 1)
+    names(files)[i] <- tmp_fcs@description$`$TOT`
+  }
+  if(use_ncdf) {
+    require(ncdfFlow)
+  }
+  if(length(x = grep(pattern = "\\.fcs$", x = files, ignore.case = TRUE))!=length(files)) {
+    files <- files[grep(pattern = "\\.fcs$", x = files, ignore.case = TRUE)]
+    if(length(files)==0) {
+      stop("error in argument 'files': No files with extension 'fcs' or 'FCS' found")
+    }
+  }
+  if(use_ncdf) {
+    fs <- ncdfFlow::read.ncdfFlowSet(files = files)
+  } else {
+    fs <- flowCore::read.flowSet(files = files, truncate_max_range = FALSE)
+  }
+  if(!is.na(downsample_size)) {
+    for(i in 1:length(fs)) {
+      set.seed(123)
+      fs[[i]] <- fs[[i]][sample(1:nrow(fs[[i]]),size=downsample_size,replace=F),]
+    }
+  }
   if(!transform_per_channel) {
-    if(length(instrument_type)>1) {
-      warning(paste0("Consider specifying 'instrument_type'. Default use is 'cytof'. If inputs are from a flow cytometer, use 'flow'. Using ",instrument_type[1]," for now."))
-      instrument_type <- instrument_type[1]
-    }
-    if(length(transform_type)>1) {
-      warning(paste0("Consider specifying 'transform_type'. Default is 'asinh'. If undesirable, you can specify 'biexp' or 'hyperlog'. Using ",transform_type[1]," for now."))
-      transform_type <- transform_type[1]
-    }
-    require(flowCore)
-    if(use_ncdf) {
-      require(ncdfFlow)
-    }
-    if(length(x = grep(pattern = "\\.fcs$", x = files, ignore.case = TRUE))!=length(files)) {
-      files <- files[grep(pattern = "\\.fcs$", x = files, ignore.case = TRUE)]
-      if(length(files)==0) {
-        stop("error in argument 'files': No files with extension 'fcs' or 'FCS' found")
-      }
-    }
-    if(use_ncdf) {
-      fs <- ncdfFlow::read.ncdfFlowSet(files = files)
-    } else {
-      fs <- flowCore::read.flowSet(files = files, truncate_max_range = FALSE)
-    }
     if(tolower(instrument_type)=="cytof") {
       if(is.null(asinh_transform_factor)) {
         asinh_transform_factor <- 5
@@ -131,8 +142,6 @@ fcs_join <- function(files, use_ncdf = FALSE,
                   source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))))
     }
   } else {
-    require(flowCore)
-    fs <- flowCore::read.flowSet(files = files, truncate_max_range = FALSE)
     for(i in 1:length(fs)) {
       if(i==1) {
         tmp_data <- flowCore::exprs(object = fs[[i]])
@@ -155,15 +164,23 @@ fcs_join <- function(files, use_ncdf = FALSE,
     }
     if(nrow(tmp_data)>50000) {
       set.seed(123)
-      write.csv(x = tmp_data[sample(1:nrow(tmp_data),size=50000,replace=F),],
-                file = paste0(system.file(package = "FCSimple"),"/temp_files/tmp_data.csv"), row.names = FALSE)
+      # write.csv(x = tmp_data[sample(1:nrow(tmp_data),size=50000,replace=F),],
+      #           file = paste0(system.file(package = "FCSimple"),"/temp_files/tmp_data.csv"), row.names = FALSE)
     } else {
       write.csv(x = tmp_data,file = paste0(system.file(package = "FCSimple"),"/temp_files/tmp_data.csv"), row.names = FALSE)
     }
     require(shiny)
     # runApp(appDir = paste0(system.file(package = "FCSimple"),"/R/app"))
-    runApp(appDir = "E:/FCSimple/FCSimple/inst/transform_app")
-    # shiny::runApp(appDir = file.path(system.file(package = "FCSimple"), "transform_app"))
+    # runApp(appDir = "E:/FCSimple/FCSimple/inst/transform_app")
+    shiny::runApp(appDir = file.path(system.file(package = "FCSimple"), "transform_app"))
+    parameter_settings <- read.csv(file = paste0(system.file(package = "FCSimple"),"/temp_files/tmp_transform_values.csv"))
+    # temp_files <- list.files(path = paste0(system.file(package = "FCSimple"),"/temp_files/"), full.names = TRUE, recursive = TRUE)
+    # if(length(temp_files)!=0) { # remove any files present here, make sure folder stays clean
+    #   file.remove(temp_files)
+    # }
+    # for(i in 1:ncol(parameter_settings)) {
+    #
+    # }
     # print("test print")
   }
 }
