@@ -28,6 +28,7 @@ fcs_join <- function(files, use_ncdf = FALSE,
     tmp_fcs <- flowCore::read.FCS(files[i], which.lines = 1)
     names(files)[i] <- tmp_fcs@description$`$TOT`
   }
+  # new
   if(use_ncdf) {
     require(ncdfFlow)
   }
