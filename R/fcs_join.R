@@ -12,7 +12,7 @@ fcs_join <- function(files,
                      hyperlog_transform_M = 5,
                      hyperlog_transform_W = 0.01,
                      hyperlog_transform_A = 2,
-                     transform_per_channel = FALSE,
+                     transform_per_channel = TRUE,
                      downsample_size = c(NA,20000)) {
   require(flowCore)
   if(!transform_per_channel) {
