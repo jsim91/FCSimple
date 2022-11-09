@@ -39,9 +39,10 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
       map <- map_calculate[["Y"]]
       colnames(map) <- c("tSNE1","tSNE2")
     } else if(tolower(language)=="python") {
+      require(parallel)
       capture_dir <- system.file(package = "FCSimple")
       write.csv(fcs_join_obj[["data"]], file = paste0(capture_dir,"/temp_files/__python_tsne_input__.csv"), row.names = FALSE)
-      system(command = paste0("python ",paste0(capture_dir,"/python/run_tsne.py")," ",paste0(capture_dir,"/temp_files/__python_tsne_input__.csv")," ",capture_dir,"/temp_files"))
+      system(command = paste0("python ",paste0(capture_dir,"/python/run_tsne.py")," ",paste0(capture_dir,"/temp_files/__python_tsne_input__.csv")," ",capture_dir,"/temp_files"," ",floor(parallel::detectCores()/2)))
       map <- read.csv(paste0(capture_dir,"/temp_files/__tmp_tsne__.csv"), check.names = FALSE)
       temp_files <- list.files(path = paste0(system.file(package = "FCSimple"),"/temp_files/"), full.names = TRUE, recursive = TRUE)
       if(length(temp_files)!=0) {
