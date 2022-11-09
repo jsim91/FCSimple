@@ -23,6 +23,6 @@ tsne = TSNE(
 )
 
 map_output = tsne.fit(data.to_numpy())
-map_df = pd.DataFrame(map)
+map_df = pd.DataFrame(map_output)
 map_df.columns = ["tSNE1","tSNE2"]
 map_df.to_csv(out_file + "/__tmp_tsne__.csv", index = False)
