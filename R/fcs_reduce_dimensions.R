@@ -74,8 +74,9 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
                                                      random_state = 123, verbose = "True", num_threads = ceiling(detectCores()/2)))
     }
   }
+  return(fcs_join_obj[["tsne"]])
   # return(fcs_join_obj)
-  return(list(coordinates = map,
-              settings = list(language = "Python", perplexity = 30, metric = "euclidean",
-                              random_state = 123, verbose = "True", num_threads = ceiling(detectCores()/2))))
+  # return(list(coordinates = map,
+  #             settings = list(language = "Python", perplexity = 30, metric = "euclidean",
+  #                             random_state = 123, verbose = "True", num_threads = ceiling(detectCores()/2))))
 }
