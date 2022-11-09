@@ -1,5 +1,6 @@
-#appR
 library(shinythemes)
+library(flowCore)
+library(flowWorkspace)
 
 # to do: store final transform values, save out transform parameters;
 # allow user to update these values every time the button is pressed; finally, apply transform to data set
@@ -9,7 +10,6 @@ library(shinythemes)
 # names, such as fluorochrome + marker or metal + marker to allow for more robust matching of future panels
 
 # Define UI ----
-# ui <- fluidPage(theme = shinytheme("yeti"),
 fluidPage(theme = shinytheme("yeti"),
                 navbarPage(
                   "FCSimple Transformer",
@@ -54,7 +54,7 @@ fluidPage(theme = shinytheme("yeti"),
                              column(12, align = "center",
                                uiOutput("warning_message"),
                                hr(),
-                               actionButton(inputId = "finalize_transform", label = "finalize transformation choices")
+                               actionButton(inputId = "finalize_transform", label = "Yes, finalize transformation choices")
                              )
                            ))
                 )

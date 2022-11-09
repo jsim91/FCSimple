@@ -1,9 +1,6 @@
-#appR
-
 # Define server logic ----
-# server <- function(input, output) {
 function(input,output) {
-  Data <- read.csv("E:/sample_FCS/test_data.csv", check.names = FALSE)
+  Data <- read.csv(file = paste0(system.file(package = "FCSimple"),"/temp_files/tmp_data.csv"), check.names = FALSE)
   Data_dynamic <- Data
   param_df <- as.data.frame(matrix(data = NA,nrow=9,ncol=ncol(Data)))
   colnames(param_df) <- colnames(Data)
@@ -123,16 +120,13 @@ function(input,output) {
       }
     }
   })
-  # output$transform_text <- renderText({
-  #   chosen_transf()
-  # })
   output$warning_message <- renderText({
     "Clicking finalize will lock in the transform values. Are you sure you want to continue?"
   })
   observeEvent(input$apply_transform, {
     insert_channel <- gsub("\\:((linear|asinh|biexponential|hyperlog)|(linear|asinh|biexponential|hyperlog).+$)","",chosen_transf())
     col_index <- which(colnames(param_settings$reactive_data)==insert_channel)
-    if(input$transform_type=="linear") { # if transform isn't edited currently, values default to linear, table should reflect this, consider changing default value to asinh
+    if(input$transform_type=="linear") {
       param_settings$reactive_data[,col_index] <- c("linear",rep(NA,8))
     } else if(input$transform_type=="asinh") {
       param_settings$reactive_data[,col_index] <- c("asinh",input$cofactor,rep(NA,7))
@@ -143,9 +137,7 @@ function(input,output) {
     }
   })
   observeEvent(input$apply_transform_all, {
-    # insert_channel <- gsub("\\:((linear|asinh|biexponential|hyperlog)|(linear|asinh|biexponential|hyperlog).+$)","",chosen_transf())
-    # col_index <- which(colnames(param_settings$reactive_data)==insert_channel)
-    if(input$transform_type=="linear") { # if transform isn't edited currently, values default to linear, table should reflect this, consider changing default value to asinh
+    if(input$transform_type=="linear") {
       param_settings$reactive_data <- param_df
       param_settings$reactive_data[1,] <- rep("linear",ncol(param_settings$reactive_data))
     } else if(input$transform_type=="asinh") {
@@ -169,7 +161,6 @@ function(input,output) {
   })
   twoD_plot <- eventReactive(input$apply_plot, {
     if(!is.null(input$channel)) {
-      # x_channel <- input$channel_x; y_channel <- input$channel_y
       transform_options <- c("linear","asinh","biexponential","hyperlog")
       xcol <- which(colnames(param_settings$reactive_data)==input$channel_x); ycol <- which(colnames(param_settings$reactive_data)==input$channel_y)
       in_data_x <- Data[,xcol]; in_data_y <- Data[,ycol]
@@ -260,8 +251,42 @@ function(input,output) {
       plot(plot_data, pch = 19, col = scales::alpha("black",0.1), cex = 0.7, asp = 1, xlab = "UMAP1", ylab = "UMAP2")
     }
   })
+  app_return <- function() {
+    list_obj <- readRDS(paste0(system.file(package = "FCSimple"),"/temp_files/tmp_list_obj.rds"))
+    Data_full <- list_obj[["data"]]
+    for(i in 1:ncol(param_settings$reactive_data)) {
+      use_algo <- param_settings$reactive_data[1,i]
+      cof <- as.numeric(param_settings$reactive_data[2,i])
+      biexp_pos <- as.numeric(param_settings$reactive_data[3,i])
+      biexp_neg <- as.numeric(param_settings$reactive_data[4,i])
+      biexp_wid <- as.numeric(param_settings$reactive_data[5,i])
+      hyper_t <- as.numeric(param_settings$reactive_data[6,i])
+      hyper_m <- as.numeric(param_settings$reactive_data[7,i])
+      hyper_w <- as.numeric(param_settings$reactive_data[8,i])
+      hyper_a <- as.numeric(param_settings$reactive_data[9,i])
+      col_index <- which(colnames(Data_full)==colnames(param_settings$reactive_data)[i])
+      if(use_algo=="asinh") {
+        Data_full[,col_index] <- asinh(Data_full[,col_index]/cof)
+      } else if(use_algo=="biexponential") {
+        biexp_fun <- flowWorkspace::flowjo_biexp(pos = biexp_pos,
+                                                 neg = biexp_neg,
+                                                 widthBasis = (10^biexp_wid)*-1)
+        Data_full[,col_index] <- biexp_fun(Data_full[,col_index])
+      } else if(use_algo=="hyperlog") {
+        hyperlog_fun <- flowCore::hyperlogtGml2(parameters = colnames(param_settings$reactive_data)[i],
+                                                T = hyper_t, M = hyper_m, W = hyper_w, A = hyper_a)
+        Data_full[,col_index] <- eval(hyperlog_fun)(Data_full[,col_index])
+      }
+    }
+    temp_files <- list.files(path = paste0(system.file(package = "FCSimple"),"/temp_files/"), full.names = TRUE, recursive = TRUE)
+    if(length(temp_files)!=0) { # remove any files present here, make sure folder stays clean
+      file.remove(temp_files)
+    }
+    return(list(data = Data_full,
+                source = list_obj[["source"]]))
+  }
   finalize <- eventReactive(input$finalize_transform, {
-    # write transform choices to file, include a line to remove files in temp directory before exiting fcj_join function
+    # write transform choices to file, include a line to remove files in temp directory before exiting fcs_join function
     transform_algo_chosen <- param_settings$reactive_data[1,]
     if(sum(is.na(transform_algo_chosen))!=0) {
       showModal(modalDialog(
@@ -269,42 +294,11 @@ function(input,output) {
         "Check 'Selected Transforms' tab. Algo column should not have any NA values.", easyClose = TRUE
       ))
     } else {
-      # write.csv(param_settings$reactive_data, file = paste0(system.file(package = "FCSimple"),"/temp_files/tmp_transform_values.csv"), row.names = FALSE)
-      Data_full <- read.csv("E:/sample_FCS/test_data.csv", check.names = FALSE)
-      for(i in 1:ncol(param_settings$reactive_data)) {
-        use_algo <- param_settings$reactive_data[1,i]
-        cof <- param_settings$reactive_data[2,i]
-        biexp_pos <- param_settings$reactive_data[3,i]
-        biexp_neg <- param_settings$reactive_data[4,i]
-        biexp_wid <- param_settings$reactive_data[5,i]
-        hyper_t <- param_settings$reactive_data[6,i]
-        hyper_m <- param_settings$reactive_data[7,i]
-        hyper_w <- param_settings$reactive_data[8,i]
-        hyper_a <- param_settings$reactive_data[9,i]
-        col_index <- which(colnames(Data_full)==colnames(param_settings$reactive_data)[i])
-        if(use_algo=="asinh") {
-          Data_full[,col_index] <- asinh(Data_full[,col_index]/cof)
-        } else if(use_algo=="biexponential") {
-          biexp_fun <- flowWorkspace::flowjo_biexp(pos = biexp_pos,
-                                                   neg = biexp_neg,
-                                                   widthBasis = (10^biexp_wid)*-1)
-          Data_full[,col_index] <- biexp_fun(Data_full[,col_index])
-        } else if(use_algo=="hyperlog") {
-          hyperlog_fun <- flowCore::hyperlogtGml2(parameters = colnames(Data_full)[col_index], T = hyper_t, M = hyper_m,
-                                                  W = hyper_w, A = hyper_a)
-          Data_full[,col_index] <- eval(hyperlog_fun)(Data_full[,col_index])
-        }
-      }
       showModal(modalDialog(
-        title = "Transformation complete!",
-        "Close app by clicking the X in the top right corner.", easyClose = FALSE)
+        title = "Applying transforms", "The app will close when finished.", easyClose = FALSE)
       )
+      stopApp(returnValue = app_return())
     }
-    stopApp(returnValue = Data_full)
-    # placeholder value
-    # this function defines what happens when the finalize button is clicked
-    # transform choices should be passed along and used to apply the transforms to the user's data set
-    # the app should close
   })
   observeEvent(input$finalize_transform, {
     finalize()
