@@ -17,16 +17,13 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
                         n_threads = ceiling(detectCores()/2), verbose = TRUE)
       colnames(map) <- c("UMAP1","UMAP2")
     } else if(tolower(language)=="python") {
-      capture_dir <- system.file(package = "FCSimple") # points to package location
-      write.csv(fcs_join_obj[["data"]], file = paste0(capture_dir,"/python/__python_umap_input__.csv"), row.names = FALSE)
-
-      system(command = paste0("python ",paste0(capture_dir,"/python/run_umap.py")," ",paste0(capture_dir,"/python/__python_umap_input__.csv")," ",capture_dir,"/python"))
-      map <- read.csv(paste0(capture_dir,"/python/__tmp_umap__.csv"), check.names = FALSE)
-      if (file.exists(paste0(capture_dir,"/python/__tmp_umap__.csv"))) {
-        file.remove(paste0(capture_dir,"/python/__tmp_umap__.csv"))
-      }
-      if (file.exists(paste0(capture_dir,"/python/__python_umap_input__.csv"))) {
-        file.remove(paste0(capture_dir,"/python/__python_umap_input__.csv"))
+      capture_dir <- system.file(package = "FCSimple")
+      write.csv(fcs_join_obj[["data"]], file = paste0(capture_dir,"/temp_files/__python_umap_input__.csv"), row.names = FALSE)
+      system(command = paste0("python ",paste0(capture_dir,"/python/run_umap.py")," ",paste0(capture_dir,"/temp_files/__python_umap_input__.csv")," ",capture_dir,"/temp_files"))
+      map <- read.csv(paste0(capture_dir,"/temp_files/__tmp_umap__.csv"), check.names = FALSE)
+      temp_files <- list.files(path = paste0(system.file(package = "FCSimple"),"/temp_files/"), full.names = TRUE, recursive = TRUE)
+      if(length(temp_files)!=0) {
+        file.remove(temp_files)
       }
     } else {
       stop("error in argument 'language': use 'R' or 'Python'")
@@ -35,7 +32,6 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
     if(tolower(language)=="r") {
       require(Rtsne)
       require(parallel)
-      # map_input <- Rtsne::normalize_input(fcs_join_obj[["data"]])
       map_calculate <- Rtsne::Rtsne(X = fcs_join_obj[["data"]], check_duplicates = FALSE, max_iter = 2000, normalize = FALSE,
                                     stop_lying_iter = 700, mom_switch_iter = 700,
                                     eta = round(nrow(map_input)/12),
@@ -43,16 +39,14 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
       map <- map_calculate[["Y"]]
       colnames(map) <- c("tSNE1","tSNE2")
     } else if(tolower(language)=="python") {
-      warning("unsupported argument inputs 'language' + 'algorithm': tsne in python not supported. Using R for now.")
-      require(Rtsne)
-      require(parallel)
-      # map_input <- Rtsne::normalize_input(fcs_join_obj[["data"]])
-      map_calculate <- Rtsne::Rtsne(X = fcs_join_obj[["data"]], check_duplicates = FALSE, max_iter = 2000, normalize = FALSE,
-                                    stop_lying_iter = 700, mom_switch_iter = 700,
-                                    eta = round(nrow(map_input)/12),
-                                    num_threads = ceiling(detectCores()/2))
-      map <- map_calculate[["Y"]]
-      colnames(map) <- c("tSNE1","tSNE2")
+      capture_dir <- system.file(package = "FCSimple")
+      write.csv(fcs_join_obj[["data"]], file = paste0(capture_dir,"/temp_files/__python_tsne_input__.csv"), row.names = FALSE)
+      system(command = paste0("python ",paste0(capture_dir,"/python/run_tsne.py")," ",paste0(capture_dir,"/temp_files/__python_tsne_input__.csv")," ",capture_dir,"/temp_files"))
+      map <- read.csv(paste0(capture_dir,"/temp_files/__tmp_tsne__.csv"), check.names = FALSE)
+      temp_files <- list.files(path = paste0(system.file(package = "FCSimple"),"/temp_files/"), full.names = TRUE, recursive = TRUE)
+      if(length(temp_files)!=0) {
+        file.remove(temp_files)
+      }
     }
   }
   if(tolower(algorithm)=="umap") {
