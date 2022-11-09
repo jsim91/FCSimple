@@ -68,6 +68,14 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
                                                           normalize = FALSE, stop_lying_iter = 700, mom_switch_iter = 700,
                                                           eta = round(nrow(map_input)/12), num_threads = ceiling(detectCores()/2)))
     }
+    if(tolower(language)=="python") {
+      fcs_join_obj[["tsne"]] <- list(coordinates = map,
+                                     settings = list(language = "Python", perplexity = 30, metric = "euclidean",
+                                                     random_state = 123, verbose = "True", num_threads = ceiling(detectCores()/2)))
+    }
   }
-  return(fcs_join_obj)
+  # return(fcs_join_obj)
+  return(list(coordinates = map,
+              settings = list(language = "Python", perplexity = 30, metric = "euclidean",
+                              random_state = 123, verbose = "True", num_threads = ceiling(detectCores()/2))))
 }
