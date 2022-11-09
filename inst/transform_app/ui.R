@@ -33,8 +33,6 @@ fluidPage(theme = shinytheme("yeti"),
                              textOutput("dens_asinh_error"),
                              hr(),
                              plotOutput("render_2d_plot")
-                             # hr(),
-                             # uiOutput("transform_text")
                            )),
                   tabPanel("Selected Transforms",
                            tableOutput("parameter_df")),
