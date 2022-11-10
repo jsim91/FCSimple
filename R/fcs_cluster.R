@@ -29,6 +29,7 @@ fcs_cluster <- function(fcs_join_obj,
         require(RANN)
         require(parallel)
         require(future)
+        require(future.apply)
 
         num_core <- ceiling(detectCores()/2)
         options(future.globals.maxSize= Inf)
