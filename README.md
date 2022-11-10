@@ -60,6 +60,7 @@ The dimension reduction and clustering steps do offer methods to run the calcula
 - [numpy](https://pypi.org/project/numpy/)
 - [pandas](https://pypi.org/project/pandas/)
 - [igraph](https://pypi.org/project/igraph/)
+- [openTSNE](https://github.com/pavlin-policar/openTSNE)
 
 
 # Usage
