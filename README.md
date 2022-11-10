@@ -44,6 +44,7 @@ install_github("jsim91/FCSimple")
 - [ggplot2](https://cran.r-project.org/web/packages/ggplot2/index.html)
 - [shadowtext](https://cran.r-project.org/web/packages/shadowtext/index.html)
 - [future](https://cran.r-project.org/web/packages/future/index.html)
+- [future.apply](https://cran.r-project.org/web/packages/future.apply/index.html)
 - [RANN](https://cran.r-project.org/web/packages/RANN/RANN.pdf)
 - [shiny](https://cran.r-project.org/web/packages/shiny/index.html)
 - [shinythemes](https://cran.r-project.org/web/packages/shinythemes/index.html)
@@ -59,6 +60,7 @@ The dimension reduction and clustering steps do offer methods to run the calcula
 - [numpy](https://pypi.org/project/numpy/)
 - [pandas](https://pypi.org/project/pandas/)
 - [igraph](https://pypi.org/project/igraph/)
+- [openTSNE](https://github.com/pavlin-policar/openTSNE)
 
 
 # Usage
@@ -76,4 +78,4 @@ Subsequent functions will take the object created with function
 fcs_join()
 ```
 
-as input. Analysis outputs will be joined to this object as new list entries.
+as input. Analysis outputs will be joined to this object as new list entries. Tested in and developed with the Windows 10 operating system.
