@@ -66,11 +66,13 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
     if(tolower(language)=="r") {
       settings_list <- list(language = "R", check_duplicates = FALSE, max_iter = 2000,
                             normalize = FALSE, stop_lying_iter = 700, mom_switch_iter = 700,
-                            eta = round(nrow(map_input)/12), num_threads = ceiling(detectCores()/2))
+                            eta = round(nrow(map_input)/12),
+                            num_threads = ceiling(detectCores()/2))
     }
     if(tolower(language)=="python") {
       settings_list <- list(language = "Python", perplexity = 30, metric = "euclidean",
-                            random_state = 123, verbose = "True", num_threads = ceiling(detectCores()/2))
+                            random_state = 123, verbose = "True",
+                            num_threads = ceiling(detectCores()/2))
     }
   }
   fcs_join_obj[[length(fcs_join_obj)+1]] <- list(coordinates = coordinates_list,
