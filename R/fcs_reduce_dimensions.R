@@ -50,33 +50,29 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
       }
     }
   }
+  coordinates_list <- map
   if(tolower(algorithm)=="umap") {
     if(tolower(language)=="r") {
-      fcs_join_obj[["umap"]] <- list(coordinates = map,
-                                          settings = list(language = "R", n_neighbors = 30, init = "spca", min_dist = 0.1,
-                                                          n_threads = ceiling(detectCores()/2), verbose = TRUE))
+      settings_list <- list(language = "R", n_neighbors = 30, init = "spca", min_dist = 0.1,
+                            n_threads = ceiling(detectCores()/2), verbose = TRUE)
     } else if(tolower(language)=="python") {
-      fcs_join_obj[["umap"]] <- list(coordinates = map,
-                                          settings = list(language = "Python", n_neighbors = 30, init = 'spectral',
-                                                          min_dist = 0.1, low_memory = 'True', random_state = 123,
-                                                          transform_seed = 123, verbose = 'True'))
+      settings_list <- list(language = "Python", n_neighbors = 30, init = 'spectral',
+                            min_dist = 0.1, low_memory = 'True', random_state = 123,
+                            transform_seed = 123, verbose = 'True')
     }
   } else if(tolower(algorithm)=="tsne") {
     if(tolower(language)=="r") {
-      fcs_join_obj[["tsne"]] <- list(coordinates = map,
-                                          settings = list(language = "R", check_duplicates = FALSE, max_iter = 2000,
-                                                          normalize = FALSE, stop_lying_iter = 700, mom_switch_iter = 700,
-                                                          eta = round(nrow(map_input)/12), num_threads = ceiling(detectCores()/2)))
+      settings_list <- list(language = "R", check_duplicates = FALSE, max_iter = 2000,
+                            normalize = FALSE, stop_lying_iter = 700, mom_switch_iter = 700,
+                            eta = round(nrow(map_input)/12), num_threads = ceiling(detectCores()/2))
     }
     if(tolower(language)=="python") {
-      fcs_join_obj[["tsne"]] <- list(coordinates = map,
-                                     settings = list(language = "Python", perplexity = 30, metric = "euclidean",
-                                                     random_state = 123, verbose = "True", num_threads = ceiling(detectCores()/2)))
+      settings_list <- list(language = "Python", perplexity = 30, metric = "euclidean",
+                            random_state = 123, verbose = "True", num_threads = ceiling(detectCores()/2))
     }
   }
-  return(fcs_join_obj[["tsne"]])
-  # return(fcs_join_obj)
-  # return(list(coordinates = map,
-  #             settings = list(language = "Python", perplexity = 30, metric = "euclidean",
-  #                             random_state = 123, verbose = "True", num_threads = ceiling(detectCores()/2))))
+  fcs_join_obj[[length(fcs_join_obj)+1]] <- list(coordinates = coordinates_list,
+                                                 settings = settings_list)
+  names(fcs_join_obj)[length(fcs_join_obj)] <- ifelse(tolower(algorithm)=="umap","umap","tsne")
+  return(fcs_join_obj)
 }
