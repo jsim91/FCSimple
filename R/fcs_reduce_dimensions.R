@@ -48,6 +48,8 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
       if(length(temp_files)!=0) {
         file.remove(temp_files)
       }
+    } else {
+      stop("error in argument 'language': use 'R' or 'Python'")
     }
   }
   coordinates_list <- map
