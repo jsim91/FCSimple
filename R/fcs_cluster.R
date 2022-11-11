@@ -58,6 +58,7 @@ fcs_cluster <- function(fcs_join_obj,
           }
         }
 
+        fcs_join_obj[["nn_search"]] <- search_id
         nn_idx <- search_id
         i_input <- rep(1:nrow(nn_idx),times=num_neighbors-1)
         j_input <- as.vector(nn_idx[,2:num_neighbors])
