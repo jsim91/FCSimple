@@ -46,7 +46,7 @@ fcs_join <- function(files,
   } else {
     fs <- flowCore::read.flowSet(files = files, truncate_max_range = FALSE)
   }
-  # if(use_ncdf) {
+  # if(use_ncdf) { # consider enabling ncdf support for larger data sets
   #   require(ncdfFlow)
   # }
   # if(use_ncdf) {
