@@ -14,17 +14,17 @@ fcs_cluster <- function(fcs_join_obj,
   if(tolower(algorithm) %in% c("leiden","louvain")) {
     require(FNN)
     require(Matrix)
-    if(all("nn_search" %in% names(fcs_join_obj), c("matrix","data.frame") %in% class(fcs_join_obj[["nn_search"]]))) {
-      adj_search <- fcs_join_obj[["nn_search"]]
-      adjacency_knn <- ncol(adj_search)
+    if("adjacency_matrix" %in% names(fcs_join_obj)) {
+      if(fcs_join_obj[["adjacency_matrix"]]=="ngCMatrix") {
+        sm <- fcs_join_obj[["adjacency_matrix"]]
+      }
     } else {
       if(tolower(search_method)=="fnn") {
         adj_search <- FNN::knn.index(data = fcs_join_obj[["data"]], k = adjacency_knn)
-        fcs_join_obj[["nn_search"]] <- adj_search
         i_input <- rep(1:nrow(adj_search),times=ncol(adj_search))
         j_input <- as.vector(adj_search)
         sm <- Matrix::sparseMatrix(i=i_input,j=j_input,dims=c(nrow(adj_search),nrow(adj_search)))
-        Matrix::writeMM(obj = sm, file = paste0(capture_dir,"/python/__python_cl_input__.mtx"))
+        fcs_join_obj[["adjacency_matrix"]] <- sm
       } else if(tolower(search_method)=="rann") {
         require(RANN)
         require(parallel)
@@ -58,12 +58,13 @@ fcs_cluster <- function(fcs_join_obj,
           }
         }
 
-        fcs_join_obj[["nn_search"]] <- search_id
         nn_idx <- search_id
         i_input <- rep(1:nrow(nn_idx),times=num_neighbors-1)
         j_input <- as.vector(nn_idx[,2:num_neighbors])
         sm <- Matrix::sparseMatrix(i=i_input,j=j_input,dims=c(nrow(nn_idx),nrow(nn_idx)))
-        Matrix::writeMM(obj = sm, file = paste0(capture_dir,"/python/__python_cl_input__.mtx"))
+        fcs_join_obj[["adjacency_matrix"]] <- sm
+      } else {
+        stop("error in argument 'search_method': use either 'RANN' or 'FNN'")
       }
     }
     if(tolower(language)=="python") {
