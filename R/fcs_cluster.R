@@ -7,7 +7,6 @@ fcs_cluster <- function(fcs_join_obj,
                         adjacency_knn = 30,
                         search_method = c("FNN","RANN"))
 {
-  require(Matrix)
   capture_dir <- system.file(package = "FCSimple")
   if(any(length(language)!=1, !tolower(language) %in% c("r","python"))) {
     stop("error in argument 'language': use 'R' or 'Python'")
@@ -16,10 +15,8 @@ fcs_cluster <- function(fcs_join_obj,
     require(FNN)
     require(Matrix)
     if("adjacency_matrix" %in% names(fcs_join_obj)) {
-      if(fcs_join_obj[["adjacency_matrix"]]=="ngCMatrix") {
-        print("Adjacency matrix found, skipping nearest neighbor step.")
-        sm <- fcs_join_obj[["adjacency_matrix"]]
-      }
+      print("Adjacency matrix found, skipping nearest neighbor step.")
+      sm <- fcs_join_obj[["adjacency_matrix"]]
     } else {
       if(tolower(search_method)=="fnn") {
         adj_search <- FNN::knn.index(data = fcs_join_obj[["data"]], k = adjacency_knn)
