@@ -20,14 +20,28 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   if(any(length(compare_list)!=2,class(compare_list)!="list")) {
     stop("error in argument 'compare_list': object must be a named list of length 2. Names of list entries will be used as the categories of comparison. Entries must each be a character vector of file names, with or without file path. File names must match the file names in 'fcs_join_obj' either directly or partially. See unique(fcs_join_obj[['source']])")
   }
-  source_names <- fcs_join_obj[["source"]]
   set1_label <- names(compare_list)[1]
   set2_label <- names(compare_list)[2]
   set1_full <- compare_list[[1]]
   set2_full <- compare_list[[2]]
   total_data <- as.data.frame(fcs_join_obj[["data"]])
   total_data$src <- fcs_join_obj[["source"]]
-
+  source_names <- total_data$src
+  if(mean(unique(source_names) %in% gsub("^.*/","",unlist(compare_list)))==1) {
+    if(tolower(reduction)=="umap") {
+      if("umap" %in% tolower(names(fcs_join_obj))) {
+        get_reduction <- fcs_join_obj[["umap"]][["coordinates"]]
+      } else {
+        stop("error in function call: UMAP specified but no UMAP coordinates found. Run fcs_reduce_dimensions using algorithm = 'UMAP' first")
+      }
+    } else if(tolower(reduction)=="tsne") {
+      if("tsne" %in% tolower(names(fcs_join_obj))) {
+        get_reduction <- fcs_join_obj[["tsne"]][["coordinates"]]
+      } else {
+        stop("error in function call: tSNE specified but no tSNE coordinates found. Run fcs_reduce_dimensions using algorithm = 'tSNE' first")
+      }
+    }
+  }
   set1 <- gsub("^.*/","",set1_full)
   set2 <- gsub("^.*/","",set2_full)
   if(length(which(total_data$src %in% gsub("^\\./","",set1)))==0) {
@@ -38,15 +52,15 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   }
   set1_ind <- which(total_data$src %in% gsub("^\\./","",set1))
   set2_ind <- which(total_data$src %in% gsub("^\\./","",set2))
-  other_index <- which(!total_data$src %in% gsub("^\\./","",c(set1,set2)))
+  other_ind <- which(!total_data$src %in% gsub("^\\./","",c(set1,set2)))
   set_blank <- rep(NA,times=nrow(total_data))
-  set_blank[set1_index] <- set1_label; set_blank[set2_index] <- set2_label
-  if(length(other_index)!=0){
+  set_blank[set1_ind] <- set1_label; set_blank[set2_ind] <- set2_label
+  if(length(other_ind)!=0){
     set_blank[other_index] <- "other"
   }
   total_data$set <- set_blank
 
-  dimred_data <- cbind(total_data, as.data.frame(fcs_join_obj[[tolower(reduction)]][["coordinates"]]))
+  dimred_data <- cbind(total_data, as.data.frame(get_reduction))
   other_ind <- which(!1:nrow(dimred_data) %in% c(set1_ind,set2_ind))
 
   if(length(other_ind)!=0) {
@@ -101,7 +115,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
           legend.position = "bottom")
 
   ggsave(filename = paste0(ifelse(tolower(reduction)=="umap","UMAP_","tSNE_"),strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"), plot = pl,
-         device = "pdf", path = new_dir, width = 10, height = 10, units = "in", dpi = 900)
+         device = "pdf", path = outdir, width = 10, height = 10, units = "in", dpi = 900)
 
   if(tolower(reduction)=="umap") {
     map <- join_data[,c("UMAP1","UMAP2","set")]
@@ -201,7 +215,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
 
   ggsave(filename = paste0(ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_by_category_",
                            strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"), plot = pl_bins,
-         device = "pdf", path = new_dir, width = 10, height = 10, units = "in", dpi = 900)
+         device = "pdf", path = outdir, width = 10, height = 10, units = "in", dpi = 900)
 
   get_high <- which(row_mean>neighbor_significance_threshold)
   get_low <- which(row_mean<(1-neighbor_significance_threshold))
@@ -250,7 +264,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
 
   ggsave(filename = paste0(ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_significant_",
                            strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"), plot = pl_hl,
-         device = "pdf", path = new_dir, width = 10, height = 10, units = "in", dpi = 900)
+         device = "pdf", path = outdir, width = 10, height = 10, units = "in", dpi = 900)
 
   if(length(which(total_data$bin==paste0(set1_label," - ",neighbor_significance_threshold * 100,"%")))==0) {
     set1_spots <- total_data[1,]
@@ -493,23 +507,5 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
          plot = gridExtra::marrangeGrob(grobs = arranged_list, nrow=1, ncol=1, top = ""),
          device = "pdf", path = outdir, width = 12, height = 12, units = "in", dpi = 900)
 
-  # capture_metadata_filename <- paste0(new_dir,"/metadata_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".csv")
-  # write.csv(x = metadata_file, file = capture_metadata_filename, row.names = FALSE,)
-  # settings <- data.frame(values = c(paste0('metadata_file = ',capture_metadata_filename),
-  #                                   paste0('compare_groups = ',paste0(compare_groups[1],', ',compare_groups[2])),
-  #                                   paste0('results_dir = ',results_dir),
-  #                                   paste0('language = ',language),
-  #                                   ifelse(tolower(reduction)=="umap",paste0('umap_script = ',umap_script),"tsne_script = no external script used"),
-  #                                   paste0('percentile_breaks = c(',paste0(percentile_breaks,collapse = ", "),')'),
-  #                                   paste0('neighbor_significance_threshold = ',neighbor_significance_threshold),
-  #                                   paste0('"blue" = ',"blue"),
-  #                                   paste0('"red" = ',"red"),
-  #                                   paste0('neighborhood_size = ',neighborhood_size),
-  #                                   paste0('cluster_min_size = ',cluster_min_size),
-  #                                   paste0('relative_cluster_distance = ',relative_cluster_distance),
-  #                                   paste0('reduction_object = ',capture_dimred_file),
-  #                                   paste0('run_MEM = ',run_MEM)))
-  # write.table(x = settings, file = paste0(new_dir,"/trex_inputs_",
-  #                                         strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".txt"), row.names = FALSE,
-  #             col.names = FALSE, quote = FALSE, sep = ",")
+  return(fcs_join_obj)
 }
