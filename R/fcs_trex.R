@@ -507,5 +507,5 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
          plot = gridExtra::marrangeGrob(grobs = arranged_list, nrow=1, ncol=1, top = ""),
          device = "pdf", path = outdir, width = 12, height = 12, units = "in", dpi = 900)
 
-  return(fcs_join_obj)
+  # return(fcs_join_obj)
 }
