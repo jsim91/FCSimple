@@ -371,8 +371,8 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
 
   ggsave(filename = paste0(ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_significant_cluster_heatmap_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
          plot = grid::grid.grabExpr(draw(heatmap_output)), device = "pdf",
-         path = outdir, width = ncol(backend.matrix)/15 + 1,
-         height = nrow(backend.matrix)/15 + 1.5, units = "in", dpi = 900, limitsize = FALSE)
+         path = outdir, width = ncol(backend.matrix)/2 + 1,
+         height = nrow(backend.matrix)/2 + 1.5, units = "in", dpi = 900, limitsize = FALSE)
 
   if(tolower(reduction)=="umap") {
     plot_data <- clustered_data[,c("UMAP1","UMAP2","cluster")]
