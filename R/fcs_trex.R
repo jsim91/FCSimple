@@ -2,7 +2,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
                      point_alpha = 0.05, neighborhood_size = 60,
                      percentile_breaks = c(0,5,10,15,85,90,95,100),
                      neighbor_significance_threshold = 0.9, cluster_min_size = 50,
-                     relative_cluster_distance = 20)
+                     relative_cluster_distance = 30, file_output_prefix = NULL)
 {
   require(flowCore)
   require(ggplot2)
@@ -16,6 +16,9 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
 
   # workflow source: https://github.com/cytolab/T-REX
 
+  if(!is.null(file_output_prefix)) {
+    file_output_prefix <- paste0(file_output_prefix,"_")
+  }
   outdir <- gsub("/$","",outdir)
   if(any(length(compare_list)!=2,class(compare_list)!="list")) {
     stop("error in argument 'compare_list': object must be a named list of length 2. Names of list entries will be used as the categories of comparison. Entries must each be a character vector of file names, with or without file path. File names must match the file names in 'fcs_join_obj' either directly or partially. See unique(fcs_join_obj[['source']])")
@@ -114,7 +117,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
           legend.text = element_text(size = 16),
           legend.position = "bottom")
 
-  ggsave(filename = paste0(ifelse(tolower(reduction)=="umap","UMAP_","tSNE_trex_"),strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"), plot = pl,
+  ggsave(filename = paste0(file_output_prefix,ifelse(tolower(reduction)=="umap","UMAP_","tSNE_trex_"),strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"), plot = pl,
          device = "pdf", path = outdir, width = 10, height = 10, units = "in", dpi = 900)
 
   if(tolower(reduction)=="umap") {
@@ -213,7 +216,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
           legend.text = element_text(size = 12),
           plot.caption = element_text(size = 12, hjust = 0.5))
 
-  ggsave(filename = paste0(ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_by_category_",
+  ggsave(filename = paste0(file_output_prefix,ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_by_category_",
                            strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"), plot = pl_bins,
          device = "pdf", path = outdir, width = 10, height = 10, units = "in", dpi = 900)
 
@@ -262,7 +265,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
           legend.text = element_text(size = 14),
           legend.position = "bottom")
 
-  ggsave(filename = paste0(ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_significant_",
+  ggsave(filename = paste0(file_output_prefix,ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_significant_",
                            strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"), plot = pl_hl,
          device = "pdf", path = outdir, width = 10, height = 10, units = "in", dpi = 900)
 
@@ -369,7 +372,8 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
                             column_dend_gp = gpar(lwd=1.2), column_dend_height = unit(1,"cm")) +
     ranno1 + ranno2
 
-  ggsave(filename = paste0(ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_significant_cluster_heatmap_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
+  ggsave(filename = paste0(file_output_prefix,ifelse(tolower(reduction)=="umap","UMAP","tSNE"),
+                           "_trex_significant_cluster_heatmap_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
          plot = grid::grid.grabExpr(draw(heatmap_output)), device = "pdf",
          path = outdir, width = ncol(backend.matrix)/2 + 1,
          height = nrow(backend.matrix)/2 + 1.5, units = "in", dpi = 900, limitsize = FALSE)
@@ -429,7 +433,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
           legend.position = "none")
 
   listed_plots <- mget(c("pl_lab","pl_sig_lab"))
-  ggsave(filename = paste0(ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_significant_labeled_",
+  ggsave(filename = paste0(file_output_prefix,ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_significant_labeled_",
                            strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
          plot = gridExtra::arrangeGrob(grobs = listed_plots, nrow=2, ncol=1),
          device = "pdf", path = outdir, width = 10, height = 20, units = "in", dpi = 900)
@@ -501,7 +505,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
                                             nrow = 2, ncol = 2)
   }
 
-  ggsave(filename = paste0(ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_heatmaps_",
+  ggsave(filename = paste0(file_output_prefix,ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_heatmaps_",
                            strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
          plot = gridExtra::marrangeGrob(grobs = arranged_list, nrow=1, ncol=1, top = ""),
          device = "pdf", path = outdir, width = 12, height = 12, units = "in", dpi = 900)
