@@ -4,7 +4,7 @@ fcs_join <- function(files,
                      use_descriptive_column_names = TRUE,
                      transform_function = NULL,
                      transform_type = c("asinh","biexp","hyperlog"),
-                     asinh_transform_factor = 5,
+                     asinh_transform_cofactor = 5,
                      biexp_transform_pos = 4.5,
                      biexp_transform_neg = 0,
                      biexp_transform_width = -10,
@@ -56,10 +56,10 @@ fcs_join <- function(files,
   # }
   if(!transform_per_channel) {
     if(tolower(instrument_type)=="cytof") {
-      if(is.null(asinh_transform_factor)) {
-        asinh_transform_factor <- 5
+      if(is.null(asinh_transform_cofactor)) {
+        asinh_transform_cofactor <- 5
       }
-      transform_function <- transformList(flowCore::colnames(fs), function(x) return(asinh(x/asinh_transform_factor)))
+      transform_function <- transformList(flowCore::colnames(fs), function(x) return(asinh(x/asinh_transform_cofactor)))
       # if(use_ncdf) {
       #   fst <- ncdfFlow::transform(fs, transform_function)
       # } else {
@@ -74,10 +74,10 @@ fcs_join <- function(files,
       }
     } else if(tolower(instrument_type)=="flow") {
       if(transform_type=="asinh") {
-        if(is.null(asinh_transform_factor)) {
-          asinh_transform_factor <- 200
+        if(is.null(asinh_transform_cofactor)) {
+          asinh_transform_cofactor <- 200
         }
-        transform_function <- flowCore::transformList(flowCore::colnames(fs), function(x) return(asinh(x/asinh_transform_factor)))
+        transform_function <- flowCore::transformList(flowCore::colnames(fs), function(x) return(asinh(x/asinh_transform_cofactor)))
         fst <- flowCore::transform(fs, transform_function)
         for(i in 1:length(fst)) {
           if(i==1) {
