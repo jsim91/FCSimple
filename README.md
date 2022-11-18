@@ -8,6 +8,7 @@ fcs_reduce_dimensions # Use after running fcs_join() to produce low dimension re
 fcs_cluster # Use after running fcs_join() to partition the data into discrete clusters using the Leiden, Louvain, FlowSOM, or Phenograph algorithms.
 fcs_calculate_abundance # Use after running fcs_cluster() to calculate cluster abundance, either as fraction (0-1) or frequency (0-100)
 fcs_cluster_heatmap # Use after running fcs_cluster() to create a heatmap object that describes the cluster expression
+
 fcs_report_abundance # Use after running fcs_calculate_abundance() to report calculated cluster abundance values (no object return)
 fcs_plot_distribution # Use after running fcs_join() to render the transformed (or not) distributions per channel as density curves (no object return)
 fcs_plot_heatmap # Use after running fcs_cluster_heatmap() to render the cluster heatmap as a pdf (no object return)
