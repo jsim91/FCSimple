@@ -10,6 +10,7 @@ fcs_calculate_abundance # Use after running fcs_cluster() to calculate cluster a
 fcs_report_abundance # Use after running fcs_calculate_abundance() to report calculated cluster abundance values (no object return)
 fcs_cluster_heatmap # Use after running fcs_cluster() to create a heatmap object that describes the cluster expression
 fcs_plot_heatmap # Use after running fcs_cluster_heatmap() to render the cluster heatmap as a pdf (no object return)
+fcs_plot_reduction # Use after running fcs_reduce_dimensions() and fcs_cluster() to render the UMAP or tSNE plot with cluster colors and labels (no object return)
 fcs_trex # Use after running fcs_reduce_dimensions() to compare two groups (no object return); https://elifesciences.org/articles/64653
 
 # more to come
