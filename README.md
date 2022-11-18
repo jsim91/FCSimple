@@ -7,10 +7,10 @@ fcs_join # Use for concatenation of multiple FCS files (can also take a single F
 fcs_reduce_dimensions # Use after running fcs_join() to produce low dimension representations of your data set with the UMAP or tSNE algorithms.
 fcs_cluster # Use after running fcs_join() to partition the data into discrete clusters using the Leiden, Louvain, FlowSOM, or Phenograph algorithms.
 fcs_calculate_abundance # Use after running fcs_cluster() to calculate cluster abundance, either as fraction (0-1) or frequency (0-100)
-fcs_report_abundance # Use after running fcs_calculate_abundance() to report calculated cluster abundance values
+fcs_report_abundance # Use after running fcs_calculate_abundance() to report calculated cluster abundance values (no object return)
 fcs_cluster_heatmap # Use after running fcs_cluster() to create a heatmap object that describes the cluster expression
-fcs_plot_heatmap # Use after running fcs_cluster_heatmap() to render the cluster heatmap as a pdf
-fcs_trex # Use after running fcs_reduce_dimensions to compare two groups; https://elifesciences.org/articles/64653
+fcs_plot_heatmap # Use after running fcs_cluster_heatmap() to render the cluster heatmap as a pdf (no object return)
+fcs_trex # Use after running fcs_reduce_dimensions() to compare two groups (no object return); https://elifesciences.org/articles/64653
 
 # more to come
 ```
