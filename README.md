@@ -10,6 +10,7 @@ fcs_calculate_abundance # Use after running fcs_cluster() to calculate cluster a
 fcs_report_abundance # Use after running fcs_calculate_abundance() to report calculated cluster abundance values
 fcs_cluster_heatmap # Use after running fcs_cluster() to create a heatmap object that describes the cluster expression
 fcs_plot_heatmap # Use after running fcs_cluster_heatmap() to render the cluster heatmap as a pdf
+fcs_trex # Use after running fcs_reduce_dimensions to compare two groups; https://elifesciences.org/articles/64653
 
 # more to come
 ```
@@ -49,6 +50,7 @@ install_github("jsim91/FCSimple")
 - [shiny](https://cran.r-project.org/web/packages/shiny/index.html)
 - [shinythemes](https://cran.r-project.org/web/packages/shinythemes/index.html)
 - [scales](https://cran.r-project.org/web/packages/scales/index.html)
+- [cytoMEM](https://bioconductor.org/packages/release/bioc/html/cytoMEM.html)
 
 The dimension reduction and clustering steps do offer methods to run the calculations through Python, however no knowledge of the Python language is required. These functions will call Python in the background and results will be transferred to the R environment. The reticulate package is not required. Users may edit the included python scripts if they want to alter the default Python behavior. To take advantage of Python-supported methods, these items are required:
 
