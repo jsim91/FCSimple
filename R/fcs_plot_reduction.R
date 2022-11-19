@@ -1,5 +1,5 @@
 fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha = 0.1, outdir = getwd(),
-                               internal_call = FALSE, anno_indices = NULL)
+                               internal_call = FALSE, anno_indices = NULL, keep_indices = NA)
 {
   require(ggplot2)
   require(shadowtext)
@@ -26,10 +26,10 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
     fname <- paste0(outdir,"/",tolower(algorithm),"_",tolower(reduction),"_labeled_",
                     strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf")
   } else {
-    plt_reduction <- ggplot(data = plt_input[-dbscan_keep_rows,], mapping = aes_string(x = colnames(reduction_coords)[1],
+    plt_reduction <- ggplot(data = plt_input[-keep_indices,], mapping = aes_string(x = colnames(reduction_coords)[1],
                                                                                        y = colnames(reduction_coords)[2])) +
       ggrastr::geom_point_rast(alpha = point_alpha, color = "grey") +
-      ggrastr::geom_point_rast(data = plt_input[dbscan_keep_rows,], mapping = aes_string(x = colnames(reduction_coords)[1],
+      ggrastr::geom_point_rast(data = plt_input[keep_indices,], mapping = aes_string(x = colnames(reduction_coords)[1],
                                                                                         y = colnames(reduction_coords)[2]),
                                alpha = point_alpha, color = "red") +
       annotate("shadowtext", x = xval, y = yval, label = names(xval), size = 5) +
