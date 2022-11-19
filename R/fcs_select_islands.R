@@ -1,8 +1,8 @@
 fcs_select_islands <- function(fcs_join_obj,
                                reduction_cluster_annotate_algorithm = c("leiden","flowsom","louvain","phenograph"),
                                dbscan_reduction = c("umap","tsne"),
-                               dbscan_minpts = 200,
-                               dbscan_eps = 0.25,
+                               dbscan_minpts = 50,
+                               dbscan_eps = 0.5,
                                dbscan_lineage = c("170Yb_CD3","165Ho_CD19","145Nd_CD4","146Nd_CD8"),
                                outdir = getwd())
 {
@@ -45,8 +45,8 @@ fcs_select_islands <- function(fcs_join_obj,
   calc_hm <- FCSimple::fcs_cluster_heatmap(fcs_join_obj = tmp_join_obj, algorithm = "dbscan")
   FCSimple::fcs_plot_heatmap(fcs_join_obj = calc_hm, algorithm = "dbscan", outdir = outdir)
 
-  print("Using the dbscan heatmap")
-  print(paste0(paste0(gsub("/$","",outdir),"/dbscan_cluster_heatmap_...pdf"),")"))
+  print("Using the dbscan heatmap here: ")
+  print(paste0(paste0(gsub("/$","",outdir),"/dbscan_cluster_heatmap.pdf"),")"))
   user_input <- readline("which dbscan clusters should be kept? Enter integer values separated by commas:")
   keep_clus <- gsub(" ","",user_input)
   keep_clus <- as.numeric(strsplit(x = keep_clus, split = ",")[[1]])
