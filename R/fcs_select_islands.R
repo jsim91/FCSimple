@@ -7,6 +7,8 @@ fcs_select_islands <- function(fcs_join_obj,
                                outdir = getwd())
 {
   require(dbscan)
+  require(FNN)
+
   if(!tolower(dbscan_reduction) %in% names(fcs_join_obj)) {
     stop(paste0("Cannot find specified reduction ",dbscan_reduction," to cluster on. Have you run 'fcs_reduce_dimensions' yet?"))
   }
@@ -54,7 +56,7 @@ fcs_select_islands <- function(fcs_join_obj,
 
   FCSimple::fcs_plot_reduction(fcs_join_obj = fcs_join_obj, algorithm = tolower(reduction_cluster_annotate_algorithm),
                                reduction = tolower(dbscan_reduction), point_alpha = 0.1, outdir = outdir,
-                               internal_call = TRUE, anno_indices = dbscan_keep_rows, is_dbscan = TRUE)
+                               internal_call = TRUE, anno_indices = dbscan_keep_rows)
 
   if(length(grep("DATE|date|Date",names(fs[[1]]@description)))!=0) {
     fcs_obj_pared <- list(data = fcs_join_obj[["data"]][dbscan_keep_rows,],
