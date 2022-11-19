@@ -1,4 +1,5 @@
 fcs_select_islands <- function(fcs_join_obj,
+                               reduction_cluster_annotate_algorithm = c("leiden","flowsom","louvain","phenograph"),
                                dbscan_reduction = c("umap","tsne"),
                                dbscan_minpts = 200,
                                dbscan_eps = 0.25,
@@ -47,12 +48,13 @@ fcs_select_islands <- function(fcs_join_obj,
   user_input <- readline("which dbscan clusters should be kept? Enter integer values separated by commas:")
   keep_clus <- gsub(" ","",user_input)
   keep_clus <- as.numeric(strsplit(x = keep_clus, split = ",")[[1]])
+  keep_clus <- unique(keep_clus)
 
   dbscan_keep_rows <- which(cluster_numbers %in% keep_clus)
 
-  FCSimple::fcs_plot_reduction(fcs_join_obj = fcs_join_obj, algorithm = tolower(dbscan_reduction),
+  FCSimple::fcs_plot_reduction(fcs_join_obj = fcs_join_obj, algorithm = tolower(reduction_cluster_annotate_algorithm),
                                reduction = tolower(dbscan_reduction), point_alpha = 0.1, outdir = outdir,
-                               internal_call = TRUE, anno_indices = dbscan_keep_rows)
+                               internal_call = TRUE, anno_indices = dbscan_keep_rows, is_dbscan = TRUE)
 
   if(length(grep("DATE|date|Date",names(fs[[1]]@description)))!=0) {
     fcs_obj_pared <- list(data = fcs_join_obj[["data"]][dbscan_keep_rows,],
