@@ -9,4 +9,4 @@ Description: More about what it does (maybe more than one line)
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
-Imports: uwot, Rtsne, FNN, Matrix, igraph, circlize, grid, ggplot2, ggpubr, ggrastr, ggridges, dbscan, ggrepel, viridis, grid, gridExtra, RColorBrewer, shiny, shinythemes
+Imports: uwot, Rtsne, FNN, Matrix, igraph, circlize, grid, ggplot2, ggpubr, ggrastr, ggridges, dbscan, ggrepel, viridis, grid, gridExtra, RColorBrewer, shiny, shinythemes, dbscan

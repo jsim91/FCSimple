@@ -1,4 +1,5 @@
-fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha = 0.1, outdir = getwd())
+fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha = 0.1, outdir = getwd(),
+                               internal_call = FALSE, anno_indices = NULL)
 {
   require(ggplot2)
   require(shadowtext)
@@ -14,15 +15,29 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
   }
   plt_input <- cbind(reduction_coords,data.frame(cluster = cluster_numbers))
   plt_input$cluster <- factor(plt_input$cluster)
-  plt_reduction <- ggplot(data = plt_input, mapping = aes_string(x = colnames(reduction_coords)[1],
-                                                                 y = colnames(reduction_coords)[2],
-                                                                 color = "cluster")) +
-    ggrastr::geom_point_rast(alpha = point_alpha) +
-    annotate("shadowtext", x = xval, y = yval, label = names(xval), size = 5) +
-    theme_void() +
-    theme(legend.position = "none")
-  ggsave(filename = paste0(outdir,"/",tolower(algorithm),"_",tolower(reduction),"_labeled_",
-                           strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
+  if(!internal_call) {
+    plt_reduction <- ggplot(data = plt_input, mapping = aes_string(x = colnames(reduction_coords)[1],
+                                                                   y = colnames(reduction_coords)[2],
+                                                                   color = "cluster")) +
+      ggrastr::geom_point_rast(alpha = point_alpha) +
+      annotate("shadowtext", x = xval, y = yval, label = names(xval), size = 5) +
+      theme_void() +
+      theme(legend.position = "none")
+    fname <- paste0(outdir,"/",tolower(algorithm),"_",tolower(reduction),"_labeled_",
+                    strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf")
+  } else {
+    plt_reduction <- ggplot(data = plt_input[-dbscan_keep_rows,], mapping = aes_string(x = colnames(reduction_coords)[1],
+                                                                                       y = colnames(reduction_coords)[2],
+                                                                                       color = "grey")) +
+      ggrastr::geom_point_rast(alpha = point_alpha) +
+      annotate("point_rast", x = plt_input[-dbscan_keep_rows,1], y = plt_input[-dbscan_keep_rows,2], alpha = point_alpha, color = "red") +
+      annotate("shadowtext", x = xval, y = yval, label = names(xval), size = 5) +
+      theme_void() +
+      theme(legend.position = "none")
+    fname <- paste0(outdir,"/islands_selected_for_by_dbscan_",
+                    strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf")
+  }
+  ggsave(filename = fname,
          plot = plt_reduction, device = "pdf", width = 10, height = 10,
          units = "in", dpi = 900)
 }
