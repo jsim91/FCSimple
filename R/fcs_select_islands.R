@@ -44,7 +44,7 @@ fcs_select_islands <- function(fcs_join_obj,
 
   print("Using the dbscan heatmap")
   print(paste0(paste0(gsub("/$","",outdir),"/dbscan_cluster_heatmap_...pdf"),")"))
-  user_input <- readline("which dbscan clusters should be kept? Enter integer values separated by commas: ")
+  user_input <- readline("which dbscan clusters should be kept? Enter integer values separated by commas:")
   keep_clus <- gsub(" ","",user_input)
   keep_clus <- as.numeric(strsplit(x = keep_clus, split = ",")[[1]])
 
