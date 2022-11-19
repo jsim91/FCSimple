@@ -42,7 +42,9 @@ fcs_select_islands <- function(fcs_join_obj,
   calc_hm <- FCSimple::fcs_cluster_heatmap(fcs_join_obj = tmp_join_obj, algorithm = "dbscan")
   FCSimple::fcs_plot_heatmap(fcs_join_obj = calc_hm, algorithm = "dbscan", outdir = outdir)
 
-  user_input <- readline(paste0("Using the dbscan heatmap (",paste0(gsub("/$","",outdir),"/dbscan_cluster_heatmap_...pdf"),"), which dbscan clusters should be kept? Enter integer values separated by commas: "))
+  print("Using the dbscan heatmap")
+  print(paste0(paste0(gsub("/$","",outdir),"/dbscan_cluster_heatmap_...pdf"),")"))
+  user_input <- readline("which dbscan clusters should be kept? Enter integer values separated by commas: ")
   keep_clus <- gsub(" ","",user_input)
   keep_clus <- as.numeric(strsplit(x = keep_clus, split = ",")[[1]])
 
