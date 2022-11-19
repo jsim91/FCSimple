@@ -58,7 +58,7 @@ fcs_select_islands <- function(fcs_join_obj,
                                reduction = tolower(dbscan_reduction), point_alpha = 0.1, outdir = outdir,
                                internal_call = TRUE, keep_indices = dbscan_keep_rows)
 
-  if(length(grep("DATE|date|Date",names(fs[[1]]@description)))!=0) {
+  if(length(grep("DATE|date|Date",names(fcs_join_obj)))!=0) {
     fcs_obj_pared <- list(data = fcs_join_obj[["data"]][dbscan_keep_rows,],
                           source = fcs_join_obj[["source"]][dbscan_keep_rows],
                           run_date = fcs_join_obj[["run_date"]][dbscan_keep_rows])
