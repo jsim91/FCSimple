@@ -1,6 +1,5 @@
-# https://github.com/gaozhangyang/GIT
 from git_cluster import GIT
-import git_cluster
+# https://github.com/gaozhangyang/GIT
 import numpy as np
 import pandas as pd
 import sys
