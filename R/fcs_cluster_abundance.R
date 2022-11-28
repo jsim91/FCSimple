@@ -1,6 +1,6 @@
 fcs_calculate_abundance <- function(fcs_join_obj,
-                                  report_algorithm = c("leiden","flowsom","louvain","phenograph"),
-                                  report_as = c("frequency", "fraction"))
+                                    report_algorithm = c("leiden","flowsom","louvain","phenograph","git"),
+                                    report_as = c("frequency", "fraction"))
 {
   if(!report_algorithm %in% names(fcs_join_obj)) {
     stop("error in names of fcs_join_obj: has data been clustered using a supported algorithm. See ?cluster.")
@@ -35,7 +35,7 @@ fcs_calculate_abundance <- function(fcs_join_obj,
 }
 
 fcs_report_abundance <- function(fcs_join_obj,
-                                 report_algorithm = c("leiden","flowsom","louvain","phenograph"),
+                                 report_algorithm = c("leiden","flowsom","louvain","phenograph","git"),
                                  outdir = getwd())
 {
   abundance_values <- fcs_join_obj[[tolower(report_algorithm)]][["abundance"]]

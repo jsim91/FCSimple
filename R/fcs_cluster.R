@@ -1,15 +1,33 @@
 fcs_cluster <- function(fcs_join_obj,
                         language = c("R","Python"),
-                        algorithm = c("leiden","flowsom","louvain","phenograph"),
+                        algorithm = c("leiden","flowsom","louvain","phenograph","git"),
                         leiden_louvain_resolution = 1,
                         flowsom_nClus = 15,
                         phenograph_k = 30,
                         adjacency_knn = 30,
+                        git_k = 30,
                         search_method = c("FNN","RANN"))
 {
   capture_dir <- system.file(package = "FCSimple")
   if(any(length(language)!=1, !tolower(language) %in% c("r","python"))) {
     stop("error in argument 'language': use 'R' or 'Python'")
+  }
+  if(all(tolower(language)=="r",tolower(algorithm)=="git")) {
+    warning("error in joined arguments 'language' and 'algorithm': git clustering only avaiable for Python. Attempting to git cluster in Python using k = ",round(git_k,0),"..")
+    write.csv(x = fcs_join_obj[["data"]], file = paste0(capture_dir,"/python/__python_cl_input__.csv"))
+    system(command = paste0("python ",paste0(capture_dir,"/python/run_cluster_git.py")," ",
+                            paste0(capture_dir,"/python/__python_cl_input__.csv")," ",capture_dir,"/python ",round(git_k,0)))
+    read_clus <- read.csv(paste0(capture_dir,"/python/__tmp_cl__.csv"), check.names = FALSE)
+    if(file.exists(paste0(capture_dir,"/python/__tmp_cl__.csv"))) {
+      file.remove(paste0(capture_dir,"/python/__tmp_cl__.csv"))
+    }
+    if(file.exists(paste0(capture_dir,"/python/__python_cl_input__.mtx"))) {
+      file.remove(paste0(capture_dir,"/python/__python_cl_input__.mtx"))
+    }
+    cluster_numbers <- read_clus[,1]
+    fcs_join_obj[["git"]] <- list(clusters = cluster_numbers,
+                                  settings = list(git_k = git_k))
+    return(fcs_join_obj)
   }
   if(tolower(algorithm) %in% c("leiden","louvain")) {
     require(FNN)
@@ -72,14 +90,14 @@ fcs_cluster <- function(fcs_join_obj,
 
       system(command = paste0("python ",paste0(capture_dir,"/python/run_cluster.py")," ",
                               paste0(capture_dir,"/python/__python_cl_input__.mtx")," ",capture_dir,"/python ",tolower(algorithm)," ",leiden_louvain_resolution))
-      map <- read.csv(paste0(capture_dir,"/python/__tmp_cl__.csv"), check.names = FALSE)
+      read_clus <- read.csv(paste0(capture_dir,"/python/__tmp_cl__.csv"), check.names = FALSE)
       if(file.exists(paste0(capture_dir,"/python/__tmp_cl__.csv"))) {
         file.remove(paste0(capture_dir,"/python/__tmp_cl__.csv"))
       }
       if(file.exists(paste0(capture_dir,"/python/__python_cl_input__.mtx"))) {
         file.remove(paste0(capture_dir,"/python/__python_cl_input__.mtx"))
       }
-      cluster_numbers <- map[,1]
+      cluster_numbers <- read_clus[,1]
       if(algorithm=="leiden") {
         fcs_join_obj[["leiden"]] <- list(clusters = cluster_numbers,
                                          settings = list(method = 'la.RBConfigurationVertexPartition',
@@ -127,3 +145,4 @@ fcs_cluster <- function(fcs_join_obj,
   }
   return(fcs_join_obj)
 }
+

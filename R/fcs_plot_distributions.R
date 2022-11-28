@@ -1,6 +1,6 @@
 fcs_plot_distribution <- function(fcs_join_obj,
                                   separate_by = c("none", "date", "cluster"),
-                                  plot_algorithm = c("leiden","flowsom","louvain","phenograph"),
+                                  plot_algorithm = c("leiden","flowsom","louvain","phenograph","git"),
                                   outdir = getwd(),
                                   plot_palette = NULL)
 {
@@ -33,7 +33,7 @@ fcs_plot_distribution <- function(fcs_join_obj,
     }
   }
   if(tolower(separate_by) == "cluster") {
-    if(!tolower(plot_algorithm) %in% c("leiden","flowsom","louvain","phenograph")) {
+    if(!tolower(plot_algorithm) %in% c("leiden","flowsom","louvain","phenograph","git")) {
       stop(paste0("error in argument 'plot_algorithm': clusters not found for ",tolower(plot_algorithm)," not found in 'fcs_join_obj'"))
     }
     for(i in 1:length(data_split)) {
