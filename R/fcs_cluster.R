@@ -16,15 +16,15 @@ fcs_cluster <- function(fcs_join_obj,
     warning("error in joined arguments 'language' and 'algorithm': git clustering only avaiable for Python. Attempting to git cluster in Python using k = ",round(git_k,0),"..")
   }
   if(tolower(algorithm)=="git") {
-    write.csv(x = fcs_join_obj[["data"]], file = paste0(capture_dir,"/python/__python_cl_input__.csv"))
+    write.csv(x = fcs_join_obj[["data"]], file = paste0(capture_dir,"/temp_files/__python_cl_input__.csv"))
     system(command = paste0("python ",paste0(capture_dir,"/python/run_cluster_git.py")," ",
-                            paste0(capture_dir,"/python/__python_cl_input__.csv")," ",capture_dir,"/python ",round(git_k,0)))
-    read_clus <- read.csv(paste0(capture_dir,"/python/__tmp_cl__.csv"), check.names = FALSE)
-    if(file.exists(paste0(capture_dir,"/python/__tmp_cl__.csv"))) {
-      file.remove(paste0(capture_dir,"/python/__tmp_cl__.csv"))
+                            paste0(capture_dir,"/temp_files/__python_cl_input__.csv")," ",capture_dir,"/temp_files ",round(git_k,0)))
+    read_clus <- read.csv(paste0(capture_dir,"/temp_files/__tmp_cl__.csv"), check.names = FALSE)
+    if(file.exists(paste0(capture_dir,"/temp_files/__tmp_cl__.csv"))) {
+      file.remove(paste0(capture_dir,"/temp_files/__tmp_cl__.csv"))
     }
-    if(file.exists(paste0(capture_dir,"/python/__python_cl_input__.mtx"))) {
-      file.remove(paste0(capture_dir,"/python/__python_cl_input__.mtx"))
+    if(file.exists(paste0(capture_dir,"/temp_files/__python_cl_input__.mtx"))) {
+      file.remove(paste0(capture_dir,"/temp_files/__python_cl_input__.mtx"))
     }
     cluster_numbers <- read_clus[,1]
     fcs_join_obj[["git"]] <- list(clusters = cluster_numbers,
@@ -88,16 +88,16 @@ fcs_cluster <- function(fcs_join_obj,
     }
     if(tolower(language)=="python") {
       capture_dir <- system.file(package = "FCSimple") # points to package location
-      Matrix::writeMM(obj = sm, file = paste0(capture_dir,"/python/__python_cl_input__.mtx"))
+      Matrix::writeMM(obj = sm, file = paste0(capture_dir,"/temp_files/__python_cl_input__.mtx"))
 
       system(command = paste0("python ",paste0(capture_dir,"/python/run_cluster.py")," ",
-                              paste0(capture_dir,"/python/__python_cl_input__.mtx")," ",capture_dir,"/python ",tolower(algorithm)," ",leiden_louvain_resolution))
-      read_clus <- read.csv(paste0(capture_dir,"/python/__tmp_cl__.csv"), check.names = FALSE)
-      if(file.exists(paste0(capture_dir,"/python/__tmp_cl__.csv"))) {
-        file.remove(paste0(capture_dir,"/python/__tmp_cl__.csv"))
+                              paste0(capture_dir,"/temp_files/__python_cl_input__.mtx")," ",capture_dir,"/temp_files ",tolower(algorithm)," ",leiden_louvain_resolution))
+      read_clus <- read.csv(paste0(capture_dir,"/temp_files/__tmp_cl__.csv"), check.names = FALSE)
+      if(file.exists(paste0(capture_dir,"/temp_files/__tmp_cl__.csv"))) {
+        file.remove(paste0(capture_dir,"/temp_files/__tmp_cl__.csv"))
       }
-      if(file.exists(paste0(capture_dir,"/python/__python_cl_input__.mtx"))) {
-        file.remove(paste0(capture_dir,"/python/__python_cl_input__.mtx"))
+      if(file.exists(paste0(capture_dir,"/temp_files/__python_cl_input__.mtx"))) {
+        file.remove(paste0(capture_dir,"/temp_files/__python_cl_input__.mtx"))
       }
       cluster_numbers <- read_clus[,1]
       if(algorithm=="leiden") {
