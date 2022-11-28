@@ -320,6 +320,17 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
 
   clustered_data <- do.call(rbind, list(set1_spots, set2_spots, set_ns))
   clustered_data$cluster[grep("0$",clustered_data$cluster)] <- "ns"
+  usrc <- unique(clustered_data$src); uclus <- unique(clustered_data$cluster)
+  freq_mat <- matrix(data = NA, nrow = length(usrc), ncol = length(uclus))
+  row.names(freq_mat) <- usrc; colnames(freq_mat) <- uclus
+  for(i in 1:nrow(freq_mat)) {
+    tmp_values <- clustered_data$cluster[which(clustered_data$src==row.names(freq_mat)[i])]
+    for(j in 1:ncol(freq_mat)) {
+      freq_mat[i,j] <- mean(tmp_values==colnames(freq_mat)[j]) * 100
+    }
+  }
+  write.csv(x = freq_mat, file = paste0(outdir,"/",file_output_prefix,"trex_significant_cluster_frequencies_",
+                                        strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".csv"), row.names = TRUE)
 
   require(CATALYST)
   require(ComplexHeatmap)
