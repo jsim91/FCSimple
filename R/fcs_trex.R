@@ -417,6 +417,12 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
                    display.thresh = 1,  output.files = TRUE, labels = FALSE,
                    only.MEMheatmap = TRUE)
   }
+  mem_outs <- list.files(path = paste0(getwd(),"/output files"), full.names = TRUE)
+  for(i in 1:length(mem_outs)) {
+    file.copy(from = mem_outs[i], to = outdir, overwrite = TRUE,
+              recursive = FALSE, copy.mode = TRUE)
+    file.remove(mem_outs[i])
+  }
 
   if(tolower(reduction)=="umap") {
     plot_data <- clustered_data[,c("UMAP1","UMAP2","cluster")]
