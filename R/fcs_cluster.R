@@ -14,6 +14,8 @@ fcs_cluster <- function(fcs_join_obj,
   }
   if(all(tolower(language)=="r",tolower(algorithm)=="git")) {
     warning("error in joined arguments 'language' and 'algorithm': git clustering only avaiable for Python. Attempting to git cluster in Python using k = ",round(git_k,0),"..")
+  }
+  if(tolower(algorithm)=="git") {
     write.csv(x = fcs_join_obj[["data"]], file = paste0(capture_dir,"/python/__python_cl_input__.csv"))
     system(command = paste0("python ",paste0(capture_dir,"/python/run_cluster_git.py")," ",
                             paste0(capture_dir,"/python/__python_cl_input__.csv")," ",capture_dir,"/python ",round(git_k,0)))
