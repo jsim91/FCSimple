@@ -61,12 +61,12 @@ The dimension reduction and clustering steps do offer methods to run the calcula
 - [Python](https://www.python.org/downloads/) # Check the "Add to Path" box during installation. The Python installation should come with pip.
 - [umap](https://github.com/lmcinnes/umap) # umap has its own set of dependencies, see link
 - [pynndescent](https://github.com/lmcinnes/pynndescent) # Required to use this package's UMAP-by-Python functionality
-- [leidenalg](https://github.com/vtraag/leidenalg)
+- [leidenalg](https://github.com/vtraag/leidenalg) # leiden in Python
 - [scipy](https://pypi.org/project/scipy/)
 - [numpy](https://pypi.org/project/numpy/)
 - [pandas](https://pypi.org/project/pandas/)
-- [igraph](https://pypi.org/project/igraph/)
-- [openTSNE](https://github.com/pavlin-policar/openTSNE)
+- [igraph](https://pypi.org/project/igraph/) # louvain in Python
+- [openTSNE](https://github.com/pavlin-policar/openTSNE) # tSNE in Python
 - [GIT](https://github.com/gaozhangyang/GIT) # GIT clustering algorithm
 
 
