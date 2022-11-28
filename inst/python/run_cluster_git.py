@@ -4,6 +4,7 @@ import git_cluster
 import numpy as np
 import pandas as pd
 import sys
+import os
 
 in_file = sys.argv[1]
 out_file = sys.argv[2]
