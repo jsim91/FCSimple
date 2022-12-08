@@ -63,6 +63,7 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm,
 fcs_plot_heatmap <- function(fcs_join_obj, algorithm, outdir = getwd())
 {
   require(ggplot2)
+  require(ComplexHeatmap)
   if(tolower(algorithm)=="dbscan") {
     fname <- paste0(outdir,"/",tolower(algorithm),"_cluster_heatmap.pdf")
   } else {
