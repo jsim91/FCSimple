@@ -112,11 +112,11 @@ fcs_cluster <- function(fcs_join_obj,
       }
       return(fcs_join_obj)
     } else if(tolower(language)=="r") {
-      G <- igraph::graph.adjacency(adjmatrix = sm, mode = "undirected")
       require(igraph)
+      G <- igraph::graph.adjacency(adjmatrix = sm, mode = "undirected")
       if(tolower(algorithm)=="leiden") {
         set.seed(123)
-        leid <- igraph::cluster_leiden(graph = G, objective_function = "modularity", weights = NA, resolution_parameter = leiden_louvain_resolution, )
+        leid <- igraph::cluster_leiden(graph = G, objective_function = "modularity", weights = NA, resolution_parameter = leiden_louvain_resolution)
         fcs_join_obj[["leiden"]] <- list(clusters = factor(leid$membership),
                                          settings = list(resolution_parameter = leiden_louvain_resolution,
                                                          weights = NA, seed = 123, language = language))
