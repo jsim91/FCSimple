@@ -75,7 +75,7 @@ The dimension reduction and clustering steps do offer methods to run the calcula
 This package requires the user to initiate a list object like this:
 
 ```
-include_files <- list.files(path = "fcs_file_directory", full.names = TRUE) # Point to the directory where the FCS file(s) of interest are located. It's recommended to use full names.
+include_files <- list.files(path = "fcs_file_directory", pattern = ".fcs", full.names = TRUE) # Point to the directory where the FCS file(s) of interest are located. It's recommended to use full names.
 my_object <- fcs_join(files = include_files) # This function takes the listed files as input and will initialize the list object that will store all subsequent analyses.
 ```
 
