@@ -46,6 +46,7 @@ fcs_join <- function(files,
   } else {
     fs <- flowCore::read.flowSet(files = files, truncate_max_range = FALSE)
   }
+  sampleNames(fs) <- gsub("^.+/","",sampleNames(fs))
   # if(use_ncdf) {
   #   require(ncdfFlow)
   # }

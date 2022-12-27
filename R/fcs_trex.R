@@ -31,7 +31,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   total_data <- as.data.frame(fcs_join_obj[["data"]])
   total_data$src <- fcs_join_obj[["source"]]
   source_names <- total_data$src
-  if(mean(unique(source_names) %in% gsub("^.*/","",unlist(compare_list)))==1) {
+  if(mean(gsub("^.+/","",unlist(compare_list)) %in% unique(source_names))==1) {
     if(tolower(reduction)=="umap") {
       if("umap" %in% tolower(names(fcs_join_obj))) {
         get_reduction <- fcs_join_obj[["umap"]][["coordinates"]]
@@ -45,18 +45,20 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
         stop("error in function call: tSNE specified but no tSNE coordinates found. Run fcs_reduce_dimensions using algorithm = 'tSNE' first")
       }
     }
+  } else {
+    stop("One or more IDs listed in 'compare_list' were not found in list object's source element.\nHas FCSimple::fcs_reduce_dimensions been run on object?\nIf so, verify that the IDs in 'compare_list' match those in the list object's source element.")
   }
-  set1 <- gsub("^.*/","",set1_full)
-  set2 <- gsub("^.*/","",set2_full)
-  if(length(which(total_data$src %in% gsub("^\\./","",set1)))==0) {
+  set1 <- gsub("^.+/","",set1_full)
+  set2 <- gsub("^.+/","",set2_full)
+  if(length(which(total_data$src %in% gsub("^.+/","",set1)))==0) {
     stop("error in argument 'compare_list': no file names in compare_list[[1]] match data set")
   }
-  if(length(which(total_data$src %in% gsub("^\\./","",set2)))==0) {
+  if(length(which(total_data$src %in% gsub("^.+/","",set2)))==0) {
     stop("error in argument 'compare_list': no file names in compare_list[[2]] match data set")
   }
-  set1_ind <- which(total_data$src %in% gsub("^\\./","",set1))
-  set2_ind <- which(total_data$src %in% gsub("^\\./","",set2))
-  other_ind <- which(!total_data$src %in% gsub("^\\./","",c(set1,set2)))
+  set1_ind <- which(total_data$src %in% gsub("^.+/","",set1))
+  set2_ind <- which(total_data$src %in% gsub("^.+/","",set2))
+  other_ind <- which(!total_data$src %in% gsub("^.+/","",c(set1,set2)))
   set_blank <- rep(NA,times=nrow(total_data))
   set_blank[set1_ind] <- set1_label; set_blank[set2_ind] <- set2_label
   if(length(other_ind)!=0){
