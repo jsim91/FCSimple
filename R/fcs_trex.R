@@ -60,7 +60,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   set_blank <- rep(NA,times=nrow(total_data))
   set_blank[set1_ind] <- set1_label; set_blank[set2_ind] <- set2_label
   if(length(other_ind)!=0){
-    set_blank[other_index] <- "other"
+    set_blank[other_ind] <- "other"
   }
   total_data$set <- set_blank
 
