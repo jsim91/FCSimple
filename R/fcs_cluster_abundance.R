@@ -41,6 +41,6 @@ fcs_report_abundance <- function(fcs_join_obj,
   abundance_values <- fcs_join_obj[[tolower(report_algorithm)]][["abundance"]]
   row.names(abundance_values) <- gsub("^.+/|.fcs$","",row.names(abundance_values))
   outdir <- gsub("/$","",outdir)
-  write.csv(x = abundance_values, file = paste0(outdir,"/",report_algorithm,"_cluster_abundance_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S")), row.names = TRUE)
+  write.csv(x = abundance_values, file = paste0(outdir,"/",report_algorithm,"_cluster_abundance_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".csv"), row.names = TRUE)
   return(abundance_values)
 }
