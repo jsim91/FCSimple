@@ -117,11 +117,16 @@ fcs_join <- function(files,
         if(any(!is.numeric(hyperlog_transform_T), !is.numeric(hyperlog_transform_M), !is.numeric(hyperlog_transform_W), !is.numeric(hyperlog_transform_A))) {
           stop("error in argument(s) 'hyperlog_transform_.': values must be numeric")
         }
-        transform_FUN <- flowCore::hyperlogtGml2(parameters = flowCore::colnames(fs), T = hyperlog_transform_T,
+        transform_FUN <- flowCore::hyperlogtGml2(parameters = flowCore::colnames(fs), 'T' = hyperlog_transform_T,
                                                  M = hyperlog_transform_M, W = hyperlog_transform_W,
                                                  A = hyperlog_transform_A)
-        transform_function <- flowCore::transformList(flowCore::colnames(fs), transform_FUN)
-        fst <- flowCore::transform(fs, transform_function)
+        # transform_function <- flowCore::transformList(flowCore::colnames(fs), transform_FUN)
+        # fst <- flowCore::transform(fs, transform_function)
+        fst <- fs
+        for(i in 1:length(fst)) {
+          fst[[i]] <- eval(transform_FUN)(exprs(fs[[i]]))
+        }
+        # fst <- eval(transform_FUN)(exprs(fs))
         for(i in 1:length(fst)) {
           if(i==1) {
             tmp_data <- flowCore::exprs(object = fst[[i]])
