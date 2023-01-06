@@ -273,8 +273,8 @@ function(input,output) {
                                                  widthBasis = (10^biexp_wid)*-1)
         Data_full[,col_index] <- biexp_fun(Data_full[,col_index])
       } else if(use_algo=="hyperlog") {
-        hyperlog_fun <- flowCore::hyperlogtGml2(parameters = colnames(param_settings$reactive_data)[i],
-                                                T = hyper_t, M = hyper_m, W = hyper_w, A = hyper_a)
+        hyperlog_fun <- flowCore::hyperlogtGml2(parameters = colnames(Data_full)[col_index],
+                                                'T' = hyper_t, M = hyper_m, W = hyper_w, A = hyper_a)
         Data_full[,col_index] <- eval(hyperlog_fun)(Data_full[,col_index])
       }
     }
