@@ -31,28 +31,29 @@ fcs_join <- function(files,
       stop("error in argument 'files': No files with extension 'fcs' or 'FCS' found")
     }
   }
-  fcs_list <- vector("list", length = length(files)); names(fcs_list) <- files
-  for(i in 1:length(fcs_list)) {
-    tmp_fcs <- read.FCS(filename = files[i], truncate_max_range = FALSE)
-    na_channel <- which(is.na(tmp_fcs@parameters@data$desc))
-    if(length(na_channel)!=0) {
-      tmp_fcs <- tmp_fcs[,-na_channel]
-    }
-    if(!is.na(downsample_size)) {
-      if(nrow(tmp_fcs)>downsample_size) {
-        set.seed(123)
-        fcs_list[[i]] <- tmp_fcs[sample(1:nrow(tmp_fcs),downsample_size,replace=FALSE),]
-        colnames(fcs_list[[i]]) <- fcs_list[[1]]@parameters@data$desc
-      } else {
-        fcs_list[[i]] <- tmp_fcs
-        colnames(fcs_list[[i]]) <- fcs_list[[1]]@parameters@data$desc
-      }
-    } else {
-      fcs_list[[i]] <- tmp_fcs
-      colnames(fcs_list[[i]]) <- fcs_list[[1]]@parameters@data$desc
-    }
-  }
-  fs <- flowSet(fcs_list)
+  # fcs_list <- vector("list", length = length(files)); names(fcs_list) <- files
+  # for(i in 1:length(fcs_list)) {
+  #   tmp_fcs <- read.FCS(filename = files[i], truncate_max_range = FALSE)
+  #   na_channel <- which(is.na(tmp_fcs@parameters@data$desc))
+  #   if(length(na_channel)!=0) {
+  #     tmp_fcs <- tmp_fcs[,-na_channel]
+  #   }
+  #   if(!is.na(downsample_size)) {
+  #     if(nrow(tmp_fcs)>downsample_size) {
+  #       set.seed(123)
+  #       fcs_list[[i]] <- tmp_fcs[sample(1:nrow(tmp_fcs),downsample_size,replace=FALSE),]
+  #       colnames(fcs_list[[i]]) <- fcs_list[[1]]@parameters@data$desc
+  #     } else {
+  #       fcs_list[[i]] <- tmp_fcs
+  #       colnames(fcs_list[[i]]) <- fcs_list[[1]]@parameters@data$desc
+  #     }
+  #   } else {
+  #     fcs_list[[i]] <- tmp_fcs
+  #     colnames(fcs_list[[i]]) <- fcs_list[[1]]@parameters@data$desc
+  #   }
+  # }
+  # fs <- flowSet(fcs_list)
+  fs <- flowCore::read.flowSet(files = files, truncate_max_range = FALSE)
   sampleNames(fs) <- gsub("^.+/","",sampleNames(fs))
   # if(use_ncdf) {
   #   require(ncdfFlow)
