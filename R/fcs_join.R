@@ -166,6 +166,7 @@ fcs_join <- function(files,
       if(length(desc_names)==ncol(tmp_data)) {
         colnames(tmp_data) <- desc_names
       } else {
+        colnames(tmp_data) <- fs[[1]]@parameters@data$name
         print("Unable to find descriptive column names. Using original names.")
       }
     }
