@@ -117,23 +117,34 @@ fcs_join <- function(files,
         if(any(!is.numeric(hyperlog_transform_T), !is.numeric(hyperlog_transform_M), !is.numeric(hyperlog_transform_W), !is.numeric(hyperlog_transform_A))) {
           stop("error in argument(s) 'hyperlog_transform_.': values must be numeric")
         }
-        transform_FUN <- flowCore::hyperlogtGml2(parameters = flowCore::colnames(fs), 'T' = hyperlog_transform_T,
-                                                 M = hyperlog_transform_M, W = hyperlog_transform_W,
-                                                 A = hyperlog_transform_A)
+        # transform_FUN <- flowCore::hyperlogtGml2(parameters = flowCore::colnames(fs), 'T' = hyperlog_transform_T,
+        #                                          M = hyperlog_transform_M, W = hyperlog_transform_W,
+        #                                          A = hyperlog_transform_A)
         # transform_function <- flowCore::transformList(flowCore::colnames(fs), transform_FUN)
         # fst <- flowCore::transform(fs, transform_function)
         fst <- fs
-        for(i in 1:length(fst)) {
-          fst[[i]] <- eval(transform_FUN)(exprs(fs[[i]]))
-        }
-        # fst <- eval(transform_FUN)(exprs(fs))
-        for(i in 1:length(fst)) {
+        for(i in 1:length(fs)) {
+          tmp_data2 <- exprs(fs[[i]])
+          for(j in 1:ncol(tmp_data)) {
+            transform_FUN <- flowCore::hyperlogtGml2(parameters = colnames(tmp_data2)[j], 'T' = hyperlog_transform_T,
+                                                     M = hyperlog_transform_M, W = hyperlog_transform_W,
+                                                     A = hyperlog_transform_A)
+            tmp_data2[,j] <- eval(transform_FUN)(tmp_data[,j])
+          }
           if(i==1) {
-            tmp_data <- flowCore::exprs(object = fst[[i]])
+            tmp_data <- tmp_data2
           } else {
-            tmp_data <- rbind(tmp_data, flowCore::exprs(object = fst[[i]]))
+            tmp_data <- rbind(tmp_data, tmp_data2)
           }
         }
+        # fst <- eval(transform_FUN)(exprs(fs))
+        # for(i in 1:length(fst)) {
+        #   if(i==1) {
+        #     tmp_data <- flowCore::exprs(object = fst[[i]])
+        #   } else {
+        #     tmp_data <- rbind(tmp_data, flowCore::exprs(object = fst[[i]]))
+        #   }
+        # }
       }
     } else {
       stop("error in argument 'instrument_type': depending on how FCS files were created, use 'cytof' or 'flow'")
