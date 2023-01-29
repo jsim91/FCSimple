@@ -7,7 +7,8 @@ fcs_cluster <- function(fcs_join_obj,
                         adjacency_knn = 30,
                         git_k = 30,
                         search_method = c("FNN","RANN"),
-                        search_only = FALSE)
+                        search_only = FALSE,
+                        num_cores = ceiling(detectCores()/2))
 {
   capture_dir <- system.file(package = "FCSimple")
   if(any(length(language)!=1, !tolower(language) %in% c("r","python"))) {
@@ -51,7 +52,19 @@ fcs_cluster <- function(fcs_join_obj,
         require(future)
         require(future.apply)
 
-        num_core <- ceiling(detectCores()/2)
+        if(num_cores>detectCores()) {
+          stop(paste0(num_cores," specified but only ",detectCores()," available."))
+        }
+        if(num_core==0) {
+          num_core <- detectCores()
+        } else {
+          num_core <- num_cores
+        }
+        if(num_core>1) {
+          print(paste0("searching with ",num_core," cores"))
+        } else {
+          print(paste0("searching with ",num_core," core"))
+        }
         options(future.globals.maxSize= Inf)
         future::plan(future::cluster, workers = num_core)
 
