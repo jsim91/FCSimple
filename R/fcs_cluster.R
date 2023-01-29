@@ -6,7 +6,8 @@ fcs_cluster <- function(fcs_join_obj,
                         phenograph_k = 30,
                         adjacency_knn = 30,
                         git_k = 30,
-                        search_method = c("FNN","RANN"))
+                        search_method = c("FNN","RANN"),
+                        search_only = FALSE)
 {
   capture_dir <- system.file(package = "FCSimple")
   if(any(length(language)!=1, !tolower(language) %in% c("r","python"))) {
@@ -84,6 +85,9 @@ fcs_cluster <- function(fcs_join_obj,
         fcs_join_obj[["adjacency_matrix"]] <- sm
       } else {
         stop("error in argument 'search_method': use either 'RANN' or 'FNN'")
+      }
+      if(search_only) {
+        return(fcs_join_obj)
       }
     }
     if(tolower(language)=="python") {
