@@ -8,7 +8,7 @@ fcs_cluster <- function(fcs_join_obj,
                         git_k = 30,
                         search_method = c("FNN","RANN"),
                         search_only = FALSE,
-                        num_cores = ceiling(detectCores()/2))
+                        num_cores = parallel::ceiling(detectCores()/2))
 {
   capture_dir <- system.file(package = "FCSimple")
   if(any(length(language)!=1, !tolower(language) %in% c("r","python"))) {
