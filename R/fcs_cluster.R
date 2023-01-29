@@ -52,11 +52,11 @@ fcs_cluster <- function(fcs_join_obj,
         require(future)
         require(future.apply)
 
-        if(num_cores>detectCores()) {
-          stop(paste0(num_cores," specified but only ",detectCores()," available."))
+        if(num_cores>parallel::detectCores()) {
+          stop(paste0(num_cores," specified but only ",parallel::detectCores()," available."))
         }
-        if(num_core==0) {
-          num_core <- detectCores()
+        if(num_cores==0) {
+          num_core <- parallel::detectCores()
         } else {
           num_core <- num_cores
         }
