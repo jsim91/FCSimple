@@ -25,7 +25,7 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
       theme_void() +
       theme(legend.position = "none")
     fname <- paste0(outdir,"/",tolower(algorithm),"_",tolower(reduction),"_labeled_",
-                    strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf")
+                    strftime(Sys.time(),"%Y-%m-%d_%H%M%S"))
   } else {
     plt_reduction <- ggplot(data = plt_input[-keep_indices,], mapping = aes_string(x = colnames(reduction_coords)[1],
                                                                                        y = colnames(reduction_coords)[2])) +
