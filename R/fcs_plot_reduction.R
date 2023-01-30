@@ -1,5 +1,6 @@
 fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha = 0.1, outdir = getwd(),
-                               internal_call = FALSE, anno_indices = NULL, keep_indices = NA)
+                               internal_call = FALSE, anno_indices = NULL, keep_indices = NA, pdf_dim = 10,
+                               png_dim = 1000, plotting_device = "pdf", return_plot = TRUE)
 {
   require(ggplot2)
   require(shadowtext)
@@ -36,9 +37,19 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
       theme_void() +
       theme(legend.position = "none")
     fname <- paste0(outdir,"/islands_selected_for_by_dbscan_",
-                    strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf")
+                    strftime(Sys.time(),"%Y-%m-%d_%H%M%S"))
   }
-  ggsave(filename = fname,
-         plot = plt_reduction, device = "pdf", width = 10, height = 10,
-         units = "in", dpi = 900)
+  if(return_plot) {
+    return(plt_reduction)
+  } else {
+    if(plotting_device=="pdf") {
+      ggsave(filename = paste0(fname,".pdf"),
+             plot = plt_reduction, device = "pdf", width = pdf_dim, height = pdf_dim,
+             units = "in", dpi = 900)
+    } else if(plotting_device=="png"){
+      ggsave(filename = paste0(fname,".png"),
+             plot = plt_reduction, device = "png", width = png_dim, height = png_dim,
+             units = "in", dpi = 900)
+    }
+  }
 }
