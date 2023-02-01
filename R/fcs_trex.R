@@ -31,7 +31,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   total_data <- as.data.frame(fcs_join_obj[["data"]])
   total_data$src <- fcs_join_obj[["source"]]
   source_names <- total_data$src
-  if(mean(gsub("^.+/","",unlist(compare_list)) %in% unique(source_names))==1) {
+  if(mean(gsub("^.+/","",unlist(compare_list)) %in% unique(source_names))!=0) {
     if(tolower(reduction)=="umap") {
       if("umap" %in% tolower(names(fcs_join_obj))) {
         get_reduction <- fcs_join_obj[["umap"]][["coordinates"]]
