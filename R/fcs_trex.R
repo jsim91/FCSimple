@@ -3,7 +3,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
                      percentile_breaks = c(0,5,10,15,85,90,95,100),
                      neighbor_significance_threshold = 0.9, cluster_min_size = 50,
                      relative_cluster_distance = 30, file_output_prefix = NULL,
-                     use_MEM = TRUE)
+                     use_MEM = TRUE, max_alloc = 200000)
 {
   require(flowCore)
   require(ggplot2)
@@ -297,23 +297,39 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   }
 
   set_ns <- total_data[which(total_data$bin=="not significant"),]
+  if(nrow(set1_spots)>max_alloc) {
+    set.seed(123)
+    set1_spots <- set1_spots[sample(1:nrow(set1_spots),size=max_alloc,replace=FALSE),]
+    cluster_min_size1 <- cluster_min_size * (max_alloc/nrow(set1_spots))
+  } else {
+    cluster_min_size1 <- cluster_min_size
+  }
+  if(nrow(set2_spots)>max_alloc) {
+    set.seed(123)
+    set2_spots <- set2_spots[sample(1:nrow(set2_spots),size=max_alloc,replace=FALSE),]
+    cluster_min_size2 <- cluster_min_size * (max_alloc/nrow(set2_spots))
+  } else {
+    cluster_min_size2 <- cluster_min_size
+  }
 
   if(set1_dist!=0) {
     if(tolower(reduction)=="umap") {
       scan_set1_cluster <- dbscan(x = set1_spots[,c("UMAP1","UMAP2")],
-                                  eps = set1_dist, minPts = cluster_min_size)$cluster
+                                  eps = set1_dist, minPts = cluster_min_size1)$cluster
     } else if(tolower(reduction)=="tsne") {
       scan_set1_cluster <- dbscan(x = set1_spots[,c("tSNE1","tSNE2")],
-                                  eps = set1_dist, minPts = cluster_min_size)$cluster
+                                  eps = set1_dist, minPts = cluster_min_size1)$cluster
     }
     set1_spots$cluster <- paste0(set1_label,"_",scan_set1_cluster)
   }
 
   if(set2_dist!=0) {
     if(tolower(reduction)=="umap") {
-      scan_set2_cluster <- dbscan(x = set2_spots[,c("UMAP1","UMAP2")], eps = set2_dist, minPts = cluster_min_size)$cluster
+      scan_set2_cluster <- dbscan(x = set2_spots[,c("UMAP1","UMAP2")],
+                                  eps = set2_dist, minPts = cluster_min_size2)$cluster
     } else if(tolower(reduction)=="tsne") {
-      scan_set2_cluster <- dbscan(x = set2_spots[,c("tSNE1","tSNE2")], eps = set2_dist, minPts = cluster_min_size)$cluster
+      scan_set2_cluster <- dbscan(x = set2_spots[,c("tSNE1","tSNE2")],
+                                  eps = set2_dist, minPts = cluster_min_size2)$cluster
     }
     set2_spots$cluster <- paste0(set2_label,"_",scan_set2_cluster)
   }
