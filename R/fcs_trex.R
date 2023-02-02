@@ -211,7 +211,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   }
   pl_bins <- pl_bins +
     geom_point_rast(pch = 19, size = 1.5, alpha = point_alpha) +
-    scale_color_manual(values = bin_palette) +
+    scale_color_manual(values = bin_palette, breaks = names(bin_palette)) +
     guides(color = guide_legend(override.aes = list(size = 4, alpha = 1))) +
     labs(caption = paste0("0 trends toward ",set1_label," and 100 trends toward ",set2_label)) +
     theme_void() +
