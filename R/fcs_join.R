@@ -129,7 +129,7 @@ fcs_join <- function(files,
             transform_FUN <- flowCore::hyperlogtGml2(parameters = colnames(tmp_data2)[j], 'T' = hyperlog_transform_T,
                                                      M = hyperlog_transform_M, W = hyperlog_transform_W,
                                                      A = hyperlog_transform_A)
-            tmp_data2[,j] <- eval(transform_FUN)(tmp_data2[,j])
+            tmp_data2[,j] <- eval(transform_FUN)(tmp_data2)
           }
           if(i==1) {
             tmp_data <- tmp_data2

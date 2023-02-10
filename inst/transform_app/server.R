@@ -275,7 +275,8 @@ function(input,output) {
       } else if(use_algo=="hyperlog") {
         hyperlog_fun <- flowCore::hyperlogtGml2(parameters = colnames(Data_full)[col_index],
                                                 'T' = hyper_t, M = hyper_m, W = hyper_w, A = hyper_a)
-        Data_full[,col_index] <- eval(hyperlog_fun)(Data_full[,col_index])
+        # Data_full[,col_index] <- eval(hyperlog_fun)(Data_full[,col_index])
+        Data_full[,col_index] <- eval(hyperlog_fun)(Data_full)
       }
     }
     temp_files <- list.files(path = paste0(system.file(package = "FCSimple"),"/temp_files/"), full.names = TRUE, recursive = TRUE)
