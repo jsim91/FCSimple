@@ -8,7 +8,8 @@ fcs_cluster <- function(fcs_join_obj,
                         git_k = 30,
                         search_method = c("FNN","RANN"),
                         search_only = FALSE,
-                        num_cores = parallel::ceiling(detectCores()/2))
+                        num_cores = parallel::ceiling(detectCores()/2),
+                        output_as = "adjacency")
 {
   capture_dir <- system.file(package = "FCSimple")
   if(any(length(language)!=1, !tolower(language) %in% c("r","python"))) {
@@ -42,10 +43,14 @@ fcs_cluster <- function(fcs_join_obj,
     } else {
       if(tolower(search_method)=="fnn") {
         adj_search <- FNN::knn.index(data = fcs_join_obj[["data"]], k = adjacency_knn)
-        i_input <- rep(1:nrow(adj_search),times=ncol(adj_search))
-        j_input <- as.vector(adj_search)
-        sm <- Matrix::sparseMatrix(i=i_input,j=j_input,dims=c(nrow(adj_search),nrow(adj_search)))
-        fcs_join_obj[["adjacency_matrix"]] <- sm
+        if(output_as=="adjacency") {
+          i_input <- rep(1:nrow(adj_search),times=ncol(adj_search))
+          j_input <- as.vector(adj_search)
+          sm <- Matrix::sparseMatrix(i=i_input,j=j_input,dims=c(nrow(adj_search),nrow(adj_search)))
+          fcs_join_obj[["adjacency_matrix"]] <- sm
+        } else if(output_as=="search"){
+          fcs_join_obj[["search"]] <- adj_search
+        }
       } else if(tolower(search_method)=="rann") {
         require(RANN)
         require(parallel)
@@ -92,10 +97,14 @@ fcs_cluster <- function(fcs_join_obj,
         }
 
         nn_idx <- search_id
-        i_input <- rep(1:nrow(nn_idx),times=num_neighbors-1)
-        j_input <- as.vector(nn_idx[,2:num_neighbors])
-        sm <- Matrix::sparseMatrix(i=i_input,j=j_input,dims=c(nrow(nn_idx),nrow(nn_idx)))
-        fcs_join_obj[["adjacency_matrix"]] <- sm
+        if(output_as=="adjacency") {
+          i_input <- rep(1:nrow(nn_idx),times=num_neighbors-1)
+          j_input <- as.vector(nn_idx[,2:num_neighbors])
+          sm <- Matrix::sparseMatrix(i=i_input,j=j_input,dims=c(nrow(nn_idx),nrow(nn_idx)))
+          fcs_join_obj[["adjacency_matrix"]] <- sm
+        } else if(output_as=="search"){
+          fcs_join_obj[["search"]] <- nn_idx
+        }
       } else {
         stop("error in argument 'search_method': use either 'RANN' or 'FNN'")
       }
