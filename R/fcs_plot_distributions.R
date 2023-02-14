@@ -8,12 +8,6 @@ fcs_plot_distribution <- function(fcs_join_obj,
   require(ggplot2)
   require(ggridges)
 
-  fcs_join_obj <- fcs_obj
-  separate_by <- "date"
-  plot_algorithm <- "leiden"
-  outdir <- getwd()
-  plot_palette <- NULL
-
   obj_data <- as.data.frame(fcs_join_obj[["data"]])
   if(separate_by=="date") {
     if(!"run_date" %in% names(fcs_join_obj)){
