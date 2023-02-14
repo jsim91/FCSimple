@@ -22,7 +22,7 @@ fcs_plot_distribution <- function(fcs_join_obj,
     names(data_split) <- colnames(obj_data)[1:(ncol(obj_data)-1)]
     for(i in 1:length(data_split)) {
       data_split[[i]] <- data.frame(val1 = obj_data[,which(colnames(obj_data)==names(data_split)[i])],
-                                    batch = obj_data[,"batch"])
+                                    batch = obj_data[,"date"])
     }
   } else {
     data_split <- vector("list", length = ncol(obj_data))
