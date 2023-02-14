@@ -8,7 +8,7 @@ fcs_plot_distribution <- function(fcs_join_obj,
   require(ggplot2)
   require(ggridges)
 
-  obj_data <- fcs_join_obj[["data"]]
+  obj_data <- as.data.frame(fcs_join_obj[["data"]])
   if(separate_by=="date") {
     if(!"run_date" %in% names(fcs_join_obj)){
       print("Unable to find run date. Using separate_by = 'none' instead.")
