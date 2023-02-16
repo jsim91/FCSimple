@@ -3,7 +3,8 @@ fcs_plot_distribution <- function(fcs_join_obj,
                                   plot_algorithm = c("leiden","flowsom","louvain","phenograph","git"),
                                   outdir = getwd(),
                                   plot_palette = NULL,
-                                  rm_zero = FALSE)
+                                  rm_zero = FALSE,
+                                  trim_quantile = 0)
 {
   require(ggpubr)
   require(ggplot2)
@@ -43,7 +44,7 @@ fcs_plot_distribution <- function(fcs_join_obj,
     }
   }
   if(separate_by == "none") {
-    plot_set <- lapply(X = data_split, FUN = plot_none, rm0 = rm_zero)
+    plot_set <- lapply(X = data_split, FUN = plot_none, rm0 = rm_zero, trq = trim_quantile)
     ggsave(filename = paste0(outdir,"/panel_distributions_concatenation_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
            plot = ggpubr::ggarrange(plotlist = plot_set, nrow = ceiling(sqrt(length(plot_set))),
                                     ncol = ceiling(sqrt(length(plot_set)))), device = "pdf",
@@ -53,14 +54,14 @@ fcs_plot_distribution <- function(fcs_join_obj,
     if(!"batch" %in% colnames(data_split[[1]])) {
       stop("error in argument 'separate_by': no run date found, cannot plot by run date/batch")
     }
-    plot_set <- lapply(X = data_split, FUN = plot_date, rm0 = rm_zero)
+    plot_set <- lapply(X = data_split, FUN = plot_date, rm0 = rm_zero, trq = trim_quantile)
     ggsave(filename = paste0(outdir,"/panel_distributions_by_batch_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
            plot = ggpubr::ggarrange(plotlist = plot_set, nrow = ceiling(sqrt(length(plot_set))),
                                     ncol = ceiling(sqrt(length(plot_set))), legend = "bottom", common.legend = TRUE),
            device = "pdf", width = ceiling(sqrt(length(plot_set)))*2.5, height = ceiling(sqrt(length(plot_set)))*2.5,
            units = "in", dpi = 900, limitsize = FALSE)
   } else if(separate_by == "cluster") {
-    plot_set <- lapply(X = data_split, FUN = plot_cluster, rm0 = rm_zero)
+    plot_set <- lapply(X = data_split, FUN = plot_cluster, rm0 = rm_zero, trq = trim_quantile)
     ggsave(filename = paste0(outdir,"/panel_distributions_by_cluster_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
            plot = ggpubr::ggarrange(plotlist = plot_set, nrow = ceiling(sqrt(length(plot_set))),
                                     ncol = ceiling(sqrt(length(plot_set))), legend = "bottom", common.legend = TRUE),
@@ -69,12 +70,20 @@ fcs_plot_distribution <- function(fcs_join_obj,
   }
 }
 
-plot_none <- function(input_data, rm0)
+plot_none <- function(input_data, rm0, trq)
 {
   if(rm0) {
     densdat <- input_data[-which(input_data[,1]==0),]
+    if(trq!=0) {
+      trim_q <- as.numeric(quantile(x = densdat, probs = trq))
+      densdat <- densdat[-which(densdat[,1]>trim_q),]
+    }
     xval <- density(densdat)$x; yval <- density(densdat)$y
   } else {
+    if(trq!=0) {
+      trim_q <- as.numeric(quantile(x = input_data[,1], probs = trq))
+      densdat <- input_data[-which(input_data[,1]>trim_q),]
+    }
     xval <- density(input_data[,1])$x; yval <- density(input_data[,1])$y
   }
   dens_data <- data.frame(xval = xval, yval = yval)
@@ -89,12 +98,21 @@ plot_none <- function(input_data, rm0)
   return(plt1)
 }
 
-plot_date <- function(input_data, rm0)
+plot_date <- function(input_data, rm0, trq)
 {
   capture_channel <- colnames(input_data)[1]
   colnames(input_data)[1] <- "tmp"
   if(rm0) {
     input_data <- input_data[-which(input_data[,1]==0),]
+    if(trq!=0) {
+      trim_q <- as.numeric(quantile(x = input_data[,1], probs = trq))
+      input_data <- input_data[-which(input_data[,1]>trim_q),]
+    }
+  } else {
+    if(trq!=0) {
+      trim_q <- as.numeric(quantile(x = input_data[,1], probs = trq))
+      input_data <- input_data[-which(input_data[,1]>trim_q),]
+    }
   }
   plt1 <- ggplot(data = input_data, mapping = aes(x = tmp, group = batch,
                                                   color = batch, fill = batch)) +
@@ -107,12 +125,21 @@ plot_date <- function(input_data, rm0)
   return(plt1)
 }
 
-plot_cluster <- function(input_data, rm0)
+plot_cluster <- function(input_data, rm0, trq)
 {
   capture_channel <- colnames(input_data)[1]
   colnames(input_data)[1] <- "tmp"
   if(rm0) {
     input_data <- input_data[-which(input_data[,1]==0),]
+    if(trq!=0) {
+      trim_q <- as.numeric(quantile(x = input_data[,1], probs = trq))
+      input_data <- input_data[-which(input_data[,1]>trim_q),]
+    }
+  } else {
+    if(trq!=0) {
+      trim_q <- as.numeric(quantile(x = input_data[,1], probs = trq))
+      input_data <- input_data[-which(input_data[,1]>trim_q),]
+    }
   }
   plt1 <- ggplot(data = input_data, mapping = aes(x = tmp, y = cluster)) +
     geom_density_ridges(lwd = 0.3) +
