@@ -8,7 +8,7 @@ fcs_cluster <- function(fcs_join_obj,
                         git_k = 30,
                         search_method = c("FNN","RANN"),
                         search_only = FALSE,
-                        num_cores = parallel::ceiling(detectCores()/2),
+                        num_cores = ceiling(parallel::detectCores()/2),
                         output_as = "adjacency")
 {
   capture_dir <- system.file(package = "FCSimple")
