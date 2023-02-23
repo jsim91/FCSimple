@@ -54,7 +54,20 @@ fcs_join <- function(files,
   # }
   # fs <- flowSet(fcs_list)
   fs <- flowCore::read.flowSet(files = files, truncate_max_range = FALSE)
+  if(mean(is.na(downsample_size))!=0) {
+    downsample_size <- NA
+  } else if(length(downsample_size)!=0){
+    downsample_size <- downsample_size[1]
+  }
   sampleNames(fs) <- gsub("^.+/","",sampleNames(fs))
+  if(!is.na(downsample_size)) {
+    for(i in 1:length(fs)) {
+      if(nrow(fs[[i]])>downsample_size) {
+        set.seed(123)
+        fs[[i]] <- fs[[i]][sample(x = 1:nrow(fs[[i]]), size = downsample_size, replace = FALSE),]
+      }
+    }
+  }
   # if(use_ncdf) {
   #   require(ncdfFlow)
   # }
