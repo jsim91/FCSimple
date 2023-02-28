@@ -92,7 +92,7 @@ fcs_project_parameters <- function(fcs_join_obj,
                                             nrow = 2, ncol = 2)
   }
 
-  ggsave(filename = paste0(file_output_prefix,ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_heatmaps_",
+  ggsave(filename = paste0(ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_parameter_projections_",
                            strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
          plot = gridExtra::marrangeGrob(grobs = arranged_list, nrow=1, ncol=1, top = ""),
          device = "pdf", path = outdir, width = 12, height = 12, units = "in", dpi = 900)
