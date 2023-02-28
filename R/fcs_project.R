@@ -71,6 +71,7 @@ fcs_project_parameters <- function(fcs_join_obj,
   }
   intens_plots <- lapply(intens_list, intens_pl)
 
+  # use to fill in empty plot quadrants where necessary
   void_plot <- ggplot(data = cars, aes(x=speed,y=dist)) +
     geom_point(alpha = 0) +
     theme_void()
