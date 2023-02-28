@@ -86,4 +86,4 @@ Subsequent functions will take the object created with function
 fcs_join()
 ```
 
-as input. Analysis outputs will be joined to this object as new list entries. Tested in and developed with the Windows 10 operating system.
+as input. Analysis outputs will be joined to this object as new list entries. Tested in and developed with the Windows 10/11 operating system.
