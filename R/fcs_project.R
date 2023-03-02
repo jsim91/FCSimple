@@ -5,12 +5,17 @@ fcs_project_parameters <- function(fcs_join_obj,
                                    sample_size = 50000,
                                    point_size = 0.8)
 {
+  require(ggplot2)
+  require(viridis)
+  require(ggpubr)
+  require(gg)
+
   if(length(reduction)!=1) {
     stop("error in argument 'reduction': use either 'UMAP' or 'tSNE'")
   }
   join_data <- fcs_join_obj[["data"]]
-  reduction_coords <- fcs_join_obj[[reduction]][["coordinates"]]
-  if(nrow<1) {
+  reduction_coords <- fcs_join_obj[[tolower(reduction)]][["coordinates"]]
+  if(nrow(join_data)<1) {
     stop("error in 'reduction': unable to find specified reduction")
   }
   if(parameters == "all") {
