@@ -14,6 +14,7 @@ fcs_plot_distribution # Use after running fcs_join() to render the transformed (
 fcs_plot_heatmap # Use after running fcs_cluster_heatmap() to render the cluster heatmap as a pdf (no object return)
 fcs_plot_reduction # Use after running fcs_reduce_dimensions() and fcs_cluster() to render the UMAP or tSNE plot with cluster colors and labels (no object return)
 fcs_trex # Use after running fcs_reduce_dimensions() to compare two groups (no object return); https://elifesciences.org/articles/64653
+fcs_project_parameters # Use after running fcs_reduce_dimensions() to project parameter intensities onto a calculated UMAP or tSNE point cloud (no object return)
 
 # more to come
 ```
@@ -85,4 +86,4 @@ Subsequent functions will take the object created with function
 fcs_join()
 ```
 
-as input. Analysis outputs will be joined to this object as new list entries. Tested in and developed with the Windows 10 operating system.
+as input. Analysis outputs will be joined to this object as new list entries. Tested in and developed with the Windows 10/11 operating system.
