@@ -8,7 +8,7 @@ fcs_project_parameters <- function(fcs_join_obj,
   require(ggplot2)
   require(viridis)
   require(ggpubr)
-  require(gg)
+  require(ggrastr)
 
   if(length(reduction)!=1) {
     stop("error in argument 'reduction': use either 'UMAP' or 'tSNE'")
