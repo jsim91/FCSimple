@@ -73,7 +73,10 @@ fcs_plot_distribution <- function(fcs_join_obj,
 plot_none <- function(input_data, rm0, trq)
 {
   if(rm0) {
-    densdat <- input_data[-which(input_data[,1]==0),]
+    rm0_ind <- which(input_data[,1]==0)
+    if(length(rm0_ind)!=0) {
+      densdat <- input_data[-which(input_data[,1]==0),]
+    }
     if(trq!=0) {
       trim_q <- as.numeric(quantile(x = densdat, probs = trq))
       densdat <- densdat[-which(densdat[,1]>trim_q),]
@@ -103,7 +106,10 @@ plot_date <- function(input_data, rm0, trq)
   capture_channel <- colnames(input_data)[1]
   colnames(input_data)[1] <- "tmp"
   if(rm0) {
-    input_data <- input_data[-which(input_data[,1]==0),]
+    rm0_ind <- which(input_data[,1]==0)
+    if(length(rm0_ind)!=0) {
+      densdat <- input_data[-which(input_data[,1]==0),]
+    }
     if(trq!=0) {
       trim_q <- as.numeric(quantile(x = input_data[,1], probs = trq))
       input_data <- input_data[-which(input_data[,1]>trim_q),]
@@ -130,7 +136,10 @@ plot_cluster <- function(input_data, rm0, trq)
   capture_channel <- colnames(input_data)[1]
   colnames(input_data)[1] <- "tmp"
   if(rm0) {
-    input_data <- input_data[-which(input_data[,1]==0),]
+    rm0_ind <- which(input_data[,1]==0)
+    if(length(rm0_ind)!=0) {
+      densdat <- input_data[-which(input_data[,1]==0),]
+    }
     if(trq!=0) {
       trim_q <- as.numeric(quantile(x = input_data[,1], probs = trq))
       input_data <- input_data[-which(input_data[,1]>trim_q),]
@@ -150,4 +159,3 @@ plot_cluster <- function(input_data, rm0, trq)
           plot.title = element_text(hjust = 0.5))
   return(plt1)
 }
-
