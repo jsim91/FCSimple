@@ -36,3 +36,19 @@ fcs_subset <- function(fcs_join_obj,
                                         source_object_indices = get_index))
   return(fcs_join_obj)
 }
+
+fcs_remove_parameters <- function(fcs_join_obj,
+                                  remove_parameters)
+{
+  rm_param <- which(colnames(fcs_join_obj[["data"]]) %in% remove_parameters)
+  if(length(rm_param)==0) {
+    stop("error in argument 'remove_parameters': none of the requested parameters were found")
+  } else {
+    new_obj <- list(data = fcs_join_obj[["data"]][,-rm_param],
+                    source = fcs_join_obj[["source"]])
+    if("run_date" %in% names(fcs_join_obj)) {
+      new_obj[["run_date"]] <- fcs_join_obj[["run_date"]]
+    }
+    return(new_obj)
+  }
+}
