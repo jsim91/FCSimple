@@ -284,7 +284,8 @@ function(input,output) {
       file.remove(temp_files)
     }
     return(list(data = Data_full,
-                source = list_obj[["source"]]))
+                source = list_obj[["source"]],
+                raw = list_obj[["data"]]))
   }
   finalize <- eventReactive(input$finalize_transform, {
     # write transform choices to file, include a line to remove files in temp directory before exiting fcs_join function

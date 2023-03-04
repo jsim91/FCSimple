@@ -68,6 +68,13 @@ fcs_join <- function(files,
       }
     }
   }
+  for(i in 1:length(fs)) {
+    if(i==1) {
+      raw_data <- exprs(fs[[i]])
+    } else {
+      raw_data <- rbind(raw_data, exprs(fs[[i]]))
+    }
+  }
   # if(use_ncdf) {
   #   require(ncdfFlow)
   # }
@@ -172,6 +179,7 @@ fcs_join <- function(files,
       desc_names <- fs[[1]]@parameters@data$desc
       if(length(desc_names)==ncol(tmp_data)) {
         colnames(tmp_data) <- desc_names
+        colnames(raw_data) <- desc_names
       } else {
         print("Unable to find descriptive column names. Using original names.")
       }
@@ -179,10 +187,12 @@ fcs_join <- function(files,
     if(length(grep("DATE|date|Date",names(fs[[1]]@description)))!=0) {
       run_dates <- flowCore::fsApply(fs, function(x) return(x@description[[grep("DATE|date|Date",names(x@description))[1]]]))
       return(list(data = tmp_data,
+                  raw = raw_data,
                   source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow))),
                   run_date = ifelse(length(run_dates)>0,run_dates,NULL)))
     } else {
       return(list(data = tmp_data,
+                  raw = raw_data,
                   source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))))
     }
   } else {
@@ -197,6 +207,7 @@ fcs_join <- function(files,
       desc_names <- fs[[1]]@parameters@data$desc
       if(length(desc_names)==ncol(tmp_data)) {
         colnames(tmp_data) <- desc_names
+        colnames(raw_data) <- desc_names
       } else {
         colnames(tmp_data) <- fs[[1]]@parameters@data$name
         print("Unable to find descriptive column names. Using original names.")
