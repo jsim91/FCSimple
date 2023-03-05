@@ -3,6 +3,7 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
                                pdf_dim = 10, png_dim = 1000, plotting_device = "pdf", annotate_text_size = 5,
                                title_size = 14, return_plot = TRUE, randomize_colors = FALSE, color_random_seed = 123)
 {
+  # use annotate_text_size = NA to produce a plot without cluster annotations
   require(ggplot2)
   require(shadowtext)
   require(ggrastr)
@@ -33,22 +34,32 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
   plt_input$cluster <- factor(plt_input$cluster)
   if(!internal_call) {
     pl_fun <- function(plin = plt_input, ptalpha = point_alpha, xanno = xval,
-                       yanno = yval, sizeanno = annotate_text_size, force_title = FALSE)
+                       yanno = yval, sizeanno = annotate_text_size, force_title = FALSE,
+                       color_clus = TRUE)
     {
-      mypl <- ggplot(data = plin, mapping = aes_string(x = colnames(plin)[1],
-                                                       y = colnames(plin)[2],
-                                                       color = "cluster")) +
-        ggrastr::geom_point_rast(alpha = ptalpha) +
-        scale_color_manual(values = colorby) +
-        annotate("shadowtext", x = xanno, y = yanno, label = names(xanno), size = sizeanno) +
-        theme_void() +
+      if(color_clus) {
+        mypl <- ggplot(data = plin, mapping = aes_string(x = colnames(plin)[1],
+                                                         y = colnames(plin)[2],
+                                                         color = "cluster")) +
+          ggrastr::geom_point_rast(alpha = ptalpha) +
+          scale_color_manual(values = colorby)
+      } else {
+        mypl <- ggplot(data = plin, mapping = aes_string(x = colnames(plin)[1],
+                                                         y = colnames(plin)[2])) +
+          ggrastr::geom_point_rast(alpha = ptalpha)
+      }
+      if(!is.na(sizeanno)) {
+        mypl <- mypl +
+          annotate("shadowtext", x = xanno, y = yanno, label = names(xanno), size = sizeanno)
+      }
+      mypl <- mypl + theme_void() +
         theme(legend.position = "none")
       if(force_title) {
         mypl <- mypl + ggtitle(colnames(plin)) + theme(plot.title = element_text(hjust = 0.5, size = title_size))
       }
       return(mypl)
     }
-    if(is.na(split_factor)) {
+    if(is.na(split_factor[1])) {
       plt_reduction <- pl_fun()
     } else {
       # split the plot by split_factor where split_factor is a vector of length == nrow(reduction) that gives identity to the reduction rows
