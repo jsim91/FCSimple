@@ -2,7 +2,7 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
                                split_factor = NA, internal_call = FALSE, anno_indices = NULL, keep_indices = NA,
                                pdf_dim = 10, png_dim = 1000, plotting_device = "pdf", annotate_text_size = 5,
                                title_size = 14, return_plot = TRUE, randomize_colors = FALSE, color_random_seed = 123,
-                               color_clusters = TRUE)
+                               color_clusters = TRUE, force_title = FALSE)
 {
   # use annotate_text_size = NA to produce a plot without cluster annotations
   require(ggplot2)
@@ -35,7 +35,7 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
   plt_input$cluster <- factor(plt_input$cluster)
   if(!internal_call) {
     pl_fun <- function(plin = plt_input, ptalpha = point_alpha, xanno = xval,
-                       yanno = yval, sizeanno = annotate_text_size, force_title = FALSE,
+                       yanno = yval, sizeanno = annotate_text_size, ftitle = force_title,
                        color_clus = color_clusters, ptsize = point_size)
     {
       if(color_clus) {
@@ -55,7 +55,7 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
       }
       mypl <- mypl + theme_void() +
         theme(legend.position = "none")
-      if(force_title) {
+      if(ftitle) {
         mypl <- mypl + ggtitle(colnames(plin)[ncol(plin)]) + theme(plot.title = element_text(hjust = 0.5, size = title_size))
       }
       return(mypl)
