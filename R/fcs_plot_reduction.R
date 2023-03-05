@@ -1,6 +1,7 @@
 fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha = 0.1, outdir = getwd(),
-                               internal_call = FALSE, anno_indices = NULL, keep_indices = NA, pdf_dim = 10,
-                               png_dim = 1000, plotting_device = "pdf", return_plot = TRUE)
+                               split_factor = NA, internal_call = FALSE, anno_indices = NULL, keep_indices = NA,
+                               pdf_dim = 10, png_dim = 1000, plotting_device = "pdf", annotate_text_size = 5,
+                               title_size = 14, return_plot = TRUE, randomize_colors = FALSE, color_random_seed = 123)
 {
   require(ggplot2)
   require(shadowtext)
@@ -9,6 +10,20 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
   reduction_coords <- fcs_join_obj[[tolower(reduction)]][["coordinates"]]
   cluster_numbers <- as.numeric(as.character(fcs_join_obj[[tolower(algorithm)]][["clusters"]]))
   uclus <- unique(cluster_numbers)[order(unique(cluster_numbers))]
+
+  # https://stackoverflow.com/questions/8197559/emulate-ggplot2-default-color-palette
+  gg_color_hue <- function(n) {
+    hues = seq(15, 375, length = n + 1)
+    hcl(h = hues, l = 65, c = 100)[1:n]
+  }
+  colorby <- gg_color_hue(n = length(uclus))
+  if(randomize_colors) {
+    set.seed(color_random_seed)
+    names(colorby) <- sample(x = uclus, size = length(uclus), replace = FALSE)
+  } else {
+    names(colorby) <- uclus
+  }
+
   xval <- rep(NA,times=length(uclus)); names(xval) <- uclus; yval <- xval
   for(i in 1:length(xval)) {
     xval[i] <- median(reduction_coords[,1][which(cluster_numbers==as.numeric(names(xval)[i]))])
@@ -17,13 +32,34 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
   plt_input <- cbind(reduction_coords,data.frame(cluster = cluster_numbers))
   plt_input$cluster <- factor(plt_input$cluster)
   if(!internal_call) {
-    plt_reduction <- ggplot(data = plt_input, mapping = aes_string(x = colnames(reduction_coords)[1],
-                                                                   y = colnames(reduction_coords)[2],
-                                                                   color = "cluster")) +
-      ggrastr::geom_point_rast(alpha = point_alpha) +
-      annotate("shadowtext", x = xval, y = yval, label = names(xval), size = 5) +
-      theme_void() +
-      theme(legend.position = "none")
+    pl_fun <- function(plin = plt_input, ptalpha = point_alpha, xanno = xval,
+                       yanno = yval, sizeanno = annotate_text_size, force_title = FALSE)
+    {
+      mypl <- ggplot(data = plin, mapping = aes_string(x = colnames(plin)[1],
+                                                       y = colnames(plin)[2],
+                                                       color = "cluster")) +
+        ggrastr::geom_point_rast(alpha = ptalpha) +
+        scale_color_manual(values = colorby) +
+        annotate("shadowtext", x = xanno, y = yanno, label = names(xanno), size = sizeanno) +
+        theme_void() +
+        theme(legend.position = "none")
+      if(force_title) {
+        mypl <- mypl + ggtitle(colnames(plin)) + theme(plot.title = element_text(hjust = 0.5, size = title_size))
+      }
+      return(mypl)
+    }
+    if(is.na(split_factor)) {
+      plt_reduction <- pl_fun()
+    } else {
+      # split the plot by split_factor where split_factor is a vector of length == nrow(reduction) that gives identity to the reduction rows
+      split_reduction <- split(x = reduction_coords, f = factor(split_factor))
+      for(i in 1:length(split_reduction)) {
+        split_reduction[[i]] <- cbind(as.data.frame(split_reduction[[i]]), data.frame(var1 = rep(1,nrow(split_reduction[[i]]))))
+        colnames(split_reduction[[i]])[ncol(split_reduction[[i]])] <- names(split_reduction)[i]
+      }
+      outplots <- lapply(X = split_reduction, pl_fun, force_title = TRUE)
+      plt_reduction <- ggpubr::ggarrange(plotlist = outplots, nrow = floor(sqrt(length(table(split_factor)))))
+    }
     fname <- paste0(outdir,"/",tolower(algorithm),"_",tolower(reduction),"_labeled_",
                     strftime(Sys.time(),"%Y-%m-%d_%H%M%S"))
   } else {
@@ -33,7 +69,7 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
       ggrastr::geom_point_rast(data = plt_input[keep_indices,], mapping = aes_string(x = colnames(reduction_coords)[1],
                                                                                         y = colnames(reduction_coords)[2]),
                                alpha = point_alpha, color = "red") +
-      annotate("shadowtext", x = xval, y = yval, label = names(xval), size = 5) +
+      annotate("shadowtext", x = xval, y = yval, label = names(xval), size = annotate_text_size) +
       theme_void() +
       theme(legend.position = "none")
     fname <- paste0(outdir,"/islands_selected_for_by_dbscan_",
