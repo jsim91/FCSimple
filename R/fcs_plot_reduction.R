@@ -1,7 +1,8 @@
 fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha = 0.1, outdir = getwd(),
                                split_factor = NA, internal_call = FALSE, anno_indices = NULL, keep_indices = NA,
                                pdf_dim = 10, png_dim = 1000, plotting_device = "pdf", annotate_text_size = 5,
-                               title_size = 14, return_plot = TRUE, randomize_colors = FALSE, color_random_seed = 123)
+                               title_size = 14, return_plot = TRUE, randomize_colors = FALSE, color_random_seed = 123,
+                               color_clusters = TRUE)
 {
   # use annotate_text_size = NA to produce a plot without cluster annotations
   require(ggplot2)
@@ -35,7 +36,7 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
   if(!internal_call) {
     pl_fun <- function(plin = plt_input, ptalpha = point_alpha, xanno = xval,
                        yanno = yval, sizeanno = annotate_text_size, force_title = FALSE,
-                       color_clus = TRUE)
+                       color_clus = color_clusters)
     {
       if(color_clus) {
         mypl <- ggplot(data = plin, mapping = aes_string(x = colnames(plin)[1],
@@ -63,7 +64,7 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
       plt_reduction <- pl_fun()
     } else {
       # split the plot by split_factor where split_factor is a vector of length == nrow(reduction) that gives identity to the reduction rows
-      split_reduction <- split(x = reduction_coords, f = factor(split_factor))
+      split_reduction <- split(x = plt_input, f = factor(split_factor))
       for(i in 1:length(split_reduction)) {
         split_reduction[[i]] <- cbind(as.data.frame(split_reduction[[i]]), data.frame(var1 = rep(1,nrow(split_reduction[[i]]))))
         colnames(split_reduction[[i]])[ncol(split_reduction[[i]])] <- names(split_reduction)[i]
