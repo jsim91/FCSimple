@@ -1,4 +1,4 @@
-fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha = 0.1, outdir = getwd(),
+fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha = 0.1, point_size = 1, outdir = getwd(),
                                split_factor = NA, internal_call = FALSE, anno_indices = NULL, keep_indices = NA,
                                pdf_dim = 10, png_dim = 1000, plotting_device = "pdf", annotate_text_size = 5,
                                title_size = 14, return_plot = TRUE, randomize_colors = FALSE, color_random_seed = 123,
@@ -36,13 +36,13 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
   if(!internal_call) {
     pl_fun <- function(plin = plt_input, ptalpha = point_alpha, xanno = xval,
                        yanno = yval, sizeanno = annotate_text_size, force_title = FALSE,
-                       color_clus = color_clusters)
+                       color_clus = color_clusters, ptsize = point_size)
     {
       if(color_clus) {
         mypl <- ggplot(data = plin, mapping = aes_string(x = colnames(plin)[1],
                                                          y = colnames(plin)[2],
                                                          color = "cluster")) +
-          ggrastr::geom_point_rast(alpha = ptalpha) +
+          ggrastr::geom_point_rast(alpha = ptalpha, size = ptsize) +
           scale_color_manual(values = colorby)
       } else {
         mypl <- ggplot(data = plin, mapping = aes_string(x = colnames(plin)[1],
