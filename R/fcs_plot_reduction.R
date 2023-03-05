@@ -47,7 +47,7 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
       } else {
         mypl <- ggplot(data = plin, mapping = aes_string(x = colnames(plin)[1],
                                                          y = colnames(plin)[2])) +
-          ggrastr::geom_point_rast(alpha = ptalpha)
+          ggrastr::geom_point_rast(alpha = ptalpha, size = ptsize)
       }
       if(!is.na(sizeanno)) {
         mypl <- mypl +
@@ -56,7 +56,7 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
       mypl <- mypl + theme_void() +
         theme(legend.position = "none")
       if(force_title) {
-        mypl <- mypl + ggtitle(colnames(plin)) + theme(plot.title = element_text(hjust = 0.5, size = title_size))
+        mypl <- mypl + ggtitle(colnames(plin)[ncol(plin)]) + theme(plot.title = element_text(hjust = 0.5, size = title_size))
       }
       return(mypl)
     }
