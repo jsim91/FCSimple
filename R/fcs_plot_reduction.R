@@ -2,7 +2,7 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
                                split_factor = NA, internal_call = FALSE, anno_indices = NULL, keep_indices = NA,
                                pdf_dim = 10, png_dim = 1000, plotting_device = "pdf", annotate_text_size = 5,
                                title_size = 14, return_plot = TRUE, randomize_colors = FALSE, color_random_seed = 123,
-                               color_clusters = TRUE, force_title = FALSE)
+                               color_clusters = TRUE, force_title = FALSE, sample_equally = TRUE)
 {
   # use annotate_text_size = NA to produce a plot without cluster annotations
   require(ggplot2)
@@ -69,9 +69,18 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
         split_reduction[[i]] <- cbind(as.data.frame(split_reduction[[i]]), data.frame(var1 = rep(1,nrow(split_reduction[[i]]))))
         colnames(split_reduction[[i]])[ncol(split_reduction[[i]])] <- names(split_reduction)[i]
       }
+      if(sample_equally) {
+        sample_size <- min(as.numeric(sapply(split_reduction,nrow)))
+        for(i in 1:length(split_reduction)) {
+          if(nrow(split_reduction[[i]])>sample_size) {
+            set.seed(123)
+            split_reduction[[i]] <- split_reduction[[i]][sample(1:nrow(split_reduction[[i]]),sample_size,replace=F),]
+          }
+        }
+      }
       outplots <- lapply(X = split_reduction, pl_fun, ftitle = force_title)
-      plt_reduction <- ggpubr::ggarrange(plotlist = outplots, nrow = floor(sqrt(length(table(split_factor)))),
-                                         ncol = ceiling(sqrt(length(table(split_factor)))))
+      plt_reduction <- ggpubr::ggarrange(plotlist = outplots, nrow = floor(sqrt(length(outplots))),
+                                         ncol = ceiling(sqrt(length(outplots))))
     }
     fname <- paste0(outdir,"/",tolower(algorithm),"_",tolower(reduction),"_labeled_",
                     strftime(Sys.time(),"%Y-%m-%d_%H%M%S"))
