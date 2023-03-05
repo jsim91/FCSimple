@@ -70,7 +70,8 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
         colnames(split_reduction[[i]])[ncol(split_reduction[[i]])] <- names(split_reduction)[i]
       }
       outplots <- lapply(X = split_reduction, pl_fun, ftitle = force_title)
-      plt_reduction <- ggpubr::ggarrange(plotlist = outplots, nrow = floor(sqrt(length(table(split_factor)))))
+      plt_reduction <- ggpubr::ggarrange(plotlist = outplots, nrow = floor(sqrt(length(table(split_factor)))),
+                                         ncol = ceiling(sqrt(length(table(split_factor)))))
     }
     fname <- paste0(outdir,"/",tolower(algorithm),"_",tolower(reduction),"_labeled_",
                     strftime(Sys.time(),"%Y-%m-%d_%H%M%S"))
