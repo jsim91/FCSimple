@@ -1,6 +1,7 @@
 fcs_reduce_dimensions <- function(fcs_join_obj,
                                   algorithm = c("tsne","umap"),
-                                  language = c("R","Python"))
+                                  language = c("R","Python"),
+                                  nthread = ceiling(parallel::detectCores()/2))
 {
   if(length(algorithm)!=1) {
     stop("error in argument 'algorithm': use either 'tsne' or 'umap'")
@@ -34,8 +35,8 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
       require(parallel)
       map_calculate <- Rtsne::Rtsne(X = fcs_join_obj[["data"]], check_duplicates = FALSE, max_iter = 2000, normalize = FALSE,
                                     stop_lying_iter = 700, mom_switch_iter = 700,
-                                    eta = round(nrow(map_input)/12),
-                                    num_threads = ceiling(detectCores()/2))
+                                    eta = round(nrow(fcs_join_obj[["data"]])/12),
+                                    num_threads = nthread)
       map <- map_calculate[["Y"]]
       colnames(map) <- c("tSNE1","tSNE2")
     } else if(tolower(language)=="python") {
