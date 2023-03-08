@@ -66,10 +66,13 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
   if(tolower(algorithm)=="umap") {
     if(tolower(language)=="r") {
       settings_list <- list(language = "R", n_neighbors = 30, init = "spca", min_dist = 0.1,
-                            n_threads = ceiling(detectCores()/2), verbose = TRUE)
+                            n_threads = ceiling(detectCores()/2),
+                            num_neighbors = round(umap_nn,0), min_dist = umap_min_dist,
+                            verbose = TRUE)
     } else if(tolower(language)=="python") {
       settings_list <- list(language = "Python", n_neighbors = 30, init = 'spectral',
                             min_dist = 0.1, low_memory = 'True', random_state = 123,
+                            num_neighbors = round(umap_nn,0), min_dist = umap_min_dist,
                             transform_seed = 123, verbose = 'True')
     }
   } else if(tolower(algorithm)=="tsne") {
@@ -77,11 +80,13 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
       settings_list <- list(language = "R", check_duplicates = FALSE, max_iter = 2000,
                             normalize = FALSE, stop_lying_iter = 700, mom_switch_iter = 700,
                             eta = round(nrow(map_input)/12),
+                            perplexity = round(tsne_perplexity,0),
                             num_threads = ceiling(detectCores()/2))
     }
     if(tolower(language)=="python") {
       settings_list <- list(language = "Python", perplexity = 30, metric = "euclidean",
                             random_state = 123, verbose = "True",
+                            perplexity = round(tsne_perplexity,0),
                             num_threads = ceiling(detectCores()/2))
     }
   }
