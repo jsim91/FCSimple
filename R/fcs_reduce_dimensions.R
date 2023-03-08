@@ -1,6 +1,9 @@
 fcs_reduce_dimensions <- function(fcs_join_obj,
                                   algorithm = c("tsne","umap"),
                                   language = c("R","Python"),
+                                  umap_nn = 30,
+                                  umap_min_dist = 0.1,
+                                  tsne_perplexity = 30,
                                   nthread = ceiling(parallel::detectCores()/2))
 {
   if(length(algorithm)!=1) {
@@ -14,13 +17,16 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
       require(uwot)
       require(parallel)
       set.seed(123)
-      map <- uwot::umap(X = fcs_join_obj[["data"]], n_neighbors = 30, init = "spca", min_dist = 0.1,
+      map <- uwot::umap(X = fcs_join_obj[["data"]], n_neighbors = round(umap_nn,0),
+                        init = "spca", min_dist = umap_min_dist,
                         n_threads = ceiling(detectCores()/2), verbose = TRUE)
       colnames(map) <- c("UMAP1","UMAP2")
     } else if(tolower(language)=="python") {
       capture_dir <- system.file(package = "FCSimple")
       write.csv(fcs_join_obj[["data"]], file = paste0(capture_dir,"/temp_files/__python_umap_input__.csv"), row.names = FALSE)
-      system(command = paste0("python ",paste0(capture_dir,"/python/run_umap.py")," ",paste0(capture_dir,"/temp_files/__python_umap_input__.csv")," ",capture_dir,"/temp_files"))
+      system(command = paste0("python ",paste0(capture_dir,"/python/run_umap.py")," ",
+                              paste0(capture_dir,"/temp_files/__python_umap_input__.csv")," ",
+                              capture_dir,"/temp_files ",round(umap_nn,0)," ",umap_min_dist))
       map <- read.csv(paste0(capture_dir,"/temp_files/__tmp_umap__.csv"), check.names = FALSE)
       temp_files <- list.files(path = paste0(system.file(package = "FCSimple"),"/temp_files/"), full.names = TRUE, recursive = TRUE)
       if(length(temp_files)!=0) {
@@ -33,7 +39,8 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
     if(tolower(language)=="r") {
       require(Rtsne)
       require(parallel)
-      map_calculate <- Rtsne::Rtsne(X = fcs_join_obj[["data"]], check_duplicates = FALSE, max_iter = 2000, normalize = FALSE,
+      map_calculate <- Rtsne::Rtsne(X = fcs_join_obj[["data"]], check_duplicates = FALSE,
+                                    max_iter = 2000, normalize = FALSE, perplexity = round(tsne_perplexity,0),
                                     stop_lying_iter = 700, mom_switch_iter = 700,
                                     eta = round(nrow(fcs_join_obj[["data"]])/12),
                                     num_threads = nthread)
@@ -43,7 +50,9 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
       require(parallel)
       capture_dir <- system.file(package = "FCSimple")
       write.csv(fcs_join_obj[["data"]], file = paste0(capture_dir,"/temp_files/__python_tsne_input__.csv"), row.names = FALSE)
-      system(command = paste0("python ",paste0(capture_dir,"/python/run_tsne.py")," ",paste0(capture_dir,"/temp_files/__python_tsne_input__.csv")," ",capture_dir,"/temp_files"," ",floor(parallel::detectCores()/2)))
+      system(command = paste0("python ",paste0(capture_dir,"/python/run_tsne.py")," ",
+                              paste0(capture_dir,"/temp_files/__python_tsne_input__.csv")," ",
+                              capture_dir,"/temp_files"," ",floor(parallel::detectCores()/2)," ",round(tsne_perplexity,0)))
       map <- read.csv(paste0(capture_dir,"/temp_files/__tmp_tsne__.csv"), check.names = FALSE)
       temp_files <- list.files(path = paste0(system.file(package = "FCSimple"),"/temp_files/"), full.names = TRUE, recursive = TRUE)
       if(length(temp_files)!=0) {

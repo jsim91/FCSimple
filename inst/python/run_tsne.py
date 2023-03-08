@@ -7,6 +7,8 @@ import os
 in_file = sys.argv[1]
 out_file = sys.argv[2]
 n_threads = sys.argv[3]
+perpl = sys.argv[4]
+
 data = pd.read_csv(filepath_or_buffer = in_file)
 
 try:
@@ -15,7 +17,7 @@ except OSError:
     pass
 
 tsne = TSNE(
-    perplexity = 30,
+    perplexity = int(perpl),
     metric = "euclidean",
     n_jobs = int(n_threads),
     random_state = 123,
