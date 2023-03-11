@@ -1,5 +1,6 @@
-fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "all", cluster_heatmap = TRUE,
-                                heatmap_color_palette = rev(RColorBrewer::brewer.pal(11, "RdYlBu")))
+fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "all",
+                                heatmap_color_palette = rev(RColorBrewer::brewer.pal(11, "RdYlBu")),
+                                transpose_heatmap = FALSE, cluster_row = TRUE, cluster_col = TRUE)
 {
   if(!tolower(algorithm) %in% names(fcs_join_obj)) {
     stop("error in argument 'algorithm': algorithm not found in fcs_join_obj. Try 'View(fcs_join_obj)'")
@@ -48,28 +49,42 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
   ranno2 <- rowAnnotation(frequency=anno_text(paste0(size_anno_nums,"%"),
                                               gp=gpar(fontsize=10,fontface="bold")))
   backend.matrix <- backend.matrix[order(as.numeric(row.names(backend.matrix))),]
-  if(cluster_heatmap) {
-    heatmap_output <- Heatmap(backend.matrix,col=color.map.fun,
-                              row_names_side="left",
-                              name="median\nscaled\nexpression",
-                              heatmap_legend_param=list(at=c(0,0.2,0.4,0.6,0.8,1),legend_height=unit(3,"cm"),
-                                                        grid_width=unit(0.6,"cm"),title_position="topleft",
-                                                        labels_gp=gpar(fontsize=11),title_gp=gpar(fontsize=11)),
-                              row_names_gp=gpar(fontsize=13,fontface="bold"),column_names_gp=gpar(fontsize=12,fontface="bold"),
-                              row_gap=unit(1,"mm"),column_gap=unit(1,"mm"),row_dend_gp=gpar(lwd=1.2),row_dend_width=unit(1,"cm"),
-                              column_dend_gp = gpar(lwd=1.2), column_dend_height = unit(1,"cm")) +
-      ranno1 + ranno2
-  } else {
-    heatmap_output <- Heatmap(backend.matrix,col=color.map.fun,
-                              row_names_side="left",
-                              name="median\nscaled\nexpression",
-                              heatmap_legend_param=list(at=c(0,0.2,0.4,0.6,0.8,1),legend_height=unit(3,"cm"),
-                                                        grid_width=unit(0.6,"cm"),title_position="topleft",
-                                                        labels_gp=gpar(fontsize=11),title_gp=gpar(fontsize=11)),
-                              row_names_gp=gpar(fontsize=13,fontface="bold"),column_names_gp=gpar(fontsize=12,fontface="bold"),
-                              row_gap=unit(1,"mm"),column_gap=unit(1,"mm"),cluster_rows = FALSE, cluster_columns = FALSE) +
-      ranno1 + ranno2
+  if(transpose_heatmap) {
+    backend.matrix <- t(backend.matrix)
   }
+  heatmap_output <- Heatmap(backend.matrix,col=color.map.fun,
+                            row_names_side="left",
+                            name="median\nscaled\nexpression",
+                            heatmap_legend_param=list(at=c(0,0.2,0.4,0.6,0.8,1),legend_height=unit(3,"cm"),
+                                                      grid_width=unit(0.6,"cm"),title_position="topleft",
+                                                      labels_gp=gpar(fontsize=11),title_gp=gpar(fontsize=11)),
+                            row_names_gp=gpar(fontsize=13,fontface="bold"),column_names_gp=gpar(fontsize=12,fontface="bold"),
+                            cluster_columns = ifelse(cluster_col,TRUE,FALSE), cluster_rows = ifelse(cluster_row,TRUE,FALSE),
+                            row_gap=unit(1,"mm"),column_gap=unit(1,"mm"),row_dend_gp=gpar(lwd=1.2),row_dend_width=unit(1,"cm"),
+                            column_dend_gp = gpar(lwd=1.2), column_dend_height = unit(1,"cm")) +
+    ranno1 + ranno2
+  # if(cluster_heatmap) {
+  #   heatmap_output <- Heatmap(backend.matrix,col=color.map.fun,
+  #                             row_names_side="left",
+  #                             name="median\nscaled\nexpression",
+  #                             heatmap_legend_param=list(at=c(0,0.2,0.4,0.6,0.8,1),legend_height=unit(3,"cm"),
+  #                                                       grid_width=unit(0.6,"cm"),title_position="topleft",
+  #                                                       labels_gp=gpar(fontsize=11),title_gp=gpar(fontsize=11)),
+  #                             row_names_gp=gpar(fontsize=13,fontface="bold"),column_names_gp=gpar(fontsize=12,fontface="bold"),
+  #                             row_gap=unit(1,"mm"),column_gap=unit(1,"mm"),row_dend_gp=gpar(lwd=1.2),row_dend_width=unit(1,"cm"),
+  #                             column_dend_gp = gpar(lwd=1.2), column_dend_height = unit(1,"cm")) +
+  #     ranno1 + ranno2
+  # } else {
+  #   heatmap_output <- Heatmap(backend.matrix,col=color.map.fun,
+  #                             row_names_side="left",
+  #                             name="median\nscaled\nexpression",
+  #                             heatmap_legend_param=list(at=c(0,0.2,0.4,0.6,0.8,1),legend_height=unit(3,"cm"),
+  #                                                       grid_width=unit(0.6,"cm"),title_position="topleft",
+  #                                                       labels_gp=gpar(fontsize=11),title_gp=gpar(fontsize=11)),
+  #                             row_names_gp=gpar(fontsize=13,fontface="bold"),column_names_gp=gpar(fontsize=12,fontface="bold"),
+  #                             row_gap=unit(1,"mm"),column_gap=unit(1,"mm"),cluster_rows = FALSE, cluster_columns = FALSE) +
+  #     ranno1 + ranno2
+  # }
   fcs_join_obj[[paste0(tolower(algorithm),"_heatmap")]] <- list(heatmap = heatmap_output,
                                                                 heatmap_tile_data = backend.matrix,
                                                                 population_size = pop.freq)
