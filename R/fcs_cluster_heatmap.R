@@ -1,4 +1,4 @@
-fcs_cluster_heatmap <- function(fcs_join_obj, algorithm,
+fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "all",
                                 heatmap_color_palette = rev(RColorBrewer::brewer.pal(11, "RdYlBu")))
 {
   if(!tolower(algorithm) %in% names(fcs_join_obj)) {
@@ -13,7 +13,11 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm,
   event_source <- fcs_join_obj[["source"]]
   cluster_numbers <- as.numeric(fcs_join_obj[[tolower(algorithm)]][["clusters"]])
   heatmap_data <- fcs_join_obj[["data"]]
-  include_channels <- colnames(fcs_join_obj[["data"]])
+  if(include_parameters=="all") {
+    include_channels <- colnames(fcs_join_obj[["data"]])
+  } else {
+    include_channels <- include_parameters
+  }
 
   scaled.global <- CATALYST:::.scale_exprs(t(heatmap_data[,include_channels]), 1, 0.01)
   global.t <- t(scaled.global)
