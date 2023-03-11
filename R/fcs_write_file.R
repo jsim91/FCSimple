@@ -79,7 +79,7 @@ fcs_write.FCS <- function(fcs_join_obj,
       final_return <- cbind(fcs_include[[1]], fcs_include[[2]])
     }
   } else if(length(which_populated)==3) {
-    for(i in 1:length(final_return)) {
+    for(i in 1:length(which_populated)) {
       if(i==1) {
         next
       } else if(i==2) {
