@@ -1,4 +1,5 @@
 fcs_write.FCS <- function(fcs_join_obj,
+                          fcs_prefix_string = "fcsimple",
                           data_format = c("raw","transformed"),
                           include_reductions = c("UMAP","tSNE"),
                           include_clusterings = c("leiden","flowsom","louvain","phenograph","git"),
@@ -94,8 +95,8 @@ fcs_write.FCS <- function(fcs_join_obj,
   }
   out_ff <- new("flowFrame", exprs = final_return)
   if(include_timestamp) {
-    write.FCS(x = out_ff, filename = paste0(gsub("\\/$","",outdir,"/fcsimple_outfile_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".fcs")))
+    write.FCS(x = out_ff, filename = paste0(gsub("\\/$","",outdir),"/",fcs_prefix_string,"_fcsimple_outfile_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".fcs"))
   } else {
-    write.FCS(x = out_ff, filename = paste0(gsub("\\/$","",outdir,"/fcsimple_outfile.fcs")))
+    write.FCS(x = out_ff, filename = paste0(gsub("\\/$","",outdir),"/",fcs_prefix_string,"_fcsimple_outfile.fcs"))
   }
 }
