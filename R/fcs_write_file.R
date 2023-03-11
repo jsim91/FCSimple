@@ -95,7 +95,7 @@ fcs_write.FCS <- function(fcs_join_obj,
   }
   out_ff <- new("flowFrame", exprs = final_return)
   if(include_timestamp) {
-    write.FCS(x = out_ff, filename = paste0(gsub("\\/$","",outdir),"/",fcs_name,strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".fcs"))
+    write.FCS(x = out_ff, filename = paste0(gsub("\\/$","",outdir),"/",fcs_name,"_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".fcs"))
   } else {
     write.FCS(x = out_ff, filename = paste0(gsub("\\/$","",outdir),"/",fcs_name,".fcs"))
   }
