@@ -34,20 +34,24 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
   plt_input <- cbind(reduction_coords,data.frame(cluster = cluster_numbers))
   plt_input$cluster <- factor(plt_input$cluster)
   if(!internal_call) {
-    pl_fun <- function(plin = plt_input, ptalpha = point_alpha, xanno = xval,
+    pl_fun <- function(plin, ptalpha = point_alpha, xanno = xval,
                        yanno = yval, sizeanno = annotate_text_size, ftitle = force_title,
                        color_clus = color_clusters, ptsize = point_size)
     {
+      cnamex <- colnames(plin)[1]; cnamey <- colnames(plin)[2]
+      colnames(plin)[1:2] <- c("valx","valy") # bypass aes_string, which is now deprecated
       if(color_clus) {
-        mypl <- ggplot(data = plin, mapping = aes_string(x = colnames(plin)[1],
-                                                         y = colnames(plin)[2],
-                                                         color = "cluster")) +
+        mypl <- ggplot(data = plin, mapping = aes(x = valx,
+                                                  y = valy,
+                                                  color = cluster)) +
           ggrastr::geom_point_rast(alpha = ptalpha, size = ptsize) +
-          scale_color_manual(values = colorby)
+          scale_color_manual(values = colorby) +
+          labs(x = cnamex, y = cnamey)
       } else {
-        mypl <- ggplot(data = plin, mapping = aes_string(x = colnames(plin)[1],
-                                                         y = colnames(plin)[2])) +
-          ggrastr::geom_point_rast(alpha = ptalpha, size = ptsize)
+        mypl <- ggplot(data = plin, mapping = aes(x = valx,
+                                                  y = valy)) +
+          ggrastr::geom_point_rast(alpha = ptalpha, size = ptsize) +
+          labs(x = cnamex, y = cnamey)
       }
       if(!is.na(sizeanno)) {
         mypl <- mypl +
@@ -61,7 +65,7 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
       return(mypl)
     }
     if(is.na(split_factor[1])) {
-      plt_reduction <- pl_fun()
+      plt_reduction <- pl_fun(plin = plt_input)
     } else {
       # split the plot by split_factor where split_factor is a vector of length == nrow(reduction) that gives identity to the reduction rows
       split_reduction <- split(x = plt_input, f = factor(split_factor))
@@ -79,8 +83,9 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
         }
       }
       outplots <- lapply(X = split_reduction, pl_fun, ftitle = force_title)
-      plt_reduction <- ggpubr::ggarrange(plotlist = outplots, nrow = floor(sqrt(length(outplots))),
-                                         ncol = ceiling(sqrt(length(outplots))))
+      plotnrow <- ifelse(length(outplots)<=4,1,floor(sqrt(length(outplots))))
+      plotncol <- ifelse(length(outplots)<=4,length(outplots),ceiling(sqrt(length(outplots))))
+      plt_reduction <- ggpubr::ggarrange(plotlist = outplots, nrow = plotnrow, ncol = plotncol)
     }
     fname <- paste0(outdir,"/",tolower(algorithm),"_",tolower(reduction),"_labeled_",
                     strftime(Sys.time(),"%Y-%m-%d_%H%M%S"))
