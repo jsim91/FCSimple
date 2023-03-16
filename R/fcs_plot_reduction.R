@@ -1,6 +1,6 @@
 fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha = 0.1, point_size = 1, outdir = getwd(),
                                split_factor = NA, internal_call = FALSE, anno_indices = NULL, keep_indices = NA,
-                               pdf_dim = 10, png_dim = 1000, plotting_device = "pdf", annotate_text_size = 5,
+                               figure_width = 10, figure_height = 10, plotting_device = "pdf", annotate_text_size = 5,
                                title_size = 14, return_plot = TRUE, randomize_colors = FALSE, color_random_seed = 123,
                                color_clusters = TRUE, force_title = FALSE, sample_equally = TRUE)
 {
@@ -8,6 +8,7 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
   require(ggplot2)
   require(shadowtext)
   require(ggrastr)
+  require(ggpubr)
 
   reduction_coords <- fcs_join_obj[[tolower(reduction)]][["coordinates"]]
   cluster_numbers <- as.numeric(as.character(fcs_join_obj[[tolower(algorithm)]][["clusters"]]))
@@ -107,12 +108,12 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
   } else {
     if(plotting_device=="pdf") {
       ggsave(filename = paste0(fname,".pdf"),
-             plot = plt_reduction, device = "pdf", width = pdf_dim, height = pdf_dim,
-             units = "in", dpi = 900)
+             plot = plt_reduction, device = "pdf", width = figure_width, height = figure_height,
+             units = "in", dpi = 900, bg = "white")
     } else if(plotting_device=="png"){
       ggsave(filename = paste0(fname,".png"),
-             plot = plt_reduction, device = "png", width = png_dim, height = png_dim,
-             units = "in", dpi = 900)
+             plot = plt_reduction, device = "png", width = figure_width, height = figure_height,
+             units = "in", dpi = 900, bg = "white")
     }
   }
 }
