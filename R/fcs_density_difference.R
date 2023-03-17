@@ -4,7 +4,8 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
                                           dbscan_eps_ratio = "auto", dbscan_minPts_ratio = "auto",
                                           legend_label_text_size = 12, legend_pos = c(0.5,0), # legend_pos c(1,1) top right
                                           legend_orientation = c("horizontal","vertical"),
-                                          figure_width = 8, figure_height = 8)
+                                          figure_width = 8, figure_height = 8,
+                                          add_timestamp = TRUE)
 {
   require(ggplot2)
   require(MASS)
@@ -144,12 +145,21 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
           panel.background = element_blank())
 
   timestamp <- strftime(Sys.time(),"%Y-%m-%d_%H%M%S")
-  fname_top <- paste0(outdir,"/",names(compare_list)[1],"_vs_",
-                      names(compare_list)[2],"_reduction_density_difference_over_",
-                      timestamp)
-  fname_bottom <- paste0(outdir,"/",names(compare_list)[1],"_vs_",
-                         names(compare_list)[2],"_reduction_density_difference_under_",
-                         timestamp)
+  if(add_timestamp) {
+    fname_top <- paste0(outdir,"/",names(compare_list)[1],"_vs_",
+                        names(compare_list)[2],"_reduction_density_difference_over_",
+                        timestamp)
+    fname_bottom <- paste0(outdir,"/",names(compare_list)[1],"_vs_",
+                           names(compare_list)[2],"_reduction_density_difference_under_",
+                           timestamp)
+  } else {
+    fname_top <- paste0(outdir,"/",names(compare_list)[1],"_vs_",
+                        names(compare_list)[2],"_",tolower(reduction),
+                        "_density_difference_over")
+    fname_bottom <- paste0(outdir,"/",names(compare_list)[1],"_vs_",
+                           names(compare_list)[2],"_",tolower(reduction),
+                           "_density_difference_under")
+  }
 
   ggsave(filename = paste0(fname_top,".pdf"),
          plot = plt_dens_diff, device = "pdf",
