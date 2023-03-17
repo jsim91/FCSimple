@@ -1,12 +1,17 @@
 fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tSNE"),
                                           compare_list, color_list, n_kde = 200,
                                           outdir = getwd(), axis_title_text_size = 12,
-                                          legend_label_text_size = 12)
+                                          dbscan_eps_ratio = "auto", dbscan_minPts_ratio = "auto",
+                                          legend_label_text_size = 12, legend_pos = c(0.5,0), # legend_pos c(1,1) top right
+                                          legend_orientation = c("horizontal","vertical"),
+                                          figure_width = 8, figure_height = 8)
 {
   require(ggplot2)
   require(MASS)
   require(reshape2)
   require(scales)
+  require(ggrastr)
+  require(ggforce); require(concaveman)
 
   # testing
   # fcs_join_obj <- readRDS("J:/umap_cluster_object.rds")
@@ -19,9 +24,15 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
   # axis_title_text_size = 12
   # legend_label_text_size = 12
   # outdir = getwd()
+  # legend_pos = c(0.5,0.075)
+  # legend_orientation = "horizontal"
 
   if(length(reduction)!=1) {
     stop("error in argument 'reduction': Use either tSNE or UMAP. Reduction must be present in 'fcs_join_obj'.")
+  }
+  if(length(legend_orientation)!=1) {
+    warning("Use either 'horizontal' or 'vertical'. Proceeding with 'legend_orientation' = 'horizontal'")
+    legend_orientation = "horizontal"
   }
 
   reduction_coords <- fcs_join_obj[[tolower(reduction)]][["coordinates"]]
@@ -42,8 +53,8 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
   if(any(length(unique(names(compare_list)))!=2, length(unique(names(color_list)))!=2)) {
     stop("error in argument 'compare_list' and 'color_list': names within each list must be unique")
   }
-  grp1_red <- reduction_coords[compare_list[[1]],]; grp1_red <- rbind(grp1_red, pad_mat)
-  grp2_red <- reduction_coords[compare_list[[2]],]; grp2_red <- rbind(grp2_red, pad_mat)
+  grp1_red <- reduction_coords[compare_list[[1]],]#; grp1_red <- rbind(grp1_red, pad_mat)
+  grp2_red <- reduction_coords[compare_list[[2]],]#; grp2_red <- rbind(grp2_red, pad_mat)
 
   # method source: https://stackoverflow.com/questions/28521145/r-calculate-and-plot-difference-between-two-density-countours
 
@@ -63,26 +74,80 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
 
   # where group2 is list element 2, positive values indicate some enrichment for group2
 
+  set.seed(123)
+  background_data <- reduction_coords[sample(1:nrow(reduction_coords),size=100000,replace=FALSE),]
+
   plt_dens_diff <- ggplot(diff12.m, aes(UMAP1, UMAP2, z=z, fill=z)) +
     geom_tile() +
-    stat_contour(aes(colour=..level..), binwidth = 0.001) +
-    scale_fill_gradient2(low = "red",mid = "white", high = "blue", midpoint = 0, breaks = c(minlim,maxlim),
+    stat_contour(aes(colour = after_stat(!!str2lang("level"))), binwidth = 0.001) +
+    scale_fill_gradient2(low = color_list[[1]],mid = "white",
+                         high = color_list[[2]], midpoint = 0, breaks = c(minlim,maxlim),
                          labels=c(names(compare_list[1]),names(compare_list[2])),limits=c(minlim,maxlim)) +
-    scale_colour_gradient2(low = muted("red"), mid = "white", high = muted("blue"), midpoint = 0) +
+    scale_colour_gradient2(low = muted(color_list[[1]]), mid = "white", high = muted(color_list[[2]]), midpoint = 0) +
     coord_cartesian(xlim = dim1_range, ylim = dim2_range, expand = FALSE) +
     guides(color = "none", fill = guide_colorbar(ticks.color = NA)) +
     theme_bw() +
-    theme(legend.position = "bottom",
+    theme(legend.position = legend_pos,
+          legend.direction= legend_orientation,
           legend.title = element_blank(),
           legend.text = element_text(size = legend_label_text_size, hjust = 0.5, vjust = 1),
           axis.text = element_blank(),
           axis.ticks = element_blank(),
           axis.title = element_text(face = "bold", size = axis_title_text_size))
 
-  fname <- paste0(outdir,"/",names(compare_list)[1],"_vs_",names(compare_list)[2],"_reduction_density_difference_",
-                  strftime(Sys.time(),"%Y-%m-%d_%H%M%S"))
+  if(length(dbscan_eps_ratio)!=1) {
+    dbscan_eps_ratio <- "auto"
+  }
+  if(length(dbscan_minPts_ratio)!=1) {
+    dbscan_minPts_ratio <- "auto"
+  }
+  if(dbscan_eps_ratio == "auto") {
+    dbscan_eps_arg <- mean(diff(dim1_range),diff(dim2_range))/20
+  } else {
+    dbscan_eps_arg <- mean(diff(dim1_range),diff(dim2_range))/dbscan_eps_ratio
+  }
+  if(dbscan_minPts_ratio == "auto") {
+    dbscan_minpts_arg <- floor(nrow(background_data)/100)
+  } else {
+    dbscan_minpts_arg <- floor(nrow(background_data)/dbscan_minPts_ratio)
+  }
+  scan_islands <- dbscan::dbscan(x = background_data[,c(1:2)], eps = dbscan_eps_arg, minPts = dbscan_minpts_arg)
+  background_data$island <- as.character(scan_islands$cluster)
+  background_data$island_1 <- scan_islands$cluster
+  override_island_col <- rep(alpha(c("black"), alpha = 1), length(unique(background_data$island)))
+  names(override_island_col) <- unique(background_data$island)
 
-  ggsave(filename = paste0(fname,".pdf"),
-         plot = plt_dens_diff, device = "pdf", width = 8, height = 8,
+  plt_dens_back <- ggplot(background_data, aes(x = UMAP1, y = UMAP2, color = island_1)) +
+    geom_point(alpha = 0) +
+    geom_mark_hull(concavity = 2, expand = unit(1, "mm"), aes(fill = island, filter = island != '0'),
+                   color = alpha(colour = "white", alpha = 0)) +
+    scale_fill_manual(values = override_island_col) +
+    coord_cartesian(xlim = dim1_range, ylim = dim2_range, expand = FALSE) +
+    guides(fill = "none", color = guide_colorbar(ticks.color = NA)) +
+    theme_bw() +
+    theme(legend.position = "none",
+          legend.title = element_blank(),
+          legend.text = element_text(size = legend_label_text_size, hjust = 0.5, vjust = 1),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(),
+          axis.title = element_text(face = "bold", size = axis_title_text_size, color = "white"),
+          panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
+          panel.background = element_blank())
+
+  timestamp <- strftime(Sys.time(),"%Y-%m-%d_%H%M%S")
+  fname_top <- paste0(outdir,"/",names(compare_list)[1],"_vs_",
+                      names(compare_list)[2],"_reduction_density_difference_over_",
+                      timestamp)
+  fname_bottom <- paste0(outdir,"/",names(compare_list)[1],"_vs_",
+                         names(compare_list)[2],"_reduction_density_difference_under_",
+                         timestamp)
+
+  ggsave(filename = paste0(fname_top,".pdf"),
+         plot = plt_dens_diff, device = "pdf",
+         figure_width = 8, figure_height = 8,
+         units = "in", dpi = 900, bg = "white")
+  ggsave(filename = paste0(fname_bottom,".pdf"),
+         plot = plt_dens_back, device = "pdf",
+         figure_width = 8, figure_height = 8,
          units = "in", dpi = 900, bg = "white")
 }
