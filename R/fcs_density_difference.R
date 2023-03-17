@@ -37,12 +37,12 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
 
   reduction_coords <- fcs_join_obj[[tolower(reduction)]][["coordinates"]]
   dim1_range <- range(reduction_coords[,1]); dim2_range <- range(reduction_coords[,2])
-  pad1 <- c(min(dim1_range*1.1),min(dim2_range*1.1)); pad2 <- c(min(dim1_range*1.1),max(dim2_range*1.1))
-  pad3 <- c(max(dim1_range*1.1),min(dim2_range*1.1)); pad4 <- c(max(dim1_range*1.1),max(dim2_range*1.1))
-  pad_mat <- rbind(rbind(rbind(matrix(data = pad1, nrow = 1, ncol = 2), matrix(data = pad2, nrow = 1, ncol = 2)),
-                         matrix(data = pad3, nrow = 1, ncol = 2)),
-                   matrix(data = pad4, nrow = 1, ncol = 2))
-  colnames(pad_mat) <- colnames(reduction_coords)
+  # pad1 <- c(min(dim1_range*1.1),min(dim2_range*1.1)); pad2 <- c(min(dim1_range*1.1),max(dim2_range*1.1))
+  # pad3 <- c(max(dim1_range*1.1),min(dim2_range*1.1)); pad4 <- c(max(dim1_range*1.1),max(dim2_range*1.1))
+  # pad_mat <- rbind(rbind(rbind(matrix(data = pad1, nrow = 1, ncol = 2), matrix(data = pad2, nrow = 1, ncol = 2)),
+  #                        matrix(data = pad3, nrow = 1, ncol = 2)),
+  #                  matrix(data = pad4, nrow = 1, ncol = 2))
+  # colnames(pad_mat) <- colnames(reduction_coords)
 
   if(any(length(compare_list)!=2, length(color_list)!=2)) {
     stop("error in argument 'compare_list' and 'color_list': both lists need to be length 2")
@@ -55,6 +55,15 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
   }
   grp1_red <- reduction_coords[compare_list[[1]],]#; grp1_red <- rbind(grp1_red, pad_mat)
   grp2_red <- reduction_coords[compare_list[[2]],]#; grp2_red <- rbind(grp2_red, pad_mat)
+  ds_to <- min(nrow(grp1_red),nrow(grp2_red))
+  if(nrow(grp1_red)>ds_to) {
+    set.seed(123)
+    grp1_red <- grp1_red[sample(x = 1:nrow(grp1_red), size = ds_to, replace = FALSE),]
+  }
+  if(nrow(grp2_red)>ds_to) {
+    set.seed(123)
+    grp2_red <- grp2_red[sample(x = 1:nrow(grp2_red), size = ds_to, replace = FALSE),]
+  }
 
   # method source: https://stackoverflow.com/questions/28521145/r-calculate-and-plot-difference-between-two-density-countours
 
