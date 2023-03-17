@@ -187,13 +187,16 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
   timestamp <- strftime(Sys.time(),"%Y-%m-%d_%H%M%S")
   if(add_timestamp) {
     fname_top <- paste0(outdir,"/",names(compare_list)[1],"_vs_",
-                        names(compare_list)[2],"_reduction_density_difference_over_",
+                        names(compare_list)[2],"_",tolower(reduction),
+                        "_density_difference_over_",
                         timestamp)
     fname_bottom <- paste0(outdir,"/",names(compare_list)[1],"_vs_",
-                           names(compare_list)[2],"_reduction_density_difference_under_",
+                           names(compare_list)[2],"_",tolower(reduction),
+                           "_density_difference_under_",
                            timestamp)
     fname_legend <- paste0(outdir,"/",names(compare_list)[1],"_vs_",
-                           names(compare_list)[2],"_reduction_density_difference_legend_",
+                           names(compare_list)[2],"_",tolower(reduction),
+                           "_density_difference_legend_",
                            timestamp)
   } else {
     fname_top <- paste0(outdir,"/",names(compare_list)[1],"_vs_",
@@ -203,7 +206,8 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
                            names(compare_list)[2],"_",tolower(reduction),
                            "_density_difference_under")
     fname_legend <- paste0(outdir,"/",names(compare_list)[1],"_vs_",
-                           names(compare_list)[2],"_reduction_density_difference_legend")
+                           names(compare_list)[2],"_",tolower(reduction),
+                           "_density_difference_legend")
   }
 
   ggsave(filename = paste0(fname_top,".pdf"),
