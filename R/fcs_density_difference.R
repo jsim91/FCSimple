@@ -4,10 +4,10 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
                                           dbscan_eps_ratio = "auto", dbscan_minPts_ratio = "auto",
                                           legend_label_text_size = 12, annotate_clusters = TRUE,
                                           cluster_algorithm = c("leiden","flowsom","louvain","phenograph","git"),
-                                          cluster_number_annotation_size = 5,
+                                          cluster_number_annotation_size = 5, contour_bin_width = 0.001,
                                           legend_orientation = c("horizontal","vertical"),
                                           figure_width = 8, figure_height = 8,
-                                          add_timestamp = TRUE)
+                                          add_timestamp = TRUE, hull_concavity = 2)
 {
   require(ggplot2)
   require(MASS)
@@ -109,7 +109,7 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
 
   plt_dens_diff <- ggplot(diff12.m, aes(x = Var1, y = Var2, z=z, fill=z)) +
     geom_tile() +
-    stat_contour(aes(colour = after_stat(!!str2lang("level"))), binwidth = 0.001) +
+    stat_contour(aes(colour = after_stat(!!str2lang("level"))), binwidth = contour_bin_width) +
     scale_fill_gradient2(low = color_list[[1]],mid = "white",
                          high = color_list[[2]], midpoint = 0, breaks = c(minlim,maxlim),
                          labels=c(names(compare_list[1]),names(compare_list[2])),limits=c(minlim,maxlim)) +
@@ -168,7 +168,8 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
 
   plt_dens_back <- ggplot(background_data, aes(x = dimx, y = dimy, color = island_1)) +
     geom_point(alpha = 0) +
-    geom_mark_hull(concavity = 2, expand = unit(1, "mm"), aes(fill = island, filter = island != '0'),
+    geom_mark_hull(concavity = hull_concavity, expand = unit(1, "mm"),
+                   aes(fill = island, filter = island != '0'),
                    color = alpha(colour = "white", alpha = 0)) +
     scale_fill_manual(values = override_island_col) +
     coord_cartesian(xlim = dim1_range, ylim = dim2_range, expand = FALSE) +
