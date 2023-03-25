@@ -1,7 +1,7 @@
-fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparisons,
+fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparisons, denominator_cell_type,
                               algorithm = c("leiden","flowsom","louvain","phenograph","git"),
                               Rcolorbrewer_palette = "RdYlBu", # must be a colorbrewer palette that's 11 long such as Spectral or RdYlBu
-                              dot_size = 1, denominator_cell_type, overlay_heatmap_numbers = TRUE)
+                              dot_size = 1, overlay_heatmap_numbers = TRUE)
 {
   require(ggplot2)
   require(ggpubr)
