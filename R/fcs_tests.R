@@ -118,7 +118,7 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
 
   out_plots <- lapply(X = in_list, FUN = test_plot)
 
-  pdf(file = paste0(abundance_alg,"_cluster_statistics.pdf"), width = 10, height = 5)
+  pdf(file = paste0(algorithm,"_cluster_statistics.pdf"), width = 10, height = 5)
   lapply(X = out_plots, FUN = function(x) x)
   dev.off()
 }
