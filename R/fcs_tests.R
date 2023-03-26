@@ -113,23 +113,22 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
     color.map.fun = circlize::colorRamp2(seq(0,1, l = n <- 100), colorRampPalette(hm_pal)(n))
 
     cluster_col_ind <- grep(pattern = "^cluster", x = colnames(plot_input))
-    capture_cluster <- colnames(plot_input)[cluster_col_ind]
-    colnames(plot_input)[cluster_col_ind] <- "placeholder"
+    capture_cluster <- plot_input[1,cluster_col_ind]
 
-    plt <- ggplot(data = plot_input, mapping = aes(x = group_assignment, y = placeholder, color = group_assignment)) +
+    plt <- ggplot(data = plot_input, mapping = aes(x = compare_group, y = frequency, color = compare_group)) +
       geom_boxplot(fill = "#bfbfbf", lwd = 0.5, alpha = 0.4, width = 0.4)
     if(pair_test) {
       plt <- plt + geom_line(mapping = aes(group = group), color = "black") +
         geom_point(mapping = aes(fill = compare_group), pch = 21, size = size_of_dots*3, color = "black") +
         stat_compare_means(method = "wilcox", comparisons = compare_these, size = 4.5, paired = TRUE)
     } else {
-      plt <- plt + geom_dotplot(data = plot_input, aes(fill = group_assignment), color = "black", stroke = 1,
+      plt <- plt + geom_dotplot(data = plot_input, aes(fill = compare_group), color = "black", stroke = 1,
                                 binaxis = "y", stackdir = "center", position = "dodge", binpositions="all",
                                 dotsize = size_of_dots) +
         stat_compare_means(method = "wilcox", comparisons = compare_these, size = 4.5, paired = FALSE)
     }
     plt <- plt + scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
-      labs(y = paste0("% of ",cell_type_denom), title = gsub("_"," ",capture_cluster)) +
+      labs(y = paste0("% of ",cell_type_denom), title = paste0("cluster ",capture_cluster)) +
       scale_fill_manual(values = dplot_col) +
       scale_color_manual(values = dplot_col) +
       theme_minimal() +
