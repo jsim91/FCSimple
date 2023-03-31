@@ -2,7 +2,8 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
                                split_factor = NA, internal_call = FALSE, anno_indices = NULL, keep_indices = NA,
                                figure_width = 10, figure_height = 10, plotting_device = "pdf", annotate_text_size = 5,
                                title_size = 14, return_plot = TRUE, randomize_colors = FALSE, color_random_seed = 123,
-                               color_clusters = TRUE, force_title = FALSE, sample_equally = TRUE)
+                               color_clusters = TRUE, force_title = FALSE, sample_equally = TRUE,
+                               cluster_substitute_names = NA)
 {
   # use annotate_text_size = NA to produce a plot without cluster annotations
   require(ggplot2)
@@ -32,6 +33,16 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
     xval[i] <- median(reduction_coords[,1][which(cluster_numbers==as.numeric(names(xval)[i]))])
     yval[i] <- median(reduction_coords[,2][which(cluster_numbers==as.numeric(names(yval)[i]))])
   }
+
+  if(!is.na(cluster_substitute_names[1])) {
+    if(length(cluster_substitute_names)!=length(xval)) {
+      stop("error in argument 'cluster_substitute_names': length of 'cluster_substitute_names' does not match number of clusters.")
+    } else {
+      print("Substituted cluster names will replace cluster number annotations 1:1. Order matters! You may use '\n' character to create multi-line annotations. 'My\nCluster' will put 'My' on first line and 'Cluster' on second line.")
+      names(xval) <- cluster_substitute_names; names(yval) <- cluster_substitute_names
+    }
+  }
+
   plt_input <- cbind(reduction_coords,data.frame(cluster = cluster_numbers))
   plt_input$cluster <- factor(plt_input$cluster)
   if(!internal_call) {
