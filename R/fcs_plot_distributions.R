@@ -74,22 +74,27 @@ fcs_plot_distribution <- function(fcs_join_obj,
 
 plot_none <- function(input_data, rm0, trq)
 {
+  cache_colname <- colnames(input_data)[1]
   if(rm0) {
     rm0_ind <- which(input_data[,1]==0)
     if(length(rm0_ind)!=0) {
-      densdat <- input_data[-which(input_data[,1]==0),]
+      densdat <- input_data[-which(input_data[,1]==0),1]
+    } else {
+      densdat <- input_data[,1]
     }
     if(trq!=0) {
       trim_q <- as.numeric(quantile(x = densdat, probs = trq))
-      densdat <- densdat[-which(densdat[,1]>trim_q),]
+      densdat <- densdat[-which(densdat>trim_q)]
     }
     xval <- density(densdat)$x; yval <- density(densdat)$y
   } else {
     if(trq!=0) {
       trim_q <- as.numeric(quantile(x = input_data[,1], probs = trq))
       densdat <- input_data[-which(input_data[,1]>trim_q),]
+    } else {
+      densdat <- input_data[,1]
     }
-    xval <- density(input_data[,1])$x; yval <- density(input_data[,1])$y
+    xval <- density(densdat)$x; yval <- density(densdat)$y
   }
   dens_data <- data.frame(xval = xval, yval = yval)
   plt1 <- ggplot(data = dens_data, mapping = aes(x = xval, y = yval)) +
