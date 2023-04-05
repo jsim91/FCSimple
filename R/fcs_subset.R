@@ -28,12 +28,10 @@ fcs_subset <- function(fcs_join_obj,
   } else {
     stop("error in argument 'subset_by': only subettable by cluster or source")
   }
-  fcs_join_obj <- list(data = fcs_join_obj$data,
-                       source = fcs_join_obj$source,
-                       subset_on = list(subset_by = subset_by,
-                                        subset_cluster_algorithm = subset_cluster_algorithm,
-                                        subset_values = subset_values,
-                                        source_object_indices = get_index))
+  fcs_join_obj[["subset_on"]] <- list(subset_by = subset_by,
+                                      subset_cluster_algorithm = subset_cluster_algorithm,
+                                      subset_values = subset_values,
+                                      source_object_indices = get_index)
   return(fcs_join_obj)
 }
 
