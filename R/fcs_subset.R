@@ -7,7 +7,7 @@ fcs_subset <- function(fcs_join_obj,
   #                      source = sample(LETTERS[1:3],10000/10,replace=T))
   if(subset_by=="source") {
     get_index <- which(fcs_join_obj[["source"]] %in% subset_values)
-    if(length(get_source_index)==0) {
+    if(length(get_index)==0) {
       stop(paste0("Value requested not found in source. Use one or more of: ",
                   paste0(names(table(fcs_join_obj[["source"]])), collapse = ", ")))
     }
