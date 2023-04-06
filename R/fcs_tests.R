@@ -1,5 +1,6 @@
 fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparisons, denominator_cell_type,
-                              abundance, algorithm = c("leiden","flowsom","louvain","phenograph","git"),
+                              abundance = NA, heatmap_matrix = NA,
+                              algorithm = c("leiden","flowsom","louvain","phenograph","git"),
                               Rcolorbrewer_palette = "RdYlBu", # must be a colorbrewer palette that's 11 long such as Spectral or RdYlBu
                               dot_size = 1, overlay_heatmap_numbers = TRUE, paired_test = FALSE)
 {
@@ -87,7 +88,11 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
   plot_cols <- unlist(color_list)
   my_compare <- comparisons
 
-  hm_tiles <- fcs_join_obj[[paste0(tolower(algorithm),"_heatmap")]][["heatmap_tile_data"]]
+  if(is.na(heatmap_matrix[1])) {
+    hm_tiles <- fcs_join_obj[[paste0(tolower(algorithm),"_heatmap")]][["heatmap_tile_data"]]
+  } else {
+    hm_tiles <- heatmap_matrix
+  }
   in_list <- vector("list", length = length(cluster_list)); names(in_list) <- names(cluster_list)
   for(i in 1:length(cluster_list)) {
     in_list[[i]] <- list(cluster_list[[i]],t(as.matrix(hm_tiles[which(row.names(hm_tiles)==names(in_list)[i]),])))
