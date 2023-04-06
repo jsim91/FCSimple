@@ -104,7 +104,7 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
                         heatmap_overlay_values = overlay_heatmap_numbers,
                         abundance_alg = algorithm, pair_test = paired_test) {
 
-    # testing
+    # testing #
     # abundance_alg <- algorithm
     # heatmap_overlay_values = overlay_heatmap_numbers
     # size_of_dots = dot_size
