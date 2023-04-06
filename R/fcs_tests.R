@@ -1,5 +1,5 @@
 fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparisons, denominator_cell_type,
-                              algorithm = c("leiden","flowsom","louvain","phenograph","git"),
+                              abundance, algorithm = c("leiden","flowsom","louvain","phenograph","git"),
                               Rcolorbrewer_palette = "RdYlBu", # must be a colorbrewer palette that's 11 long such as Spectral or RdYlBu
                               dot_size = 1, overlay_heatmap_numbers = TRUE, paired_test = FALSE)
 {
@@ -50,7 +50,9 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
   # comparisons <- list(c('V1','V2'))
   # end testing argument assignments
 
-  abundance <- fcs_obj[[tolower(algorithm)]][["abundance"]]
+  if(is.na(abundance[1])) {
+    abundance <- fcs_obj[[tolower(algorithm)]][["abundance"]]
+  }
   rm_row <- which(!row.names(abundance) %in% unlist(compare_list))
   if(length(rm_row)!=0) {
     abundance <- abundance[-rm_row,]
