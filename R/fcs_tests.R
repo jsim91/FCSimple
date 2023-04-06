@@ -50,6 +50,7 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
   # comparisons <- list(c('V1','V2'))
   # end testing argument assignments
 
+  abundance <- fcs_obj[[tolower(algorithm)]][["abundance"]]
   rm_row <- which(!row.names(abundance) %in% unlist(compare_list))
   if(length(rm_row)!=0) {
     abundance <- abundance[-rm_row,]
