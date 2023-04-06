@@ -52,7 +52,7 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
   # end testing argument assignments
 
   if(is.na(abundance[1])) {
-    abundance <- fcs_obj[[tolower(algorithm)]][["abundance"]]
+    abundance <- fcs_join_obj[[tolower(algorithm)]][["abundance"]]
   }
   rm_row <- which(!row.names(abundance) %in% unlist(compare_list))
   if(length(rm_row)!=0) {
