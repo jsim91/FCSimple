@@ -74,8 +74,10 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
   if(any(length(unique(names(compare_list)))!=2, length(unique(names(color_list)))!=2)) {
     stop("error in argument 'compare_list' and 'color_list': names within each list must be unique")
   }
-  grp1_red <- reduction_coords[compare_list[[1]],]#; grp1_red <- rbind(grp1_red, pad_mat)
-  grp2_red <- reduction_coords[compare_list[[2]],]#; grp2_red <- rbind(grp2_red, pad_mat)
+  grp1_reduction_loc <- which(fcs_join_obj[["source"]] %in% compare_list[[1]])
+  grp2_reduction_loc <- which(fcs_join_obj[["source"]] %in% compare_list[[2]])
+  grp1_red <- reduction_coords[grp1_reduction_loc,]#; grp1_red <- rbind(grp1_red, pad_mat)
+  grp2_red <- reduction_coords[grp2_reduction_loc,]#; grp2_red <- rbind(grp2_red, pad_mat)
   ds_to <- min(nrow(grp1_red),nrow(grp2_red))
   if(nrow(grp1_red)>ds_to) {
     set.seed(123)
@@ -112,7 +114,7 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
     stat_contour(aes(colour = after_stat(!!str2lang("level"))), binwidth = contour_bin_width) +
     scale_fill_gradient2(low = color_list[[1]],mid = "white",
                          high = color_list[[2]], midpoint = 0, breaks = c(minlim,maxlim),
-                         labels=c(names(compare_list[1]),names(compare_list[2])),limits=c(minlim,maxlim)) +
+                         labels=c(names(compare_list)[1],names(compare_list)[2]),limits=c(minlim,maxlim)) +
     scale_colour_gradient2(low = muted(color_list[[1]]), mid = "white", high = muted(color_list[[2]]), midpoint = 0) +
     coord_cartesian(xlim = dim1_range, ylim = dim2_range, expand = FALSE) +
     guides(color = "none", fill = guide_colorbar(ticks.color = NA)) +
