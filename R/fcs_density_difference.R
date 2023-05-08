@@ -1,12 +1,12 @@
 fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tSNE"),
                                           compare_list, color_list, n_kde = 200,
                                           outdir = getwd(), axis_title_text_size = 12,
-                                          dbscan_eps_ratio = "auto", dbscan_minPts_ratio = "auto",
+                                          dbscan_eps = "auto", dbscan_minPts = "auto",
                                           legend_label_text_size = 12, annotate_clusters = TRUE,
                                           cluster_algorithm = c("leiden","flowsom","louvain","phenograph","git"),
                                           cluster_number_annotation_size = 5, contour_bin_width = 0.001,
                                           legend_orientation = c("horizontal","vertical"),
-                                          figure_width = 8, figure_height = 8,
+                                          figure_width = 8, figure_height = 8, hull_radius = 1.5,
                                           add_timestamp = TRUE, hull_concavity = 2)
 {
   require(ggplot2)
@@ -146,21 +146,21 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
 
   plt_dens_diff <- plt_dens_diff + theme(legend.position = "none")
 
-  if(length(dbscan_eps_ratio)!=1) {
-    dbscan_eps_ratio <- "auto"
+  if(length(dbscan_eps)!=1) {
+    dbscan_eps <- "auto"
   }
-  if(length(dbscan_minPts_ratio)!=1) {
-    dbscan_minPts_ratio <- "auto"
+  if(length(dbscan_minPts)!=1) {
+    dbscan_minPts <- "auto"
   }
-  if(dbscan_eps_ratio == "auto") {
+  if(dbscan_eps == "auto") {
     dbscan_eps_arg <- mean(diff(dim1_range),diff(dim2_range))/20
   } else {
-    dbscan_eps_arg <- mean(diff(dim1_range),diff(dim2_range))/dbscan_eps_ratio
+    dbscan_eps_arg <- dbscan_eps
   }
-  if(dbscan_minPts_ratio == "auto") {
+  if(dbscan_minPts == "auto") {
     dbscan_minpts_arg <- floor(nrow(background_data)/100)
   } else {
-    dbscan_minpts_arg <- floor(nrow(background_data)/dbscan_minPts_ratio)
+    dbscan_minpts_arg <- dbscan_minPts
   }
   scan_islands <- dbscan::dbscan(x = background_data[,c(1:2)], eps = dbscan_eps_arg, minPts = dbscan_minpts_arg)
   background_data$island <- as.character(scan_islands$cluster)
@@ -170,9 +170,9 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
 
   plt_dens_back <- ggplot(background_data, aes(x = dimx, y = dimy, color = island_1)) +
     geom_point(alpha = 0) +
-    geom_mark_hull(concavity = hull_concavity, expand = unit(1, "mm"),
+    geom_mark_hull(concavity = hull_concavity, expand = unit(0.25, "mm"),
                    aes(fill = island, filter = island != '0'),
-                   color = alpha(colour = "white", alpha = 0)) +
+                   color = alpha(colour = "white", alpha = 0), radius = unit(hull_radius, "mm")) +
     scale_fill_manual(values = override_island_col) +
     coord_cartesian(xlim = dim1_range, ylim = dim2_range, expand = FALSE) +
     guides(fill = "none", color = guide_colorbar(ticks.color = NA)) +
