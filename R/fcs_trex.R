@@ -230,6 +230,14 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   map_set$bin[get_low] <- paste0(set1_label," - ",neighbor_significance_threshold * 100,"%")
   map_set$bin[get_high] <- paste0(set2_label," - ",neighbor_significance_threshold * 100,"%")
   map_set$bin[which(!1:nrow(map_set) %in% c(get_high,get_low))] <- "not significant"
+  sig_table <- table(map_set$bin)
+  if(length(sig_table)==1) {
+    print("no significant regions found. Exiting function.")
+    return(0)
+  } else {
+    print(paste0("regions of significance identified: "))
+    print(sig_table)
+  }
 
   map_set_copy <- map_set
   map_set_copy$bin <- factor(x = map_set_copy$bin,
