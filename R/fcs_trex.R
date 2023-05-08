@@ -231,6 +231,9 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   map_set$bin[get_high] <- paste0(set2_label," - ",neighbor_significance_threshold * 100,"%")
   map_set$bin[which(!1:nrow(map_set) %in% c(get_high,get_low))] <- "not significant"
   region_table <- table(map_set$bin)
+  write.csv(x = data.frame(regions = region_table),
+            file = paste0(file_output_prefix,ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_regions_found_",
+                          strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".csv"), row.names = TRUE)
   if(length(region_table)==1) {
     print("no significant regions found. Exiting function.")
     return(0)
@@ -238,9 +241,6 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
     print(paste0("regions identified: "))
     print(region_table)
     print(paste0("minimum cluster size was set to: ",cluster_min_size))
-    write.csv(x = data.frame(regions = region_table),
-              file = paste0(file_output_prefix,ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_regions_found_",
-                            strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".csv"), row.names = TRUE)
     if(max(region_table[-which(names(region_table)=="not significant")])<cluster_min_size) {
       print(paste0("All regions of significance are below min cluster size. Exiting function."))
       return(0)
