@@ -237,6 +237,14 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   } else {
     print(paste0("regions of significance identified: "))
     print(sig_table)
+    print(paste0("minimum cluster size was set to: ",cluster_min_size))
+    write.csv(x = data.frame(regions = sig_table),
+              file = paste0(file_output_prefix,ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_regions_found_",
+                            strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".csv"), row.names = TRUE)
+    if(max(sig_table)<cluster_min_size) {
+      print(paste0("All regions of significance are below min cluster size. Exiting function."))
+      return(0)
+    }
   }
 
   map_set_copy <- map_set
