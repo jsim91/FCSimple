@@ -58,6 +58,12 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
   if(length(rm_row)!=0) {
     abundance <- abundance[-rm_row,]
   }
+  for(i in 1:length(comapare_list)) {
+    try_rm <- which(!compare_list[[i]] %in% row.names(abundance))
+    if(length(try_rm)!=0) {
+      compare_list[[i]] <- compare_list[[i]][-try_rm]
+    }
+  }
 
   rbind_list <- vector("list", length = length(compare_list))
   for(i in 1:length(compare_list)) {
