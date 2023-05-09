@@ -1,6 +1,6 @@
 # FCSimple
 
-Tools for the analysis of .fcs data sets. Methods that are currently supported include: 
+Tools for the analysis of .fcs data sets. Methods that are currently supported include (but are not limited to): 
 
 ```
 fcs_join # Use for concatenation of multiple FCS files (can also take a single FCS file) and formatting of package-wide list object
