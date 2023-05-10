@@ -83,7 +83,7 @@ fcs_cluster <- function(fcs_join_obj,
             sub_data[[i]] <- fcs_join_obj[["data"]][(split_sums[i] + 1):(split_sums[i+1]),]
           }
         }
-        search_out <- future_lapply(sub_data,FUN=function(x) {
+        search_out <- future.apply::future_lapply(sub_data,FUN=function(x) {
           return(RANN::nn2(data=fcs_join_obj[["data"]],query=x,k=num_neighbors,treetype = "kd",searchtype = "standard"))
         })
         future::plan(future::sequential)
