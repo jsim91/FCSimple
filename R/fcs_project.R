@@ -3,7 +3,9 @@ fcs_project_parameters <- function(fcs_join_obj,
                                    parameters = "all",
                                    outdir = getwd(),
                                    sample_size = 50000,
-                                   point_size = 0.8)
+                                   point_size = 0.8,
+                                   trim_outliers = TRUE,
+                                   trim_quantile = 0.01)
 {
   require(ggplot2)
   require(viridis)
@@ -33,7 +35,12 @@ fcs_project_parameters <- function(fcs_join_obj,
     tmp_param <- include_params[i]
     intens_list[[i]] <- cbind(join_data[,tmp_param],reduction_coords); colnames(intens_list[[i]])[1] <- names(intens_list)[i]
   }
-  intens_pl <- function(arg1, method = "color", pts = point_size) { # allow for later output as pch = 21 or similar with fill
+  intens_pl <- function(arg1, method = "color", pts = point_size,
+                        tr_out = trim_outliers, tr_q = trim_quantile) { # allow for later output as pch = 21 or similar with fill
+    if(tr_out) {
+      quant_val <- quantile(x = arg1[,1], probs = c(tr_q, 1-tr_q))
+      arg1 <- arg1[intersect(which(arg1[,1]>min(quant_val)), which(arg1[,1]<max(quant_val))),]
+    }
     if(nrow(arg1)>sample_size){
       arg1 <- arg1[sample(1:nrow(arg1),size=sample_size,replace=F),]
     }
