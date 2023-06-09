@@ -12,7 +12,12 @@ fcs_write.FCS <- function(fcs_join_obj,
     data_format <- "raw"
   }
   if(data_format=="raw") {
-    data_incl <- fcs_join_obj[["raw"]]
+    if(!"raw" %in% names(fcs_join_obj)) {
+      warning("'raw' format not found in object. Consider adding a 'raw' element to the list object with reverse transformed values. Using transformed values stored in $data element.")
+      data_incl <- fcs_join_obj[["data"]]
+    } else {
+      data_incl <- fcs_join_obj[["raw"]]
+    }
   } else if(data_format=="transformed") {
     data_incl <- fcs_join_obj[["data"]]
   } else {
