@@ -1,6 +1,7 @@
 fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "all",
                                 heatmap_color_palette = rev(RColorBrewer::brewer.pal(11, "RdYlBu")),
-                                transpose_heatmap = FALSE, cluster_row = TRUE, cluster_col = TRUE)
+                                transpose_heatmap = FALSE, cluster_row = TRUE, cluster_col = TRUE,
+                                add_timestamp = TRUE, append_file_string = NA)
 {
   if(!tolower(algorithm) %in% names(fcs_join_obj)) {
     stop("error in argument 'algorithm': algorithm not found in fcs_join_obj. Try 'View(fcs_join_obj)'")
@@ -97,9 +98,16 @@ fcs_plot_heatmap <- function(fcs_join_obj, algorithm, outdir = getwd())
   require(ComplexHeatmap)
 
   if(tolower(algorithm)=="dbscan") {
-    fname <- paste0(outdir,"/",tolower(algorithm),"_cluster_heatmap.pdf")
+    fname <- paste0(outdir,"/",tolower(algorithm),"_cluster_heatmap_dbscan.pdf")
   } else {
-    fname <- paste0(outdir,"/",tolower(algorithm),"_cluster_heatmap_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf")
+    if(add_timestamp) {
+      fname <- paste0(outdir,"/",tolower(algorithm),"_cluster_heatmap_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf")
+    } else {
+      fname <- paste0(outdir,"/",tolower(algorithm),"_cluster_heatmap.pdf")
+    }
+  }
+  if(!is.na(append_file_string)) {
+    fname <- gsub(pattern = ".pdf$", replacement = paste0(append_file_string,".pdf"), x = fname)
   }
   ggsave(filename = fname,
          plot = grid::grid.grabExpr(draw(fcs_join_obj[[paste0(tolower(algorithm),"_heatmap")]][["heatmap"]])),
