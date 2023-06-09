@@ -107,7 +107,7 @@ fcs_plot_heatmap <- function(fcs_join_obj, algorithm, outdir = getwd())
     }
   }
   if(!is.na(append_file_string)) {
-    fname <- gsub(pattern = ".pdf$", replacement = paste0(append_file_string,".pdf"), x = fname)
+    fname <- gsub(pattern = ".pdf$", replacement = paste0("_",append_file_string,".pdf"), x = fname)
   }
   ggsave(filename = fname,
          plot = grid::grid.grabExpr(draw(fcs_join_obj[[paste0(tolower(algorithm),"_heatmap")]][["heatmap"]])),
