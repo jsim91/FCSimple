@@ -1,7 +1,6 @@
 fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "all",
                                 heatmap_color_palette = rev(RColorBrewer::brewer.pal(11, "RdYlBu")),
-                                transpose_heatmap = FALSE, cluster_row = TRUE, cluster_col = TRUE,
-                                add_timestamp = TRUE, append_file_string = NA)
+                                transpose_heatmap = FALSE, cluster_row = TRUE, cluster_col = TRUE)
 {
   if(!tolower(algorithm) %in% names(fcs_join_obj)) {
     stop("error in argument 'algorithm': algorithm not found in fcs_join_obj. Try 'View(fcs_join_obj)'")
@@ -92,7 +91,7 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
   return(fcs_join_obj)
 }
 
-fcs_plot_heatmap <- function(fcs_join_obj, algorithm, outdir = getwd())
+fcs_plot_heatmap <- function(fcs_join_obj, algorithm, outdir = getwd(), add_timestamp = TRUE, append_file_string = NA)
 {
   require(ggplot2)
   require(ComplexHeatmap)
