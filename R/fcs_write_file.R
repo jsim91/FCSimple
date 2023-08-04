@@ -3,7 +3,7 @@ fcs_write.FCS <- function(fcs_join_obj,
                           data_format = c("raw","transformed"),
                           include_reductions = c("UMAP","tSNE"),
                           include_clusterings = c("leiden","flowsom","louvain","phenograph","git"),
-                          subset_rows = "all",
+                          subset_rows = "all", # either "all" or a numeric vector of positions to write to file
                           outdir = getwd(),
                           include_timestamp = TRUE)
 {
