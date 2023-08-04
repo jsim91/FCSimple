@@ -3,6 +3,7 @@ fcs_write.FCS <- function(fcs_join_obj,
                           data_format = c("raw","transformed"),
                           include_reductions = c("UMAP","tSNE"),
                           include_clusterings = c("leiden","flowsom","louvain","phenograph","git"),
+                          subset_rows = "all",
                           outdir = getwd(),
                           include_timestamp = TRUE)
 {
@@ -141,6 +142,9 @@ fcs_write.FCS <- function(fcs_join_obj,
   }
   final_return <- as.matrix(final_return) # structure should be a matrix, but as.matrix is used just in case
   out_ff <- new("flowFrame", exprs = final_return)
+  if(subset_rows[1]!="all") {
+    out_ff <- out_ff[subset_rows,]
+  }
   if(include_timestamp) {
     flowCore::write.FCS(x = out_ff, filename = paste0(gsub("\\/$","",outdir),"/",gsub("\\.fcs$","",fcs_name),"_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".fcs"))
   } else {
