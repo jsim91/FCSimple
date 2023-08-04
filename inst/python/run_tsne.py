@@ -16,13 +16,7 @@ try:
 except OSError:
     pass
 
-tsne = TSNE(
-    perplexity = int(perpl),
-    metric = "euclidean",
-    n_jobs = int(n_threads),
-    random_state = 123,
-    verbose = True,
-)
+tsne = TSNE(perplexity = int(perpl), metric = "euclidean", n_jobs = int(n_threads), random_state = 123, verbose = True)
 
 map_output = tsne.fit(data.to_numpy())
 map_df = pd.DataFrame(map_output)
