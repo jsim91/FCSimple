@@ -65,15 +65,14 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
   coordinates_list <- map
   if(tolower(algorithm)=="umap") {
     if(tolower(language)=="r") {
-      settings_list <- list(language = "R", n_neighbors = 30, init = "spca", min_dist = 0.1,
+      settings_list <- list(language = "R", init = "spca", min_dist = 0.1,
                             n_threads = ceiling(detectCores()/2),
                             num_neighbors = round(umap_nn,0), min_dist = umap_min_dist,
                             verbose = TRUE)
     } else if(tolower(language)=="python") {
-      settings_list <- list(language = "Python", n_neighbors = 30, init = 'spectral',
-                            min_dist = 0.1, low_memory = 'True', random_state = 123,
-                            num_neighbors = round(umap_nn,0), min_dist = umap_min_dist,
-                            transform_seed = 123, verbose = 'True')
+      settings_list <- list(language = "Python", init = 'spectral', low_memory = 'True',
+                            random_state = 123, num_neighbors = round(umap_nn,0),
+                            min_dist = umap_min_dist, transform_seed = 123, verbose = 'True')
     }
   } else if(tolower(algorithm)=="tsne") {
     if(tolower(language)=="r") {
