@@ -92,7 +92,7 @@ fcs_join <- function(files,
       # if(use_ncdf) {
       #   fst <- ncdfFlow::transform(fs, transform_function)
       # } else {
-        fst <- flowCore::transform(fs, transform_function)
+      fst <- flowCore::transform(fs, transform_function)
       # }
       for(i in 1:length(fst)) {
         if(i==1) {
@@ -143,23 +143,29 @@ fcs_join <- function(files,
         # transform_function <- flowCore::transformList(flowCore::colnames(fs), transform_FUN)
         # fst <- flowCore::transform(fs, transform_function)
         # fst <- fs
+        sample_list <- vector("list", length = length(fs))
         for(i in 1:length(fs)) {
           tmp_data2 <- exprs(fs[[i]])
-          for(j in 1:ncol(tmp_data2)) {
-            if(!exists("tmp_data2")) {
-              stop("Variable 'tmp_data2' is not defined.")
-            }
-            transform_FUN <- flowCore::hyperlogtGml2(parameters = colnames(tmp_data2)[j], 'T' = hyperlog_transform_T,
-                                                     M = hyperlog_transform_M, W = hyperlog_transform_W,
-                                                     A = hyperlog_transform_A)
-            tmp_data2[,j] <- base::eval(transform_FUN)(tmp_data2)
-          }
-          if(i==1) {
-            tmp_data <- tmp_data2
-          } else {
-            tmp_data <- rbind(tmp_data, tmp_data2)
-          }
+          transform_FUN <- flowCore::hyperlogtGml2(parameters = colnames(tmp_data2)[j], 'T' = hyperlog_transform_T,
+                                                   M = hyperlog_transform_M, W = hyperlog_transform_W,
+                                                   A = hyperlog_transform_A)
+          sample_list[[i]] <- base::eval(transform_FUN)(tmp_data2)
         }
+        #   for(j in 1:ncol(tmp_data2)) {
+        #     if(!exists("tmp_data2")) {
+        #       stop("Variable 'tmp_data2' is not defined.")
+        #     }
+        #     transform_FUN <- flowCore::hyperlogtGml2(parameters = colnames(tmp_data2)[j], 'T' = hyperlog_transform_T,
+        #                                              M = hyperlog_transform_M, W = hyperlog_transform_W,
+        #                                              A = hyperlog_transform_A)
+        #     tmp_data2[,j] <- base::eval(transform_FUN)(tmp_data2)
+        #   }
+        #   if(i==1) {
+        #     tmp_data <- tmp_data2
+        #   } else {
+        #     tmp_data <- rbind(tmp_data, tmp_data2)
+        #   }
+        # }
         # fst <- eval(transform_FUN)(exprs(fs))
         # for(i in 1:length(fst)) {
         #   if(i==1) {
@@ -168,35 +174,36 @@ fcs_join <- function(files,
         #     tmp_data <- rbind(tmp_data, flowCore::exprs(object = fst[[i]]))
         #   }
         # }
-      }
-    } else {
-      stop("error in argument 'instrument_type': depending on how FCS files were created, use 'cytof' or 'flow'")
-    }
-    if(nrow(tmp_data)==0) {
-      stop("error: data set contains 0 events (rows)")
-    }
-    if(ncol(tmp_data)==0) {
-      stop("error: data set contains 0 channels (columns)")
-    }
-    if(use_descriptive_column_names) {
-      desc_names <- fs[[1]]@parameters@data$desc
-      if(length(desc_names)==ncol(tmp_data)) {
-        colnames(tmp_data) <- desc_names
-        colnames(raw_data) <- desc_names
+        # }
       } else {
-        print("Unable to find descriptive column names. Using original names.")
+        stop("error in argument 'instrument_type': depending on how FCS files were created, use 'cytof' or 'flow'")
       }
-    }
-    if(length(grep("DATE|date|Date",names(fs[[1]]@description)))!=0) {
-      run_dates <- flowCore::fsApply(fs, function(x) return(x@description[[grep("DATE|date|Date",names(x@description))[1]]]))
-      return(list(data = tmp_data,
-                  raw = raw_data,
-                  source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow))),
-                  run_date = ifelse(length(run_dates)>0,run_dates,NULL)))
-    } else {
-      return(list(data = tmp_data,
-                  raw = raw_data,
-                  source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))))
+      if(nrow(tmp_data)==0) {
+        stop("error: data set contains 0 events (rows)")
+      }
+      if(ncol(tmp_data)==0) {
+        stop("error: data set contains 0 channels (columns)")
+      }
+      if(use_descriptive_column_names) {
+        desc_names <- fs[[1]]@parameters@data$desc
+        if(length(desc_names)==ncol(tmp_data)) {
+          colnames(tmp_data) <- desc_names
+          colnames(raw_data) <- desc_names
+        } else {
+          print("Unable to find descriptive column names. Using original names.")
+        }
+      }
+      if(length(grep("DATE|date|Date",names(fs[[1]]@description)))!=0) {
+        run_dates <- flowCore::fsApply(fs, function(x) return(x@description[[grep("DATE|date|Date",names(x@description))[1]]]))
+        return(list(data = tmp_data,
+                    raw = raw_data,
+                    source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow))),
+                    run_date = ifelse(length(run_dates)>0,run_dates,NULL)))
+      } else {
+        return(list(data = tmp_data,
+                    raw = raw_data,
+                    source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))))
+      }
     }
   } else {
     for(i in 1:length(fs)) {
