@@ -137,9 +137,6 @@ fcs_join <- function(files,
         if(any(!is.numeric(hyperlog_transform_T), !is.numeric(hyperlog_transform_M), !is.numeric(hyperlog_transform_W), !is.numeric(hyperlog_transform_A))) {
           stop("error in argument(s) 'hyperlog_transform_.': values must be numeric")
         }
-        sample_list <- vector("list", length = length(fs))
-
-        fs <- read.flowSet(files = fils, truncate_max_range = F)
         for(i in 1:length(fs)) {
           td <- exprs(fs[[i]])
           for(j in 1:ncol(td)) {
