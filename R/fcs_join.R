@@ -137,44 +137,25 @@ fcs_join <- function(files,
         if(any(!is.numeric(hyperlog_transform_T), !is.numeric(hyperlog_transform_M), !is.numeric(hyperlog_transform_W), !is.numeric(hyperlog_transform_A))) {
           stop("error in argument(s) 'hyperlog_transform_.': values must be numeric")
         }
-        # transform_FUN <- flowCore::hyperlogtGml2(parameters = flowCore::colnames(fs), 'T' = hyperlog_transform_T,
-        #                                          M = hyperlog_transform_M, W = hyperlog_transform_W,
-        #                                          A = hyperlog_transform_A)
-        # transform_function <- flowCore::transformList(flowCore::colnames(fs), transform_FUN)
-        # fst <- flowCore::transform(fs, transform_function)
-        # fst <- fs
         sample_list <- vector("list", length = length(fs))
+
+        fs <- read.flowSet(files = fils, truncate_max_range = F)
         for(i in 1:length(fs)) {
-          tmp_data2 <- exprs(fs[[i]])
-          transform_FUN <- flowCore::hyperlogtGml2(parameters = colnames(tmp_data2)[1], 'T' = hyperlog_transform_T,
-                                                   M = hyperlog_transform_M, W = hyperlog_transform_W,
-                                                   A = hyperlog_transform_A)
-          sample_list[[i]] <- base::eval(transform_FUN)(tmp_data2)
+          td <- exprs(fs[[i]])
+          for(j in 1:ncol(td)) {
+            transform_fun <- flowCore::hyperlogtGml2(parameters = colnames(td)[j], 'T' = hyperlog_transform_T,
+                                                     M = hyperlog_transform_M, W = hyperlog_transform_W,
+                                                     A = hyperlog_transform_A, transformationId = "hyper1")
+            td[,j] <- eval(transform_fun)(td)
+          }
+          if(i==1) {
+            tmp_data <- td
+            src_data <- rep(sampleNames(fs)[i], nrow(fs[[i]]))
+          } else {
+            tmp_data <- rbind(tmp_data, td)
+            src_data <- append(src_data, rep(sampleNames(fs)[i], nrow(fs[[i]])))
+          }
         }
-        #   for(j in 1:ncol(tmp_data2)) {
-        #     if(!exists("tmp_data2")) {
-        #       stop("Variable 'tmp_data2' is not defined.")
-        #     }
-        #     transform_FUN <- flowCore::hyperlogtGml2(parameters = colnames(tmp_data2)[j], 'T' = hyperlog_transform_T,
-        #                                              M = hyperlog_transform_M, W = hyperlog_transform_W,
-        #                                              A = hyperlog_transform_A)
-        #     tmp_data2[,j] <- base::eval(transform_FUN)(tmp_data2)
-        #   }
-        #   if(i==1) {
-        #     tmp_data <- tmp_data2
-        #   } else {
-        #     tmp_data <- rbind(tmp_data, tmp_data2)
-        #   }
-        # }
-        # fst <- eval(transform_FUN)(exprs(fs))
-        # for(i in 1:length(fst)) {
-        #   if(i==1) {
-        #     tmp_data <- flowCore::exprs(object = fst[[i]])
-        #   } else {
-        #     tmp_data <- rbind(tmp_data, flowCore::exprs(object = fst[[i]]))
-        #   }
-        # }
-        # }
       } else {
         stop("error in argument 'instrument_type': depending on how FCS files were created, use 'cytof' or 'flow'")
       }
