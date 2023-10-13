@@ -10,7 +10,7 @@ fcs_join <- function(files,
                      biexp_transform_width = -10,
                      hyperlog_transform_T = 100000,
                      hyperlog_transform_M = 5,
-                     hyperlog_transform_W = 0.01,
+                     hyperlog_transform_W = 0.001,
                      hyperlog_transform_A = 2,
                      transform_per_channel = TRUE,
                      downsample_size = c(NA,25000)) {
@@ -137,22 +137,23 @@ fcs_join <- function(files,
         if(any(!is.numeric(hyperlog_transform_T), !is.numeric(hyperlog_transform_M), !is.numeric(hyperlog_transform_W), !is.numeric(hyperlog_transform_A))) {
           stop("error in argument(s) 'hyperlog_transform_.': values must be numeric")
         }
-        for(i in 1:length(fs)) {
-          td <- exprs(fs[[i]])
-          for(j in 1:ncol(td)) {
-            transform_fun <- flowCore::hyperlogtGml2(parameters = colnames(td)[j], 'T' = hyperlog_transform_T,
-                                                     M = hyperlog_transform_M, W = hyperlog_transform_W,
-                                                     A = hyperlog_transform_A, transformationId = "hyper1")
-            td[,j] <- eval(transform_fun)#(td)
+        transf_hyperlog <- function(fset, hyper_t, hyper_m, hyper_w, hyper_a) {
+          for(i in 1:length(fset)) {
+            exprs_data <- exprs(fset[[i]])
+            for(j in 1:ncol(exprs_data)) {
+              transform_fun <- flowCore::hyperlogtGml2(parameters = colnames(exprs_data)[j], 'T' = hyper_t, M = hyper_m, W = hyper_w, A = hyper_a, transformationId = "hyper1")
+              exprs_data[,j] <- eval(transform_fun)(exprs_data)
+            }
+            if(i==1) {
+              transf_data <- exprs_data
+            } else {
+              transf_data <- rbind(transf_data, exprs_data)
+            }
           }
-          if(i==1) {
-            tmp_data <- td
-            src_data <- rep(sampleNames(fs)[i], nrow(fs[[i]]))
-          } else {
-            tmp_data <- rbind(tmp_data, td)
-            src_data <- append(src_data, rep(sampleNames(fs)[i], nrow(fs[[i]])))
-          }
+          return(transf_data)
         }
+        tmp_data <- transf_hyperlog(fset = fs, hyper_t = hyperlog_transform_T, hyper_m = hyperlog_transform_M,
+                                    hyper_w = hyperlog_transform_W, hyper_a = hyperlog_transform_A)
       } else {
         stop("error in argument 'instrument_type': depending on how FCS files were created, use 'cytof' or 'flow'")
       }
