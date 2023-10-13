@@ -146,10 +146,13 @@ fcs_join <- function(files,
         for(i in 1:length(fs)) {
           tmp_data2 <- exprs(fs[[i]])
           for(j in 1:ncol(tmp_data2)) {
+            if(!exists("tmp_data2")) {
+              stop("Variable 'tmp_data2' is not defined.")
+            }
             transform_FUN <- flowCore::hyperlogtGml2(parameters = colnames(tmp_data2)[j], 'T' = hyperlog_transform_T,
                                                      M = hyperlog_transform_M, W = hyperlog_transform_W,
                                                      A = hyperlog_transform_A)
-            tmp_data2[,j] <- eval(transform_FUN)(tmp_data2)
+            tmp_data2[,j] <- base::eval(transform_FUN)(tmp_data2)
           }
           if(i==1) {
             tmp_data <- tmp_data2
