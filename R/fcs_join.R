@@ -146,7 +146,7 @@ fcs_join <- function(files,
         sample_list <- vector("list", length = length(fs))
         for(i in 1:length(fs)) {
           tmp_data2 <- exprs(fs[[i]])
-          transform_FUN <- flowCore::hyperlogtGml2(parameters = colnames(tmp_data2)[j], 'T' = hyperlog_transform_T,
+          transform_FUN <- flowCore::hyperlogtGml2(parameters = colnames(tmp_data2)[1], 'T' = hyperlog_transform_T,
                                                    M = hyperlog_transform_M, W = hyperlog_transform_W,
                                                    A = hyperlog_transform_A)
           sample_list[[i]] <- base::eval(transform_FUN)(tmp_data2)
