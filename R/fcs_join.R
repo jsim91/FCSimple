@@ -142,7 +142,7 @@ fcs_join <- function(files,
         #                                          A = hyperlog_transform_A)
         # transform_function <- flowCore::transformList(flowCore::colnames(fs), transform_FUN)
         # fst <- flowCore::transform(fs, transform_function)
-        fst <- fs
+        # fst <- fs
         for(i in 1:length(fs)) {
           tmp_data2 <- exprs(fs[[i]])
           for(j in 1:ncol(tmp_data2)) {
