@@ -167,7 +167,7 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
             axis.text.y = element_text(size = 12),
             axis.title.y = element_text(size = 14))
     if(max(plot_input$frequency)>95) {
-      plt <- plt + ylim(floor(min(plot_input$frequency)), ceiling(max(plot_input$frequency)))
+      plt <- plt + ylim(floor(min(plot_input$frequency)), 100)
     }
 
     colnames(hm_input) <- gsub("^.+_","",colnames(hm_input))
