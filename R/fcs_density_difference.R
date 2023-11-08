@@ -20,24 +20,26 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
   require(shadowtext)
 
   # testing
-  # fcs_join_obj <- readRDS("J:/Mashayekhi/flow/project_1/outs/fcsimple_join_obj_clustered.rds")
-  # reduction <- "umap"
-  # grp1_ind <- grep(pattern = "SD1", x = fcs_join_obj$source)
-  # grp2_ind <- grep(pattern = "SD2", x = fcs_join_obj$source)
-  # compare_list <- list(SD1 = grp1_ind, SD2 = grp2_ind)
-  # color_list <- list(SD1 = "#1bbc9b", SD2 = "#ff822e")
-  # n_kde <- 200
+  # fcs_join_obj = fcs_obj
+  # reduction = "UMAP"
+  # compare_list = compare_hiv
+  # color_list = color_hiv
+  # n_kde = 200
+  # outdir = paste0(getwd(),"/HIV_status_test")
   # axis_title_text_size = 12
+  # hull_radius = 2
+  # dbscan_eps = "auto"
+  # dbscan_minPts = "auto"
   # legend_label_text_size = 12
-  # outdir = getwd()
-  # legend_pos = c(0.5,0.075)
-  # legend_orientation = "horizontal"
-  # add_timestamp = TRUE
   # annotate_clusters = TRUE
-  # cluster_algorithm = "leiden"
-  # dbscan_eps_ratio = "auto"
-  # dbscan_minPts_ratio = "auto"
-  # cluster_number_annotation_size = 6
+  # cluster_algorithm = "flowsom"
+  # cluster_number_annotation_size = 5
+  # contour_bin_width = 0.001
+  # legend_orientation = "vertical"
+  # figure_width = 8
+  # figure_height = 8
+  # add_timestamp = TRUE
+  # hull_concavity = 2
 
   if(length(reduction)!=1) {
     stop("error in argument 'reduction': Use either tSNE or UMAP. Reduction must be present in 'fcs_join_obj'.")
@@ -111,7 +113,8 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
 
   plt_dens_diff <- ggplot(diff12.m, aes(x = Var1, y = Var2, z=z, fill=z)) +
     geom_tile() +
-    stat_contour(aes(colour = after_stat(!!str2lang("level"))), binwidth = contour_bin_width) +
+    # stat_contour(aes(colour = after_stat(!!str2lang("level"))), binwidth = contour_bin_width) +
+    stat_contour(aes(colour = after_stat(level)), binwidth = contour_bin_width) +
     scale_fill_gradient2(low = color_list[[1]],mid = "white",
                          high = color_list[[2]], midpoint = 0, breaks = c(minlim,maxlim),
                          labels=c(names(compare_list)[1],names(compare_list)[2]),limits=c(minlim,maxlim)) +
@@ -142,9 +145,25 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
             axis.title = element_text(face = "bold", size = axis_title_text_size))
   }
 
-  plt_leg <- ggpubr::as_ggplot(ggpubr::get_legend(p = plt_dens_diff))
+  col_fun = circlize::colorRamp2(seq(min(diff12.m$z),max(diff12.m$z), l = n <- 100), colorRampPalette(unlist(color_list))(n))
+  lgd_h <- Legend(col_fun = col_fun, title = "", border = "black", direction = "horizontal",
+                  at = c(min(diff12.m$z), 0, max(diff12.m$z)), legend_width = unit(6, "cm"), legend_height = unit(1, "cm"),
+                  title_position = "topcenter", labels = c(names(color_list)[1], "", names(color_list)[2]),
+                  labels_gp = gpar(fontsize = 20), tick_length = unit(0,"npc"))
+  lgd_v <- Legend(col_fun = col_fun, title = "", border = "black", direction = "vertical",
+                  at = c(min(diff12.m$z), 0, max(diff12.m$z)), legend_width = unit(1, "cm"), legend_height = unit(6, "cm"),
+                  title_position = "topcenter", labels = c(names(color_list)[1], "", names(color_list)[2]),
+                  labels_gp = gpar(fontsize = 20), tick_length = unit(0,"npc"))
+  # dev.off() # testing
+  # pushViewport(viewport(width = 0.9, height = 0.9))
+  # draw(lgd_h, x = unit(0.25, "npc"), y = unit(0.5, "npc"))
+  # draw(lgd_v, x = unit(0.7, "npc"), y = unit(0.5, "npc"))
+  # popViewport()
 
-  plt_dens_diff <- plt_dens_diff + theme(legend.position = "none")
+  # plt_leg <- ggpubr::as_ggplot(ggpubr::get_legend(p = plt_dens_diff))
+  lgh_gg <- as_ggplot(grid.grabExpr(expr = draw(lgd_h, x = unit(0.5, "npc"), y = unit(0.5, "npc"))))
+  lgv_gg <- as_ggplot(grid.grabExpr(expr = draw(lgd_v, x = unit(0.5, "npc"), y = unit(0.5, "npc"))))
+  lg_arr <- ggpubr::ggarrange(plotlist = list(lgh_gg, lgv_gg), nrow = 1)
 
   if(length(dbscan_eps)!=1) {
     dbscan_eps <- "auto"
@@ -187,6 +206,8 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
           panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank())
 
+  back_lab <- plt_dens_back + annotate("shadowtext", x = clusx, y = clusy, label = names(clusx), size = cluster_number_annotation_size)
+
   timestamp <- strftime(Sys.time(),"%Y-%m-%d_%H%M%S")
   if(add_timestamp) {
     fname_top <- paste0(outdir,"/",names(compare_list)[1],"_vs_",
@@ -211,7 +232,16 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
     fname_legend <- paste0(outdir,"/",names(compare_list)[1],"_vs_",
                            names(compare_list)[2],"_",tolower(reduction),
                            "_density_difference_legend")
+    fname <- paste0(outdir,"/",names(compare_list)[1],"_vs_",
+                    names(compare_list)[2],"_",tolower(reduction),
+                    "_density_difference")
   }
+
+  rm_box <- theme(plot.background = element_blank(),
+                  panel.grid.major = element_blank(),
+                  panel.grid.minor = element_blank(),
+                  panel.border = element_blank())
+
 
   ggsave(filename = paste0(fname_bottom,".pdf"),
          plot = plt_dens_back, device = "pdf",
@@ -224,5 +254,9 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
   ggsave(filename = paste0(fname_legend,".pdf"),
          plot = plt_leg, device = "pdf",
          width = figure_width, height = figure_height,
+         units = "in", dpi = 900, bg = "white")
+  ggsave(filename = paste0(fname,".pdf"),
+         plot = ggpubr::ggarrange(plotlist = list(back_lab + rm_box, plt_dens_diff + rm_box + theme(legend.position = "none", axis.title = element_blank())), nrow = 1), device = "pdf",
+         width = figure_width*2, height = figure_height,
          units = "in", dpi = 900, bg = "white")
 }
