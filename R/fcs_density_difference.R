@@ -18,6 +18,7 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
   require(dbscan)
   require(ggpubr)
   require(shadowtext)
+  require(ComplexHeatmap)
 
   # testing
   # fcs_join_obj = fcs_obj
