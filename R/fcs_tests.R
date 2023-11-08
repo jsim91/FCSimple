@@ -14,6 +14,20 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
   require(ComplexHeatmap)
   require(circlize)
 
+  # testing
+  # fcs_join_obj = fcs_obj
+  # compare_list = compare_hiv
+  # color_list = color_hiv
+  # comparisons = test_compare_hiv
+  # denominator_cell_type = denom_type
+  # abundance = NA
+  # heatmap_matrix = NA # safe to leave as NA, they will be calculated within the function
+  # algorithm = "flowsom"
+  # Rcolorbrewer_palette = "RdYlBu" # must be a colorbrewer palette that's 11 long such as Spectral or RdYlBu
+  # dot_size = 1
+  # overlay_heatmap_numbers = TRUE
+  # paired_test = FALSE
+
   # testing argument assignments
   # cell_type <- "lymphocytes"
   #
@@ -111,14 +125,14 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
                         abundance_alg = algorithm, pair_test = paired_test) {
 
     # testing #
-    # abundance_alg <- algorithm
-    # heatmap_overlay_values = overlay_heatmap_numbers
-    # size_of_dots = dot_size
-    # cell_type_denom = denominator_cell_type
-    # input <- in_list[[1]]
-    # compare_these = my_compare; dplot_col = plot_cols
-    # use_palette = Rcolorbrewer_palette
-    # pair_test = paired_test
+    abundance_alg <- algorithm
+    heatmap_overlay_values = overlay_heatmap_numbers
+    size_of_dots = dot_size
+    cell_type_denom = denominator_cell_type
+    input <- in_list[[1]]
+    compare_these = my_compare; dplot_col = plot_cols
+    use_palette = Rcolorbrewer_palette
+    pair_test = paired_test
 
     plot_input <- input[[1]]
     hm_input <- input[[2]]
@@ -152,6 +166,9 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
             axis.text.x = element_text(size = 14, face = "bold"),
             axis.text.y = element_text(size = 12),
             axis.title.y = element_text(size = 14))
+    if(max(plot_input$frequency)>95) {
+      plt <- plt + ylim(floor(min(plot_input$frequency)), ceiling(max(plot_input$frequency)))
+    }
 
     colnames(hm_input) <- gsub("^.+_","",colnames(hm_input))
     if(heatmap_overlay_values) {
