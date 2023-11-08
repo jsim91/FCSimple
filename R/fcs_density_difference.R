@@ -223,6 +223,10 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
                            names(compare_list)[2],"_",tolower(reduction),
                            "_density_difference_legend_",
                            timestamp)
+    fname <- paste0(outdir,"/",names(compare_list)[1],"_vs_",
+                    names(compare_list)[2],"_",tolower(reduction),
+                    "_density_difference_",
+                    timestamp)
   } else {
     fname_top <- paste0(outdir,"/",names(compare_list)[1],"_vs_",
                         names(compare_list)[2],"_",tolower(reduction),
@@ -243,6 +247,7 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
                   panel.grid.minor = element_blank(),
                   panel.border = element_blank())
 
+  umap_arr <- ggpubr::ggarrange(plotlist = list(back_lab + rm_box, plt_dens_diff + rm_box + theme(legend.position = "none", axis.title = element_blank())), nrow = 1)
 
   ggsave(filename = paste0(fname_bottom,".pdf"),
          plot = plt_dens_back, device = "pdf",
@@ -257,7 +262,7 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
          width = figure_width, height = figure_height,
          units = "in", dpi = 900, bg = "white")
   ggsave(filename = paste0(fname,".pdf"),
-         plot = ggpubr::ggarrange(plotlist = list(back_lab + rm_box, plt_dens_diff + rm_box + theme(legend.position = "none", axis.title = element_blank())), nrow = 1), device = "pdf",
+         plot = umap_arr, device = "pdf",
          width = figure_width*2, height = figure_height,
          units = "in", dpi = 900, bg = "white")
 }
