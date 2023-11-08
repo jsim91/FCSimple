@@ -125,14 +125,14 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
                         abundance_alg = algorithm, pair_test = paired_test) {
 
     # testing #
-    abundance_alg <- algorithm
-    heatmap_overlay_values = overlay_heatmap_numbers
-    size_of_dots = dot_size
-    cell_type_denom = denominator_cell_type
-    input <- in_list[[1]]
-    compare_these = my_compare; dplot_col = plot_cols
-    use_palette = Rcolorbrewer_palette
-    pair_test = paired_test
+    # abundance_alg <- algorithm
+    # heatmap_overlay_values = overlay_heatmap_numbers
+    # size_of_dots = dot_size
+    # cell_type_denom = denominator_cell_type
+    # input <- in_list[[1]]
+    # compare_these = my_compare; dplot_col = plot_cols
+    # use_palette = Rcolorbrewer_palette
+    # pair_test = paired_test
 
     plot_input <- input[[1]]
     hm_input <- input[[2]]
