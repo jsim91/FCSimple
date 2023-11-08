@@ -1,5 +1,5 @@
 fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparisons, denominator_cell_type,
-                              abundance = NA, heatmap_matrix = NA,
+                              abundance = NA, heatmap_matrix = NA, force_max = FALSE,
                               algorithm = c("leiden","flowsom","louvain","phenograph","git"),
                               Rcolorbrewer_palette = "RdYlBu", # must be a colorbrewer palette that's 11 long such as Spectral or RdYlBu
                               dot_size = 1, overlay_heatmap_numbers = TRUE, paired_test = FALSE)
@@ -121,7 +121,7 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
   test_plot <- function(input, dplot_col = plot_cols, compare_these = my_compare,
                         backmat = hm_tiles, use_palette = Rcolorbrewer_palette,
                         size_of_dots = dot_size, cell_type_denom = denominator_cell_type,
-                        heatmap_overlay_values = overlay_heatmap_numbers,
+                        heatmap_overlay_values = overlay_heatmap_numbers, fm = force_max,
                         abundance_alg = algorithm, pair_test = paired_test) {
 
     # testing #
@@ -166,8 +166,10 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
             axis.text.x = element_text(size = 14, face = "bold"),
             axis.text.y = element_text(size = 12),
             axis.title.y = element_text(size = 14))
-    if(max(plot_input$frequency)>95) {
-      plt <- plt + ylim(floor(min(plot_input$frequency)), 100)
+    if(fm) {
+      if(max(plot_input$frequency)>95) {
+        plt <- plt + ylim(floor(min(plot_input$frequency)), 100)
+      }
     }
 
     colnames(hm_input) <- gsub("^.+_","",colnames(hm_input))
