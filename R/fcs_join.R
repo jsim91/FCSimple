@@ -106,6 +106,9 @@ fcs_join <- function(files,
           tmp_data <- rbind(tmp_data, flowCore::exprs(fst[[i]]))
         }
       }
+      return(list(data = tmp_data,
+                  raw = raw_data,
+                  source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))))
     } else if(tolower(instrument_type)=="flow") {
       if(transform_type=="asinh") {
         if(is.null(asinh_transform_cofactor)) {
