@@ -25,8 +25,7 @@ fcs_project_parameters # Use after running fcs_reduce_dimensions() to project pa
 Enter the following commands within an R session
 
 ```
-library(devtools)
-install_github("jsim91/FCSimple")
+devtools::install_github("jsim91/FCSimple")
 ```
 
 
