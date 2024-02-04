@@ -19,6 +19,7 @@ vignette: |
 
 ```{r}
 vignette_files <- fcs_load_data()
+vignette_files
 ```
 
 
