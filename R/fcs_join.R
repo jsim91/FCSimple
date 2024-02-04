@@ -90,7 +90,7 @@ fcs_join <- function(files,
   }
   if(!transform_per_channel) {
     if(tolower(instrument_type)=="cytof") {
-      if(is.null(asinh_transform_cofactor)) {
+      if(is.null(asinh_transform_cofactor[1])) {
         asinh_transform_cofactor <- 5
       }
       transform_function <- transformList(flowCore::colnames(fs), function(x) return(asinh(x/asinh_transform_cofactor)))
@@ -106,12 +106,21 @@ fcs_join <- function(files,
           tmp_data <- rbind(tmp_data, flowCore::exprs(fst[[i]]))
         }
       }
+      if(use_descriptive_column_names) {
+        desc_names <- fs[[1]]@parameters@data$desc
+        if(length(desc_names)==ncol(tmp_data)) {
+          colnames(tmp_data) <- desc_names
+          colnames(raw_data) <- desc_names
+        } else {
+          print("Unable to find descriptive column names. Using original names.")
+        }
+      }
       return(list(data = tmp_data,
                   raw = raw_data,
                   source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))))
     } else if(tolower(instrument_type)=="flow") {
       if(transform_type=="asinh") {
-        if(is.null(asinh_transform_cofactor)) {
+        if(is.null(asinh_transform_cofactor[1])) {
           asinh_transform_cofactor <- 200
         }
         transform_function <- flowCore::transformList(flowCore::colnames(fs), function(x) return(asinh(x/asinh_transform_cofactor)))

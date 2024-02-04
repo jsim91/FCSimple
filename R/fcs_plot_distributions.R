@@ -4,7 +4,8 @@ fcs_plot_distribution <- function(fcs_join_obj,
                                   outdir = getwd(),
                                   plot_palette = NULL,
                                   rm_zero = FALSE,
-                                  trim_quantile = 0)
+                                  trim_quantile = 0,
+                                  add_timestamp = TRUE)
 {
   require(ggpubr)
   require(ggplot2)
@@ -47,7 +48,12 @@ fcs_plot_distribution <- function(fcs_join_obj,
       colnames(data_split[[i]])[1] <- colnames(obj_data)[i]
     }
     plot_set <- lapply(X = data_split, FUN = plot_none, rm0 = rm_zero, trq = trim_quantile)
-    ggsave(filename = paste0(outdir,"/panel_distributions_concatenation_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
+    if(add_timestamp) {
+      fname <- paste0(outdir,"/panel_distributions_concatenation_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf")
+    } else {
+      fname <- paste0(outdir,"/panel_distributions_concatenation.pdf")
+    }
+    ggsave(filename = fname,
            plot = ggpubr::ggarrange(plotlist = plot_set, nrow = ceiling(sqrt(length(plot_set))),
                                     ncol = ceiling(sqrt(length(plot_set)))), device = "pdf",
            width = ceiling(sqrt(length(plot_set)))*2.5, height = ceiling(sqrt(length(plot_set)))*2.5, units = "in",
@@ -57,14 +63,24 @@ fcs_plot_distribution <- function(fcs_join_obj,
       stop("error in argument 'separate_by': no run date found, cannot plot by run date/batch")
     }
     plot_set <- lapply(X = data_split, FUN = plot_date, rm0 = rm_zero, trq = trim_quantile)
-    ggsave(filename = paste0(outdir,"/panel_distributions_by_batch_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
+    if(add_timestamp) {
+      fname <- paste0(outdir,"/panel_distributions_by_batch_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf")
+    } else {
+      fname <- ppaste0(outdir,"/panel_distributions_by_batch.pdf")
+    }
+    ggsave(filename = fname,
            plot = ggpubr::ggarrange(plotlist = plot_set, nrow = ceiling(sqrt(length(plot_set))),
                                     ncol = ceiling(sqrt(length(plot_set))), legend = "bottom", common.legend = TRUE),
            device = "pdf", width = ceiling(sqrt(length(plot_set)))*2.5, height = ceiling(sqrt(length(plot_set)))*2.5,
            units = "in", dpi = 900, limitsize = FALSE)
   } else if(tolower(separate_by) == "cluster") {
     plot_set <- lapply(X = data_split, FUN = plot_cluster, rm0 = rm_zero, trq = trim_quantile)
-    ggsave(filename = paste0(outdir,"/panel_distributions_by_cluster_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
+    if(add_timestamp) {
+      fname <- paste0(outdir,"/panel_distributions_by_cluster_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf")
+    } else {
+      fname <- paste0(outdir,"/panel_distributions_by_cluster.pdf")
+    }
+    ggsave(filename = fname,
            plot = ggpubr::ggarrange(plotlist = plot_set, nrow = ceiling(sqrt(length(plot_set))),
                                     ncol = ceiling(sqrt(length(plot_set))), legend = "bottom", common.legend = TRUE),
            device = "pdf", width = ceiling(sqrt(length(plot_set)))*3, height = ceiling(sqrt(length(plot_set)))*9,

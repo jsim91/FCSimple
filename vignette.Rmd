@@ -15,17 +15,113 @@ vignette: |
   %\VignetteEncoding{UTF-8}
 ---
 
-# start
+```{r include=FALSE}
+setwd("J:/FCSimple_vignette_outs")
+```
+
+
+Start by getting the paths to a few sample FCS files included with the FCSimple library.
 
 ```{r}
 vignette_files <- fcs_load_data()
 vignette_files
 ```
 
+Next, create a list object using the fcs_join function. Note, for any function, you can view the function arguments like this:
 
+```{r}
+args(fcs_join)
+```
 
+You should either (1) set the transform parameters manually and set transform_per_channel = FALSE or (2) use the default function arguments and set transform_per_channel = TRUE to use the shiny app to interactively set your transforms. Default is TRUE. Here I will specify transform parameters that are generally acceptable for the analysis of any cytof data. If using fluorescence data and the "asinh" transform_type, consider setting the asinh_transform_cofactor to around 250. Default asinh_transform_cofactor is 5.
 
+```{r}
+fcs_obj <- fcs_join(files = vignette_files, instrument_type = "cytof", transform_type = "asinh", asinh_transform_cofactor = 5, downsample_size = NA, transform_per_channel = FALSE)
+```
 
+The list object will include, by default, (1) the transform data under the data element, (2) the raw untransformed data under the raw element, and (3) the file source of each cell.
+
+```{r}
+summary(fcs_obj)
+```
+
+```{r}
+head(fcs_obj$data)
+```
+
+```{r}
+table(fcs_obj$source)
+```
+
+For readability, I will trim the metal names off of the data matrix column names.
+
+```{r}
+colnames(fcs_obj$data) <- gsub(pattern = "^.+_", replacement = "", x = colnames(fcs_obj$data))
+head(fcs_obj$data,3)
+```
+
+I can check the distributions of the transformed data if I want using fcs_plot_distribution. The figure will be written to whatever is specified using the outdir argument. I will specify the oudir to be the current working directory.
+
+```{r}
+fcs_plot_distribution(fcs_join_obj = fcs_obj, separate_by = "none", outdir = "./", add_timestamp = FALSE)
+```
+![]()
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
 
 
 

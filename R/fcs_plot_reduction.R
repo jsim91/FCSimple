@@ -3,7 +3,7 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
                                figure_width = 10, figure_height = 10, plotting_device = "pdf", annotate_text_size = 5,
                                title_size = 14, return_plot = TRUE, randomize_colors = FALSE, color_random_seed = 123,
                                color_clusters = TRUE, force_title = FALSE, sample_equally = TRUE,
-                               cluster_substitute_names = NA)
+                               cluster_substitute_names = NA, add_timestamp = TRUE)
 {
   # use annotate_text_size = NA to produce a plot without cluster annotations
   require(ggplot2)
@@ -99,8 +99,12 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
       plotncol <- ifelse(length(outplots)<=4,length(outplots),ceiling(sqrt(length(outplots))))
       plt_reduction <- ggpubr::ggarrange(plotlist = outplots, nrow = plotnrow, ncol = plotncol)
     }
-    fname <- paste0(outdir,"/",tolower(algorithm),"_",tolower(reduction),"_labeled_",
-                    strftime(Sys.time(),"%Y-%m-%d_%H%M%S"))
+    if(add_timestamp) {
+      fname <- paste0(outdir,"/",tolower(algorithm),"_",tolower(reduction),"_labeled_",
+                      strftime(Sys.time(),"%Y-%m-%d_%H%M%S"))
+    } else {
+      fname <- paste0(outdir,"/",tolower(algorithm),"_",tolower(reduction),"_labeled")
+    }
   } else {
     plt_reduction <- ggplot(data = plt_input[-keep_indices,], mapping = aes_string(x = colnames(reduction_coords)[1],
                                                                                        y = colnames(reduction_coords)[2])) +
@@ -111,8 +115,12 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
       annotate("shadowtext", x = xval, y = yval, label = names(xval), size = annotate_text_size) +
       theme_void() +
       theme(legend.position = "none")
-    fname <- paste0(outdir,"/islands_selected_for_by_dbscan_",
-                    strftime(Sys.time(),"%Y-%m-%d_%H%M%S"))
+    if(add_timestamp) {
+      fname <- paste0(outdir,"/islands_selected_for_by_dbscan_",
+                      strftime(Sys.time(),"%Y-%m-%d_%H%M%S"))
+    } else {
+      fname <- paste0(outdir,"/islands_selected_for_by_dbscan_")
+    }
   }
   if(return_plot) {
     return(plt_reduction)
