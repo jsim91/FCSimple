@@ -15,54 +15,7 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
   require(circlize)
 
   # testing
-  # fcs_join_obj = fcs_obj
-  # compare_list = compare_hiv
-  # color_list = color_hiv
-  # comparisons = test_compare_hiv
-  # denominator_cell_type = denom_type
-  # abundance = NA
-  # heatmap_matrix = NA # safe to leave as NA, they will be calculated within the function
-  # algorithm = "flowsom"
-  # Rcolorbrewer_palette = "RdYlBu" # must be a colorbrewer palette that's 11 long such as Spectral or RdYlBu
-  # dot_size = 1
-  # overlay_heatmap_numbers = TRUE
-  # paired_test = FALSE
 
-  # testing argument assignments
-  # cell_type <- "lymphocytes"
-  #
-  # setwd(paste0("J:/Mashayekhi/flow/AHA_liraglutide_scenith/",cell_type))
-  #
-  # fcs_obj <- readRDS("AHA_liraglutide_lymphocytes_fcsimple_obj_clustered.rds")
-  # fcs_join_obj <- fcs_obj
-  # algorithm <- "leiden"
-  # denominator_cell_type <- cell_type
-  # algorithm = "leiden"
-  # Rcolorbrewer_palette = "RdYlBu" # must be a colorbrewer palette that's 11 long such as Spectral or RdYlBu
-  # dot_size = 1
-  # overlay_heatmap_numbers = TRUE
-  # paired_test = TRUE
-  #
-  # abundance <- read.csv(file = list.files()[grep("^leiden_cluster_abundance",list.files())],
-  #                       check.names = FALSE, row.names = 1)
-  # abundance <- abundance[grep(pattern = "No Puro", x = row.names(abundance)),]
-  # abundance <- abundance[order(row.names(abundance)),]
-  # compare_list <- list('V1' = row.names(abundance)[grep(pattern = "v1", x = row.names(abundance))],
-  #                      'V2' = row.names(abundance)[grep(pattern = "v2", x = row.names(abundance))])
-  #
-  # differ_pattern = "v[0-9]"
-  # for(i in 1:(length(compare_list)-1)) {
-  #   if(i==1) {
-  #     next
-  #   } else {
-  #     if(mean(gsub(differ_pattern,"",compare_list[[i]])==gsub(differ_pattern,"",compare_list[[i+1]]))!=1) {
-  #       stop("Mismatching PIDs. PID order must match to do paired testing.")
-  #     }
-  #   }
-  # }
-  #
-  # color_list <- list('V1' = "red", 'V2' = "blue")
-  # comparisons <- list(c('V1','V2'))
   # end testing argument assignments
 
   if(is.na(abundance[1])) {
