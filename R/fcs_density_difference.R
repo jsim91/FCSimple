@@ -110,7 +110,7 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
   # where group2 is list element 2, positive values indicate some enrichment for group2
 
   set.seed(123)
-  background_data <- reduction_coords[sample(1:nrow(reduction_coords),size=100000,replace=FALSE),]
+  background_data <- reduction_coords[sample(1:nrow(reduction_coords),size=ifelse(nrow(reduction_coords)>100000,100000,nrow(reduction_coords)),replace=FALSE),]
 
   plt_dens_diff <- ggplot(diff12.m, aes(x = Var1, y = Var2, z=z, fill=z)) +
     geom_tile() +
