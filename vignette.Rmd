@@ -1,16 +1,16 @@
 ---
-title: "FCSimple workflow 2/4/2024"
+title: "FCSimple workflow"
 author:
 - name: Josh Simmons
   affiliation: Vanderbilt University Medical Center
   email: joshua.d.simmons@vumc.org
 package: FCSimple
-output:
-  BiocStyle::html_document
+#output:
+#  BiocStyle::html_document
 abstract: |
   FCSimple workflow
 vignette: |
-  %\VignetteIndexEntry{Vignette Title}
+  %\VignetteIndexEntry{FCSimple_vignette}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
@@ -96,7 +96,7 @@ fcs_plot_distribution(fcs_join_obj = fcs_obj,
 
 The data can be clustered using the fcs_cluster function. Make sure to specify a language, either "R" or "Python". Python will require python to be on your system $PATH and the various additional dependencies (see github). The leiden algorithm for clustering is recommended. The "git" method is largely untested and may fail to run. The default number of cores to use for nearest neighbor searching is half of your system's available cores. This number can be increased or decreased using the num_cores argument. See args(fcs_cluster) for additional options. The results of fcs_cluster will be appended to the fcs_obj list. Note that the nearest neighbor search will only be run once so re-running with different resolutions will take much less time after initially calling fcs_cluster. I specify 30 nearest neighbors here but this number can be changed by altering the adjacency_knn argument value.
 
-```{r}
+```{r include=FALSE, message=FALSE}
 options(warn=-1)
 ```
 ```{r}
@@ -126,7 +126,7 @@ table(fcs_obj$leiden$clusters)
 
 A good followup to clustering is running a dimension reduction on the data to better visualize it. Here I run the UMAP algorithm using the Python language. tSNE is also supported and these can be run in R instead of Python if desired. Again, the default number of cores to use is half of the available system cores but this can be changed by altering the nthread argument. It may be useful to try different umap_min_dist or tsne_perplexity values depending on what reduction algorithm is used. It generally makes sense to use the same number of nearest neighbors as was used for clustering.
 
-```{r}
+```{r message=FALSE}
 fcs_obj <- fcs_reduce_dimensions(fcs_join_obj = fcs_obj, 
                                  algorithm = "umap", 
                                  language = "Python", 
@@ -137,7 +137,7 @@ fcs_obj <- fcs_reduce_dimensions(fcs_join_obj = fcs_obj,
 
 Since the data has been clustered and dimension reduction was run, we can take a look at the results. Note that if you would rather just save the figure to file, set return_plot to FALSE. Here I set it to TRUE and plot it below. If return_plot is set to FALSE, do not assign the results to a variable. Since I set return_plot to TRUE here, I assign the output to a variable, my_umap.
 
-```{r}
+```{r message=FALSE}
 my_umap <- fcs_plot_reduction(fcs_join_obj = fcs_obj, 
                    algorithm = "leiden", 
                    reduction = "umap", 
@@ -164,7 +164,7 @@ fcs_plot_heatmap(fcs_join_obj = fcs_obj,
 ![](E:/FCSimple/FCSimple/vignette_outs/rmd_img/cluster_heatmap.png)
 
 
-There are several ways to visualize differences between groups. Since there are only three groups here, I will make edits to the source element to demonstrate the methods. I'll save the original source information for later.
+There are several ways to visualize differences between groups. Since the included package data only includes 3 files, I will artificially inflate this number in order to properly demonstrate the function used for testing. I'll save the original source information for later.
 
 ```{r}
 original_source <- fcs_obj$source
@@ -179,7 +179,9 @@ split_source <- function(arg1, n = 10) {
   group_str <- rep(LETTERS[(1:length(arg_seq))-1],arg_seq[2])
   new_pattern <- paste0(arg1,"_",group_str)
   set.seed(123)
-  new_pattern_sampled <- new_pattern[sample(1:length(new_pattern), size = length(new_pattern), replace = FALSE)]
+  new_pattern_sampled <- new_pattern[sample(1:length(new_pattern), 
+                                            size = length(new_pattern), 
+                                            replace = FALSE)]
   return(new_pattern_sampled[1:length(arg1)])
 }
 source_sample <- lapply(X = split_src, FUN = split_source)
@@ -192,7 +194,9 @@ table(fcs_obj$source)
 Prior to testing, the cluster abundances must be calculated. The results will be added to the list object.
 
 ```{r message=FALSE}
-fcs_obj <- fcs_calculate_abundance(fcs_join_obj = fcs_obj, report_algorithm = "leiden", report_as = "frequency")
+fcs_obj <- fcs_calculate_abundance(fcs_join_obj = fcs_obj, 
+                                   report_algorithm = "leiden", 
+                                   report_as = "frequency")
 ```
 
 
@@ -223,8 +227,13 @@ test_groups
 Now run the test. The plotted results of the test will be appended to the list object.
 
 ```{r message=FALSE}
-fcs_obj <- fcs_test_clusters(fcs_join_obj = fcs_obj, compare_list = compare_v1v3_id, color_list = compare_v1v3_col, comparisons = test_groups, 
-                             algorithm = "leiden", denominator_cell_type = "lymphocytes", paired_test = FALSE)
+fcs_obj <- fcs_test_clusters(fcs_join_obj = fcs_obj, 
+                             compare_list = compare_v1v3_id, 
+                             color_list = compare_v1v3_col, 
+                             comparisons = test_groups, 
+                             algorithm = "leiden", 
+                             denominator_cell_type = "lymphocytes", 
+                             paired_test = FALSE)
 ```
 
 
@@ -250,7 +259,6 @@ dev.off()
 ```
 
 
-The plots should look similar to these examples:
 ![](E:/FCSimple/FCSimple/vignette_outs/rmd_img/cl1.png)
 
 
@@ -266,10 +274,10 @@ There are some other supported visualization methods that may be useful when att
 
 ```{r}
 unique_id <- unique(fcs_obj$source)
-umap_v1v3_id <- list(V1 = unique_id[grep("V1", unique_id)], 
-                        V3 = unique_id[grep("V3", unique_id)])
+umap_v1v3_id <- list(V1 = unique_id[grep("V1", unique_id)],
+                     V3 = unique_id[grep("V3", unique_id)])
 umap_v1v3_col <- list(V1 = "seagreen", 
-                         V3 = "coral")
+                      V3 = "coral")
 umap_groups <- list(names(compare_v1v3_id))
 ```
 
@@ -308,13 +316,17 @@ fcs_plot_reduction_difference(fcs_join_obj = fcs_obj,
 There is a method to visualize marker distributions on the dimension reduction plots. This may help guide what resolution (or equivalent) might be appropriate for the data. This function will save the plots to disk at the specified outdir.
 
 ```{r, message=FALSE}
-fcs_project_parameters(fcs_join_obj = fcs_obj, reduction = "umap", parameters = "all", outdir = "./vignette_outs", sample_size = 50000)
+fcs_project_parameters(fcs_join_obj = fcs_obj, 
+                       reduction = "umap", 
+                       parameters = "all", 
+                       outdir = "./vignette_outs", 
+                       sample_size = 50000)
 ```
 
 ![](E:/FCSimple/FCSimple/vignette_outs/rmd_img/cd4_projected.png)
 
 
-Methods that support batch correction will be added soon as time allows.
+Methods that support batch correction should be added soon.
 
 ```{r sessionInfo, echo=FALSE}
 sessionInfo()
