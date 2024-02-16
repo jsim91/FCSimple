@@ -20,7 +20,7 @@ fcs_project_parameters <- function(fcs_join_obj,
   if(nrow(join_data)<1) {
     stop("error in 'reduction': unable to find specified reduction")
   }
-  if(parameters == "all") {
+  if(parameters[1] == "all") {
     include_params <- colnames(join_data)
   } else {
     target_params <- colnames(join_data)[which(colnames(join_data) %in% parameters)]
