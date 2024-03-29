@@ -37,6 +37,7 @@ fcs_project_parameters <- function(fcs_join_obj,
   }
   intens_pl <- function(arg1, method = "color", pts = point_size,
                         tr_out = trim_outliers, tr_q = trim_quantile) { # allow for later output as pch = 21 or similar with fill
+    arg1 <- as.data.frame(arg1)
     if(tr_out) {
       quant_val <- quantile(x = arg1[,1], probs = c(tr_q, 1-tr_q))
       arg1 <- arg1[intersect(which(arg1[,1]>min(quant_val)), which(arg1[,1]<max(quant_val))),]
@@ -48,9 +49,9 @@ fcs_project_parameters <- function(fcs_join_obj,
     colnames(arg1)[1] <- "col1"
     if(method=="color") {
       if(tolower(reduction)=="umap"){
-        plt <- ggplot(data = arg1, mapping = aes_string(x = "UMAP1", y = "UMAP2", color = colnames(arg1)[1]))
+        plt <- ggplot(data = arg1, mapping = aes(x = UMAP1, y = UMAP2, color = col1))
       } else if(tolower(reduction)=="tsne") {
-        plt <- ggplot(data = arg1, mapping = aes_string(x = "tSNE1", y = "tSNE2", color = colnames(arg1)[1]))
+        plt <- ggplot(data = arg1, mapping = aes(x = tSNE1, y = tSNE2, color = col1))
       }
       plt <- plt +
         geom_point_rast(size = pts, pch = 19, alpha = 0.1) +
@@ -64,9 +65,9 @@ fcs_project_parameters <- function(fcs_join_obj,
               legend.position = "bottom")
     } else if(method=="fill") {
       if(tolower(reduction)=="umap") {
-        plt <- ggplot(data = arg1, mapping = aes_string(x = "UMAP1", y = "UMAP2", fill = colnames(arg1)[1]))
+        plt <- ggplot(data = arg1, mapping = aes(x = UMAP1, y = UMAP2, fill = col1))
       } else if(tolower(reduction)=="tsne") {
-        plt <- ggplot(data = arg1, mapping = aes_string(x = "tSNE1", y = "tSNE2", fill = colnames(arg1)[1]))
+        plt <- ggplot(data = arg1, mapping = aes(x = tSNE1, y = tSNE2, fill = col1))
       }
       plt <- plt +
         geom_point_rast(size = pts, pch = 21, stroke = 0.05) +
