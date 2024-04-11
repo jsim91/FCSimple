@@ -33,7 +33,7 @@ fcs_plot_reduction_density <- function(fcs_join_obj, reduction = "UMAP", n_kde =
   diff12$z <- grp1_kde2d$z
   rownames(diff12$z) = diff12$x
   colnames(diff12$z) = diff12$y
-  diff12.m = melt(diff12$z, id.var=rownames(diff12))
+  diff12.m = reshape2::melt(diff12$z, id.var=rownames(diff12))
   colnames(diff12.m)[3] <- "z"
 
   craftbrewer_pal <- function (type = "seq", palette = 1, direction = 1)
@@ -71,13 +71,13 @@ fcs_plot_reduction_density <- function(fcs_join_obj, reduction = "UMAP", n_kde =
     if (type == "qual") {
       warn("Using a discrete colour palette in a binned scale.\n  Consider using type = \"seq\" or type = \"div\" instead")
     }
-    binned_scale(aesthetics, "fermenter", ggplot2:::binned_pal(craftbrewer_pal(type, palette, direction)), na.value = na.value, guide = guide, ...)
+    ggplot2::binned_scale(aesthetics, "fermenter", ggplot2:::binned_pal(craftbrewer_pal(type, palette, direction)), na.value = na.value, guide = guide, ...)
   }
 
   diff12.m.copy <- diff12.m
   mybreaks <- seq(from = min(200*diff12.m$z), to = max(200*diff12.m$z), length.out = n_color_steps)
 
-  plt <- ggplot() +
+  plt <- ggplot2::ggplot() +
     metR::geom_contour_fill(data = diff12.m, mapping = aes(Var1, Var2, z = 200*z)) +
     scale_fill_craftfermenter(
       breaks = mybreaks,
@@ -86,28 +86,28 @@ fcs_plot_reduction_density <- function(fcs_join_obj, reduction = "UMAP", n_kde =
         frame.colour = "black",
         ticks.colour = "black",
         barwidth=20,
-        )
+      )
     ) +
-    geom_contour(data = diff12.m.copy, mapping = aes(Var1, Var2, z = 200*z), color = "black") +
-    theme(legend.position = "bottom") +
-    coord_cartesian(xlim = dim1_range, ylim = dim2_range, expand = FALSE) +
-    labs(x = reduction_names[1], y = reduction_names[2], title = title_string)
+    ggplot2::geom_contour(data = diff12.m.copy, mapping = aes(Var1, Var2, z = 200*z), color = "black") +
+    ggplot2::theme(legend.position = "bottom") +
+    ggplot2::coord_cartesian(xlim = dim1_range, ylim = dim2_range, expand = FALSE) +
+    ggplot2::labs(x = reduction_names[1], y = reduction_names[2], title = title_string)
   if(!is.na(plot_border_thickness[1])) {
-    plt <- plt + theme_bw() +
-      theme(axis.text = element_blank(),
-            plot.title = element_text(hjust = 0.5, size = 28*text_size_factor),
-            axis.title = element_blank(),
-            axis.ticks = element_blank(),
-            legend.title = element_blank(),
-            legend.position = "none",
-            panel.border = element_rect(color = "black", size = plot_border_thickness))
+    plt <- plt + ggplot2::theme_bw() +
+      ggplot2::theme(axis.text = ggplot2::element_blank(),
+                     plot.title = ggplot2::element_text(hjust = 0.5, size = 28*text_size_factor),
+                     axis.title = ggplot2::element_blank(),
+                     axis.ticks = ggplot2::element_blank(),
+                     legend.title = ggplot2::element_blank(),
+                     legend.position = "none",
+                     panel.border = ggplot2::element_rect(color = "black", size = plot_border_thickness))
   } else {
-    plt <- plt + theme(axis.text = element_blank(),
-                       plot.title = element_text(hjust = 0.5, size = 28*text_size_factor),
-                       axis.title = element_blank(),
-                       axis.ticks = element_blank(),
-                       legend.title = element_blank(),
-                       legend.position = "none")
+    plt <- plt + ggplot2::theme(axis.text = ggplot2::element_blank(),
+                                plot.title = ggplot2::element_text(hjust = 0.5, size = 28*text_size_factor),
+                                axis.title = ggplot2::element_blank(),
+                                axis.ticks = ggplot2::element_blank(),
+                                legend.title = ggplot2::element_blank(),
+                                legend.position = "none")
   }
   return(plt)
 }
