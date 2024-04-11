@@ -28,19 +28,6 @@ fcs_plot_reduction_density <- function(fcs_join_obj, reduction = "UMAP", n_kde =
   colnames(reduction_coords)[1:2] <- c("dimx","dimy")
   dim1_range <- xlimits; dim2_range <- ylimits
 
-  if(length(cluster_algorithm)!=1) {
-    cluster_algorithm <- cluster_algorithm[1]
-  }
-  if(annotate_clusters) {
-    obj_clusters <- fcs_join_obj[[tolower(cluster_algorithm)]][["clusters"]]
-    unique_clus <- unique(obj_clusters); unique_clus <- unique_clus[order(as.numeric(unique_clus))]
-    clusx <- rep(NA,length(unique_clus)); names(clusx) <- unique_clus; clusy <- clusx
-    for(i in 1:length(clusx)) {
-      clusx[i] <- median(reduction_coords[,1][which(obj_clusters==as.numeric(names(clusx)[i]))])
-      clusy[i] <- median(reduction_coords[,2][which(obj_clusters==as.numeric(names(clusx)[i]))])
-    }
-  }
-
   grp1_kde2d <- MASS::kde2d(x = reduction_coords[,1], y = reduction_coords[,2], lims = c(dim1_range, dim2_range), n = n_kde)
   diff12 = grp1_kde2d
   diff12$z <- grp1_kde2d$z
