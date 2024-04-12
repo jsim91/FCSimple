@@ -153,5 +153,7 @@ fcs_plot_reduction_density <- function(fcs_join_obj, reduction = "UMAP", n_kde =
                    legend.frame = ggplot2::element_rect(linewidth = 0.5))
   get_leg <- ggpubr::get_legend(plt_leg, "fill")
 
+  plt <- plt + ggplot2::theme(legend.position = "none")
+
   return(list(plot = plt, legend = get_leg))
 }
