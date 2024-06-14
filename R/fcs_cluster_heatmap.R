@@ -12,7 +12,7 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
   require(grid)
 
   event_source <- fcs_join_obj[["source"]]
-  cluster_numbers <- as.numeric(fcs_join_obj[[tolower(algorithm)]][["clusters"]])
+  cluster_numbers <- as.numeric(as.character(fcs_join_obj[[tolower(algorithm)]][["clusters"]]))
   heatmap_data <- fcs_join_obj[["data"]]
   if(include_parameters[1]=="all") {
     include_channels <- colnames(fcs_join_obj[["data"]])

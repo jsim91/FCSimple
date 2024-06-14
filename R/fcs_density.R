@@ -145,6 +145,7 @@ fcs_plot_reduction_density <- function(fcs_join_obj, reduction = "UMAP", n_kde =
                                  position = "bottom",
                                  title.hjust = 0.5,
                                  label.hjust = 0.5,
+                                 label.vjust = 0.5,
                                  barwidth = 20,
                                  draw.ulim = F,
                                  draw.llim = F,
