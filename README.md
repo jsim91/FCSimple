@@ -1,6 +1,7 @@
 # FCSimple
 
-Tools for the analysis of .fcs data sets. Methods that are currently supported include (but are not limited to): 
+Tools for the analysis of .fcs data sets
+
 
 
 # Package Install
