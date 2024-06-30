@@ -1,4 +1,5 @@
 fcs_join <- function(files,
+                     flowjo_diagnostics_file = NULL,
                      apply_transform = TRUE,
                      instrument_type = c("cytof","flow"),
                      use_descriptive_column_names = TRUE,
@@ -15,6 +16,9 @@ fcs_join <- function(files,
                      transform_per_channel = TRUE,
                      downsample_size = c(NA,25000)) {
   require(flowCore)
+  if(length(files)==0) {
+    stop("'files' should be a vector of file names of .fcs files to be used in the analysis")
+  }
   if(!transform_per_channel) {
     if(length(instrument_type)>1) {
       warning(paste0("Consider specifying 'instrument_type'. Default use is 'cytof'. If inputs are from a flow cytometer, use 'flow'. Using ",instrument_type[1]," for now."))
@@ -31,28 +35,6 @@ fcs_join <- function(files,
       stop("error in argument 'files': No files with extension 'fcs' or 'FCS' found")
     }
   }
-  # fcs_list <- vector("list", length = length(files)); names(fcs_list) <- files
-  # for(i in 1:length(fcs_list)) {
-  #   tmp_fcs <- read.FCS(filename = files[i], truncate_max_range = FALSE)
-  #   na_channel <- which(is.na(tmp_fcs@parameters@data$desc))
-  #   if(length(na_channel)!=0) {
-  #     tmp_fcs <- tmp_fcs[,-na_channel]
-  #   }
-  #   if(!is.na(downsample_size)) {
-  #     if(nrow(tmp_fcs)>downsample_size) {
-  #       set.seed(123)
-  #       fcs_list[[i]] <- tmp_fcs[sample(1:nrow(tmp_fcs),downsample_size,replace=FALSE),]
-  #       colnames(fcs_list[[i]]) <- fcs_list[[1]]@parameters@data$desc
-  #     } else {
-  #       fcs_list[[i]] <- tmp_fcs
-  #       colnames(fcs_list[[i]]) <- fcs_list[[1]]@parameters@data$desc
-  #     }
-  #   } else {
-  #     fcs_list[[i]] <- tmp_fcs
-  #     colnames(fcs_list[[i]]) <- fcs_list[[1]]@parameters@data$desc
-  #   }
-  # }
-  # fs <- flowSet(fcs_list)
   fs <- flowCore::read.flowSet(files = files, truncate_max_range = FALSE)
   if(mean(is.na(downsample_size))!=0) {
     downsample_size <- NA
@@ -75,18 +57,109 @@ fcs_join <- function(files,
       raw_data <- rbind(raw_data, exprs(fs[[i]]))
     }
   }
-  # if(use_ncdf) {
-  #   require(ncdfFlow)
-  # }
-  # if(use_ncdf) {
-  #   fs <- ncdfFlow::read.ncdfFlowSet(files = files)
-  # } else {
-  #   fs <- flowCore::read.flowSet(files = files, truncate_max_range = FALSE)
-  # }
   if(!apply_transform) {
     return(list(data = raw_data,
                 raw = raw_data,
                 source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))))
+  }
+  if(!is.null(flowjo_diagnostics_file)) {
+    if(!grepl(pattern = "\\.txt$", x = flowjo_diagnostics_file)) {
+      stop("'flowjo_diagnostics_file' must be the file name of a .txt file with contents copied from flowjo: Configure -> Diagnostics -> 'Show XML for Workspace'")
+    } else {
+      infcs <- fs[[1]]
+
+      workspace <- read.delim(file = flowjo_diagnostics_file, header = FALSE, sep = "\n")
+      tform_block_start <- grep(pattern = "<Transformations>", x = workspace[,1])[1]
+      tform_block_end <- grep(pattern = "</Transformations>", x = workspace[,1])[1]
+      transform_data <- workspace[tform_block_start:tform_block_end,1]
+      desc_row <- grep(pattern = 'P[0-9]+(S|R|N)', workspace[,1])#[1:ncol(csv_list[[1]])]
+      desc_row <- desc_row[-which(duplicated(workspace[desc_row,1]))]
+      max_n <- max(as.numeric(gsub("P","",stringr::str_extract(string = workspace[desc_row,], pattern = "P[0-9]+"))))
+      keyword_list <- vector("list", length = max_n); names(keyword_list) <- paste0("P",1:length(keyword_list))
+      for(i in 1:length(keyword_list)) {
+        tmpsubset <- workspace[desc_row,1][grep(pattern = paste0(names(keyword_list)[i],"(R|S|N)"), workspace[desc_row,1])]
+        name_subset <- tmpsubset[grep("P[0-9]+N",tmpsubset)]; desc_subset <- tmpsubset[grep("P[0-9]+S.+value\\=[A-Za-z0-9]",tmpsubset)]
+        name <- gsub("^ +|<Keyword name\\=| />|P[0-9]+N  value\\=|\\$","",name_subset)
+        if(length(name)==0) {
+          name <- ""
+        }
+        desc <- gsub("^ +|<Keyword name\\=| />|P[0-9]+S  value\\=|\\$","",desc_subset)
+        if(length(desc)==0) {
+          desc <- ""
+        }
+        if(name=="" & desc=="") {
+          break
+        }
+        keyword_list[[i]] <- data.frame(desc = desc, name = name)
+      }
+      keyword_list <- keyword_list[which(sapply(keyword_list,class)=="data.frame")]
+      param_data <- do.call(rbind,keyword_list); param_data$desc <- toupper(param_data$desc)
+
+      block_starts <- grep(pattern = "<Transformations>", wsp[,1])
+      block_ends <- grep(pattern = "</Transformations>", wsp[,1])
+      transformations <- wsp[block_starts[1]:block_ends[1],1]
+
+      tf1 <- grep(pattern = "<transforms:", x = transformations); tf2 <- grep(pattern = "</transforms:", x = transformations)
+      if(length(tf1)!=length(tf2)) {
+        stop("mismatch in index lengths..")
+      }
+      tf_list <- vector("list", length = length(tf1))
+      for(i in 1:length(tf_list)) {
+        tr_subset <- transformations[tf1[i]:tf2[i]]
+        transform_fun_str <- stringr::str_extract(string = gsub("(^[ ]+<transforms:)", "", tr_subset[1]), pattern = "^[A-Za-z]+")
+        spl_tr <- as.character(sapply(X = tr_subset[1], FUN = function(x) gsub("<|>|transforms:","",x)))
+        spl_tr <- strsplit(x = spl_tr, split = " ")[[1]]; spl_tr <- spl_tr[which(spl_tr!="")]
+        tf_list[[i]] <- list(fun = spl_tr[grep(pattern = "(linear|hyperlog|fasinh|biex)", spl_tr)], param = spl_tr[-grep(pattern = "(linear|hyperlog|fasinh|biex)", spl_tr)])
+        elm2 <- strsplit(x = tr_subset[2], split = "=")[[1]]; elm2 <- gsub(" />","",elm2[length(elm2)])
+        names(tf_list)[i] <- elm2
+      }
+      full_panel <- infcs@parameters@data
+      tmp_raw <- raw_data
+      tmp_data <- raw_data
+      for(j in 1:ncol(tmp_data)) {
+        if(!colnames(tmp_data)[j] %in% param_data$desc) {
+          next
+        }
+        hyperparams <- tf_list[[param_data$name[which(param_data$desc==colnames(tmp_data)[j])]]][[2]]
+        use_fun <- tf_list[[param_data$name[which(param_data$desc==colnames(tmp_data)[j])]]][[1]]
+        if(!use_fun %in% c("hyperlog","biex","fasinh")) {
+          stop(paste0("found function [",use_fun,"]: transformation using the flowjo workspace diagnostics file supports 'hyperlog', 'biex', and 'fasinh' transforms."))
+        }
+        if(use_fun=="hyperlog") {
+          print(paste0("using hyperlog for ",colnames(tmp_data)[j]))
+          hyper_a = as.numeric(gsub("A=","",hyperparams[grep("A=",hyperparams)]))
+          hyper_m = as.numeric(gsub("M=","",hyperparams[grep("M=",hyperparams)]))
+          hyper_w = as.numeric(gsub("W=","",hyperparams[grep("W=",hyperparams)]))
+          if(hyper_a > (hyper_m - (2*hyper_w))) {
+            hyper_a <- hyper_m - (2*hyper_w)
+          }
+          transform_fun <- flowCore::hyperlogtGml2(parameters = as.character(colnames(tmp_data)[j]),
+                                                   'T' = as.numeric(gsub("T=","",hyperparams[grep("T=",hyperparams)])),
+                                                   M = hyper_m,
+                                                   W = hyper_w,
+                                                   A = hyper_a)
+          tmp_data[,j] <- eval(transform_fun)(tmp_data)
+        } else if(use_fun=="biex") {
+          print(paste0("using biexp for ",colnames(tmp_data)[j]))
+          widb <- as.numeric(gsub("width=","",hyperparams[grep("width=",hyperparams)]))
+          transform_fun <- flowWorkspace::flowjo_biexp(pos = as.numeric(gsub("pos=","",hyperparams[grep("pos=",hyperparams)])),
+                                                       neg = as.numeric(gsub("neg=","",hyperparams[grep("neg=",hyperparams)])),
+                                                       # widthBasis = log(abs(widb),10)*-1)
+                                                       widthBasis = as.numeric(gsub("width=","",hyperparams[grep("width=",hyperparams)])))
+          tmp_data[,j] <- transform_fun(tmp_data[,j])
+        } else if(use_fun=="fasinh") {
+          print(paste0("using fasinh for ",colnames(tmp_data)[j]))
+          transform_fun <- flowjo_fasinh(m = as.numeric(gsub("M=","",hyperparams[grep("M=",hyperparams)])),
+                                         t = as.numeric(gsub("T=","",hyperparams[grep("T=",hyperparams)])),
+                                         a = as.numeric(gsub("A=","",hyperparams[grep("A=",hyperparams)])))
+          tmp_data[,j] <- transform_fun(tmp_data[,j])
+        }
+      }
+      print("transformation completed successfully")
+      return(list(data = tmp_data,
+                  raw = tmp_raw,
+                  source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))))
+    }
   }
   if(!transform_per_channel) {
     if(tolower(instrument_type)=="cytof") {
@@ -94,11 +167,7 @@ fcs_join <- function(files,
         asinh_transform_cofactor <- 5
       }
       transform_function <- transformList(flowCore::colnames(fs), function(x) return(asinh(x/asinh_transform_cofactor)))
-      # if(use_ncdf) {
-      #   fst <- ncdfFlow::transform(fs, transform_function)
-      # } else {
       fst <- flowCore::transform(fs, transform_function)
-      # }
       for(i in 1:length(fst)) {
         if(i==1) {
           tmp_data <- flowCore::exprs(fst[[i]])
