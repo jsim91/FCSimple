@@ -16,7 +16,7 @@ fcs_join <- function(files,
                      transform_per_channel = TRUE,
                      downsample_size = c(NA,25000)) {
   require(flowCore)
-  if(length(files)==0) {
+  if(any(length(files)==0,class(files[1])!="character")) {
     stop("'files' should be a vector of file names of .fcs files to be used in the analysis")
   }
   if(!transform_per_channel) {
