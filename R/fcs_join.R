@@ -158,7 +158,8 @@ fcs_join <- function(files,
       print("transformation completed successfully")
       return(list(data = tmp_data,
                   raw = tmp_raw,
-                  source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))))
+                  source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow))),
+                  transform_list = tf_list))
     }
   }
   if(!transform_per_channel) {
