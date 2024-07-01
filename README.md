@@ -6,7 +6,7 @@ Tools for the analysis of .fcs data sets
 
 # Package Install
 
-Enter the following commands within an R session
+Enter the following command within an R session
 
 ```
 devtools::install_github("jsim91/FCSimple")
