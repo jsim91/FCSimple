@@ -39,6 +39,7 @@ devtools::install_github("jsim91/FCSimple")
 - [scales](https://cran.r-project.org/web/packages/scales/index.html)
 - [cytoMEM](https://bioconductor.org/packages/release/bioc/html/cytoMEM.html)
 - [dbscan](https://cran.r-project.org/web/packages/dbscan/index.html)
+- [cyCombine](https://github.com/biosurf/cyCombine)
 
 The dimension reduction and clustering steps do offer methods to run the calculations through Python, however no knowledge of the Python language is required. These functions will call Python in the background and results will be transferred to the R environment. The reticulate package is not required. Users may edit the included python scripts if they want to alter the default Python behavior. To take advantage of Python-supported methods, these items are required:
 
