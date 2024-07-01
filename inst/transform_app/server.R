@@ -285,7 +285,8 @@ function(input,output) {
     }
     return(list(data = Data_full,
                 source = list_obj[["source"]],
-                raw = list_obj[["data"]]))
+                raw = list_obj[["data"]],
+                object_history = paste0("joined: ",Sys.time())))
   }
   finalize <- eventReactive(input$finalize_transform, {
     # write transform choices to file, include a line to remove files in temp directory before exiting fcs_join function

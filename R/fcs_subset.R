@@ -3,6 +3,9 @@ fcs_subset <- function(fcs_join_obj,
                        subset_cluster_algorithm = NA,
                        subset_values)
 {
+  if(!'object_history' %in% names(fcs_join_obj)) {
+    print("Consider running FCSimple::fcs_update() on the object.")
+  }
   if(subset_by=="source") {
     get_index <- which(fcs_join_obj[["source"]] %in% subset_values)
     if(length(get_index)==0) {

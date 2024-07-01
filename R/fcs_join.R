@@ -60,7 +60,8 @@ fcs_join <- function(files,
   if(!apply_transform) {
     return(list(data = raw_data,
                 raw = raw_data,
-                source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))))
+                source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow))),
+                object_history = paste0("joined: ",Sys.time())))
   }
   if(!is.null(flowjo_diagnostics_file)) {
     if(!grepl(pattern = "\\.txt$", x = flowjo_diagnostics_file)) {
@@ -187,7 +188,8 @@ fcs_join <- function(files,
       }
       return(list(data = tmp_data,
                   raw = raw_data,
-                  source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))))
+                  source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow))),
+                  object_history = paste0("joined: ",Sys.time())))
     } else if(tolower(instrument_type)=="flow") {
       if(transform_type=="asinh") {
         if(is.null(asinh_transform_cofactor[1])) {
@@ -265,11 +267,13 @@ fcs_join <- function(files,
         return(list(data = tmp_data,
                     raw = raw_data,
                     source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow))),
-                    run_date = ifelse(length(run_dates)>0,run_dates,NULL)))
+                    run_date = ifelse(length(run_dates)>0,run_dates,NULL),
+                    object_history = paste0("joined: ",Sys.time())))
       } else {
         return(list(data = tmp_data,
                     raw = raw_data,
-                    source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))))
+                    source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow))),
+                    object_history = paste0("joined: ",Sys.time())))
       }
     }
   } else {

@@ -1,4 +1,5 @@
 fcs_cluster <- function(fcs_join_obj,
+                        use_rep = "data",
                         language = c("R","Python"),
                         algorithm = c("leiden","flowsom","louvain","phenograph","git"),
                         leiden_louvain_resolution = 1,
@@ -11,6 +12,24 @@ fcs_cluster <- function(fcs_join_obj,
                         num_cores = ceiling(parallel::detectCores()/2),
                         output_as = "adjacency")
 {
+  use_rep <- tolower(use_rep)
+  if('batch_correction' %in% names(fcs_join_obj)) {
+    cl_data <- fcs_join_obj[['batch_correction']][['data']]
+    print("batch_correction found in fcs_join_obj list. Using fcs_join_obj[['batch_correction']][['data']] for clustering.")
+  } else {
+    print("batch_correction not found in fcs_join_obj list. Proceeding according to 'use_rep'.")
+    if(!use_rep %in% c("data","pca")) {
+      stop("'use_rep' indicates what representation of the data will be passed to the algorithm. Use 'data' or 'pca'. 'pca' requires that FCSimple::fcs_pca was already run on the data.")
+    } else {
+      if(use_rep=="data") {
+        cl_data <- fcs_join_obj[["data"]]
+        print("Using fcs_join_obj[['data']] for clustering.")
+      } else if(use_rep=="pca") {
+        cl_data <- fcs_join_obj[["pca"]][['pca_data']]
+        print("Using fcs_join_obj[['pca']][['pca_data']] for clustering.")
+      }
+    }
+  }
   capture_dir <- system.file(package = "FCSimple")
   if(any(length(language)!=1, !tolower(language) %in% c("r","python"))) {
     stop("error in argument 'language': use 'R' or 'Python'")
@@ -19,7 +38,7 @@ fcs_cluster <- function(fcs_join_obj,
     warning("error in joined arguments 'language' and 'algorithm': git clustering only avaiable for Python. Attempting to git cluster in Python using k = ",round(git_k,0),"..")
   }
   if(tolower(algorithm)=="git") {
-    write.csv(x = fcs_join_obj[["data"]], file = paste0(capture_dir,"/temp_files/__python_cl_input__.csv"))
+    write.csv(x = cl_data, file = paste0(capture_dir,"/temp_files/__python_cl_input__.csv"))
     system(command = paste0("python ",paste0(capture_dir,"/python/run_cluster_git.py")," ",
                             paste0(capture_dir,"/temp_files/__python_cl_input__.csv")," ",capture_dir,"/temp_files ",round(git_k,0)))
     read_clus <- read.csv(paste0(capture_dir,"/temp_files/__tmp_cl__.csv"), check.names = FALSE)
@@ -32,6 +51,10 @@ fcs_cluster <- function(fcs_join_obj,
     cluster_numbers <- read_clus[,1]
     fcs_join_obj[["git"]] <- list(clusters = cluster_numbers,
                                   settings = list(git_k = git_k))
+    if(!'object_history' %in% names(fcs_join_obj)) {
+      print("Consider running FCSimple::fcs_update() on the object.")
+    }
+    try(expr = fcs_join_obj[['object_history']] <- append(fcs_join_obj[['object_history']], paste0(tolower(algorithm)," on ",use_rep,": ",Sys.time())), silent = TRUE)
     return(fcs_join_obj)
   }
   if(tolower(algorithm) %in% c("leiden","louvain")) {
@@ -42,7 +65,7 @@ fcs_cluster <- function(fcs_join_obj,
       sm <- fcs_join_obj[["adjacency_matrix"]]
     } else {
       if(tolower(search_method)=="fnn") {
-        adj_search <- FNN::knn.index(data = fcs_join_obj[["data"]], k = adjacency_knn)
+        adj_search <- FNN::knn.index(data = cl_data, k = adjacency_knn)
         if(output_as=="adjacency") {
           i_input <- rep(1:nrow(adj_search),times=ncol(adj_search))
           j_input <- as.vector(adj_search)
@@ -58,7 +81,7 @@ fcs_cluster <- function(fcs_join_obj,
         require(future.apply)
 
         if(num_cores>parallel::detectCores()) {
-          stop(paste0(num_cores," specified but only ",parallel::detectCores()," available."))
+          warning(paste0(num_cores," specified but only ",parallel::detectCores()," available. Proceeding with max available cores."))
         }
         if(num_cores==0) {
           num_core <- parallel::detectCores()
@@ -75,16 +98,16 @@ fcs_cluster <- function(fcs_join_obj,
 
         num_neighbors <- adjacency_knn + 1
         sub_data <- vector(mode="list",length=num_core)
-        split_sums <- round(seq(from=1,to=nrow(fcs_join_obj[["data"]]),length.out=num_core+1),0)
+        split_sums <- round(seq(from=1,to=nrow(cl_data),length.out=num_core+1),0)
         for(i in 1:length(sub_data)) {
           if(i==1) {
-            sub_data[[i]] <- fcs_join_obj[["data"]][1:(split_sums[i+1]),]
+            sub_data[[i]] <- cl_data[1:(split_sums[i+1]),]
           } else {
-            sub_data[[i]] <- fcs_join_obj[["data"]][(split_sums[i] + 1):(split_sums[i+1]),]
+            sub_data[[i]] <- cl_data[(split_sums[i] + 1):(split_sums[i+1]),]
           }
         }
         search_out <- future.apply::future_lapply(sub_data,FUN=function(x) {
-          return(RANN::nn2(data=fcs_join_obj[["data"]],query=x,k=num_neighbors,treetype = "kd",searchtype = "standard"))
+          return(RANN::nn2(data=cl_data,query=x,k=num_neighbors,treetype = "kd",searchtype = "standard"))
         })
         future::plan(future::sequential)
 
@@ -109,6 +132,10 @@ fcs_cluster <- function(fcs_join_obj,
         stop("error in argument 'search_method': use either 'RANN' or 'FNN'")
       }
       if(search_only) {
+        if(!'object_history' %in% names(fcs_join_obj)) {
+          print("Consider running FCSimple::fcs_update() on the object.")
+        }
+        try(expr = fcs_join_obj[['object_history']] <- append(fcs_join_obj[['object_history']], paste0("nn search on ",use_rep,": ",Sys.time())), silent = TRUE)
         return(fcs_join_obj)
       }
     }
@@ -136,6 +163,10 @@ fcs_cluster <- function(fcs_join_obj,
                                           settings = list(function_call = "graph_obj.community_multilevel()",
                                                           language = language)) # left off here
       }
+      if(!'object_history' %in% names(fcs_join_obj)) {
+        print("Consider running FCSimple::fcs_update() on the object.")
+      }
+      try(expr = fcs_join_obj[['object_history']] <- append(fcs_join_obj[['object_history']], paste0(tolower(algorithm)," on ",use_rep,": ",Sys.time())), silent = TRUE)
       return(fcs_join_obj)
     } else if(tolower(language)=="r") {
       require(igraph)
@@ -158,7 +189,7 @@ fcs_cluster <- function(fcs_join_obj,
     if(tolower(algorithm)=="flowsom") {
       require(FlowSOM)
       require(flowCore)
-      som_fcs <- new(Class = "flowFrame", exprs = fcs_join_obj[["data"]])
+      som_fcs <- new(Class = "flowFrame", exprs = cl_data)
       som <- FlowSOM::FlowSOM(input = som_fcs, compensate = FALSE, transform = FALSE, silent = TRUE, nClus = flowsom_nClus)
       som_meta <- FlowSOM::GetMetaclusters(fsom = som)
       fcs_join_obj[["flowsom"]] <- list(clusters = som_meta,
@@ -166,11 +197,15 @@ fcs_cluster <- function(fcs_join_obj,
                                                         silent = TRUE, nClus = flowsom_nClus))
       } else if(tolower(algorithm)=="phenograph") {
         require(Rphenograph)
-        phenog <- Rphenograph::Rphenograph(data = fcs_join_obj[["data"]], k = phenograph_k)
+        phenog <- Rphenograph::Rphenograph(data = cl_data, k = phenograph_k)
         phcl <- membership(phenog[[2]])
         fcs_join_obj[["phenograph"]] <- list(clusters = phcl, settings = list(k = phenograph_k))
       }
   }
+  if(!'object_history' %in% names(fcs_join_obj)) {
+    print("Consider running FCSimple::fcs_update() on the object.")
+  }
+  try(expr = fcs_join_obj[['object_history']] <- append(fcs_join_obj[['object_history']], paste0(tolower(algorithm)," on ",use_rep,": ",Sys.time())), silent = TRUE)
   return(fcs_join_obj)
 }
 

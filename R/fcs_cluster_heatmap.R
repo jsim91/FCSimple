@@ -1,6 +1,7 @@
 fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "all",
                                 heatmap_color_palette = rev(RColorBrewer::brewer.pal(11, "RdYlBu")),
-                                transpose_heatmap = FALSE, cluster_row = TRUE, cluster_col = TRUE)
+                                transpose_heatmap = FALSE, cluster_row = TRUE, cluster_col = TRUE,
+                                override_correction = FALSE)
 {
   if(!tolower(algorithm) %in% names(fcs_join_obj)) {
     stop("error in argument 'algorithm': algorithm not found in fcs_join_obj. Try 'View(fcs_join_obj)'")
@@ -11,11 +12,33 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
   require(circlize)
   require(grid)
 
+  print("print messages are experimental as of 1JUL2024")
+  if('batch_correction' %in% names(fcs_join_obj)) {
+    if(override_correction) {
+      cordat <- FALSE
+      print("batch_correction found in fcs_join_obj list but using uncorrected data for heatmap because 'override_correction' was set to TRUE. Set 'override_correction' to FALSE to use corrected data.")
+      heatmap_data <- fcs_join_obj[["data"]]
+    } else {
+      cordat <- TRUE
+      print("batch_correction found in fcs_join_obj list. Using fcs_join_obj[['batch_correction']][['data']] for heatmap. Set 'override_correction' to TRUE to use uncorrected data.")
+      heatmap_data <- fcs_join_obj[['batch_correction']][['data']]
+      if(!'object_history' %in% names(fcs_join_obj)) {
+        print("'object_history' not found in fcs_join_obj. Can not tell if pca was run on object. Proceeding as instructed. Consider running FCSimple::fcs_update() on the object.")
+      } else {
+        if(grepl(pattern = "pca", x = fcs_join_obj[['object_history']])) {
+          print("It seems pca was run on this object. Using fcs_join_obj[['batch_correction']][['data']] will plot the median scaled expression scores of the corrected PCs.")
+        }
+      }
+    }
+  } else {
+    cordat <- FALSE
+    print("batch_correction not found in fcs_join_obj list. Using fcs_join_obj[['data']] for heatmap.")
+    heatmap_data <- fcs_join_obj[["data"]]
+  }
   event_source <- fcs_join_obj[["source"]]
   cluster_numbers <- as.numeric(as.character(fcs_join_obj[[tolower(algorithm)]][["clusters"]]))
-  heatmap_data <- fcs_join_obj[["data"]]
   if(include_parameters[1]=="all") {
-    include_channels <- colnames(fcs_join_obj[["data"]])
+    include_channels <- colnames(heatmap_data)
   } else {
     include_channels <- include_parameters
   }
@@ -63,31 +86,15 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
                             row_gap=unit(1,"mm"),column_gap=unit(1,"mm"),row_dend_gp=gpar(lwd=1.2),row_dend_width=unit(1,"cm"),
                             column_dend_gp = gpar(lwd=1.2), column_dend_height = unit(1,"cm")) +
     ranno1 + ranno2
-  # if(cluster_heatmap) {
-  #   heatmap_output <- Heatmap(backend.matrix,col=color.map.fun,
-  #                             row_names_side="left",
-  #                             name="median\nscaled\nexpression",
-  #                             heatmap_legend_param=list(at=c(0,0.2,0.4,0.6,0.8,1),legend_height=unit(3,"cm"),
-  #                                                       grid_width=unit(0.6,"cm"),title_position="topleft",
-  #                                                       labels_gp=gpar(fontsize=11),title_gp=gpar(fontsize=11)),
-  #                             row_names_gp=gpar(fontsize=13,fontface="bold"),column_names_gp=gpar(fontsize=12,fontface="bold"),
-  #                             row_gap=unit(1,"mm"),column_gap=unit(1,"mm"),row_dend_gp=gpar(lwd=1.2),row_dend_width=unit(1,"cm"),
-  #                             column_dend_gp = gpar(lwd=1.2), column_dend_height = unit(1,"cm")) +
-  #     ranno1 + ranno2
-  # } else {
-  #   heatmap_output <- Heatmap(backend.matrix,col=color.map.fun,
-  #                             row_names_side="left",
-  #                             name="median\nscaled\nexpression",
-  #                             heatmap_legend_param=list(at=c(0,0.2,0.4,0.6,0.8,1),legend_height=unit(3,"cm"),
-  #                                                       grid_width=unit(0.6,"cm"),title_position="topleft",
-  #                                                       labels_gp=gpar(fontsize=11),title_gp=gpar(fontsize=11)),
-  #                             row_names_gp=gpar(fontsize=13,fontface="bold"),column_names_gp=gpar(fontsize=12,fontface="bold"),
-  #                             row_gap=unit(1,"mm"),column_gap=unit(1,"mm"),cluster_rows = FALSE, cluster_columns = FALSE) +
-  #     ranno1 + ranno2
-  # }
   fcs_join_obj[[paste0(tolower(algorithm),"_heatmap")]] <- list(heatmap = heatmap_output,
                                                                 heatmap_tile_data = backend.matrix,
-                                                                population_size = pop.freq)
+                                                                population_size = pop.freq,
+                                                                rep_used = ifelse(cordat,"with batch correction","without batch correction"))
+  if(!'object_history' %in% names(fcs_join_obj)) {
+    print("Consider running FCSimple::fcs_update() on the object.")
+  }
+  try(expr = fcs_join_obj[['object_history']] <- append(fcs_join_obj[['object_history']],
+                                                        paste0(tolower(algorithm)," heatmap on ",ifelse(cordat,"corrected","uncorrected")," data: ",Sys.time())), silent = TRUE)
   return(fcs_join_obj)
 }
 
@@ -100,9 +107,9 @@ fcs_plot_heatmap <- function(fcs_join_obj, algorithm, outdir = getwd(), add_time
     fname <- paste0(outdir,"/",tolower(algorithm),"_cluster_heatmap_dbscan.pdf")
   } else {
     if(add_timestamp) {
-      fname <- paste0(outdir,"/",tolower(algorithm),"_cluster_heatmap_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf")
+      fname <- paste0(outdir,"/",tolower(algorithm),"_",ifelse(cordat,"cor","uncor"),"_cluster_heatmap_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf")
     } else {
-      fname <- paste0(outdir,"/",tolower(algorithm),"_cluster_heatmap.pdf")
+      fname <- paste0(outdir,"/",tolower(algorithm),"_",ifelse(cordat,"cor","uncor"),"_cluster_heatmap.pdf")
     }
   }
   if(!is.na(append_file_string)) {

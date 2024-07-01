@@ -2,6 +2,9 @@ fcs_calculate_abundance <- function(fcs_join_obj,
                                     report_algorithm = c("leiden","flowsom","louvain","phenograph","git"),
                                     report_as = c("frequency", "fraction"))
 {
+  if(!'object_history' %in% names(fcs_join_obj)) {
+    print("Consider running FCSimple::fcs_update() on the object.")
+  }
   if(!report_algorithm %in% names(fcs_join_obj)) {
     stop("error in names of fcs_join_obj: has data been clustered using a supported algorithm. See ?cluster.")
   }
