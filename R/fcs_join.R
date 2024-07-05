@@ -14,19 +14,22 @@ fcs_join <- function(files,
                      hyperlog_transform_W = 0.001,
                      hyperlog_transform_A = 2,
                      transform_per_channel = TRUE,
-                     downsample_size = c(NA,25000)) {
+                     downsample_size = c(NA,25000),
+                     batch_pattern = "[0-9]+\\-[A-Za-z]+\\-[0-9]+") {
   require(flowCore)
   if(any(length(files)==0,class(files[1])!="character")) {
     stop("'files' should be a vector of file names of .fcs files to be used in the analysis")
   }
-  if(!transform_per_channel) {
-    if(length(instrument_type)>1) {
-      warning(paste0("Consider specifying 'instrument_type'. Default use is 'cytof'. If inputs are from a flow cytometer, use 'flow'. Using ",instrument_type[1]," for now."))
-      instrument_type <- instrument_type[1]
-    }
-    if(length(transform_type)>1) {
-      warning(paste0("Consider specifying 'transform_type'. Default is 'asinh'. If undesirable, you can specify 'biexp' or 'hyperlog'. Using ",transform_type[1]," for now."))
-      transform_type <- transform_type[1]
+  if(!is.null(flowjo_diagnostics_file)) {
+    if(!transform_per_channel) {
+      if(length(instrument_type)>1) {
+        warning(paste0("Consider specifying 'instrument_type'. Default use is 'cytof'. If inputs are from a flow cytometer, use 'flow'. Using ",instrument_type[1]," for now."))
+        instrument_type <- instrument_type[1]
+      }
+      if(length(transform_type)>1) {
+        warning(paste0("Consider specifying 'transform_type'. Default is 'asinh'. If undesirable, you can specify 'biexp' or 'hyperlog'. Using ",transform_type[1]," for now."))
+        transform_type <- transform_type[1]
+      }
     }
   }
   if(length(x = grep(pattern = "\\.fcs$", x = files, ignore.case = TRUE))!=length(files)) {
@@ -157,9 +160,11 @@ fcs_join <- function(files,
         }
       }
       print("transformation completed successfully")
+      src <- rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))
       return(list(data = tmp_data,
                   raw = tmp_raw,
-                  source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow))),
+                  source = src,
+                  run_date = stringr::str_extract(string = src, pattern = batch_pattern),
                   transform_list = tf_list))
     }
   }
@@ -186,9 +191,11 @@ fcs_join <- function(files,
           print("Unable to find descriptive column names. Using original names.")
         }
       }
+      src <- rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))
       return(list(data = tmp_data,
                   raw = raw_data,
-                  source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow))),
+                  source = src,
+                  run_date = stringr::str_extract(string = src, pattern = batch_pattern),
                   object_history = paste0("joined: ",Sys.time())))
     } else if(tolower(instrument_type)=="flow") {
       if(transform_type=="asinh") {
@@ -262,19 +269,19 @@ fcs_join <- function(files,
           print("Unable to find descriptive column names. Using original names.")
         }
       }
-      if(length(grep("DATE|date|Date",names(fs[[1]]@description)))!=0) {
-        run_dates <- flowCore::fsApply(fs, function(x) return(x@description[[grep("DATE|date|Date",names(x@description))[1]]]))
+      # if(length(grep("DATE|date|Date",names(fs[[1]]@description)))!=0) {
+        src <- rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))
         return(list(data = tmp_data,
                     raw = raw_data,
-                    source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow))),
-                    run_date = ifelse(length(run_dates)>0,run_dates,NULL),
+                    source = src,
+                    run_date = stringr::str_extract(string = src, pattern = batch_pattern),
                     object_history = paste0("joined: ",Sys.time())))
-      } else {
-        return(list(data = tmp_data,
-                    raw = raw_data,
-                    source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow))),
-                    object_history = paste0("joined: ",Sys.time())))
-      }
+      # } else {
+      #   return(list(data = tmp_data,
+      #               raw = raw_data,
+      #               source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow))),
+      #               object_history = paste0("joined: ",Sys.time())))
+      # }
     }
   } else {
     for(i in 1:length(fs)) {
@@ -306,8 +313,7 @@ fcs_join <- function(files,
       write.csv(x = tmp_data,file = paste0(system.file(package = "FCSimple"),"/temp_files/tmp_data.csv"), row.names = FALSE)
     }
     saveRDS(object = list(data = tmp_data,
-                          source = rep(x = flowCore::sampleNames(fs),
-                                       times = as.numeric(flowCore::fsApply(fs,nrow)))),
+                          source = rep(x = flowCore::sampleNames(fs),times = as.numeric(flowCore::fsApply(fs,nrow)))),
             file = paste0(system.file(package = "FCSimple"),"/temp_files/tmp_list_obj.rds"))
     require(shiny)
     shiny::runApp(appDir = file.path(system.file(package = "FCSimple"), "transform_app"))
