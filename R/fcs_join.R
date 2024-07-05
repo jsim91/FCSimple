@@ -20,7 +20,7 @@ fcs_join <- function(files,
   if(any(length(files)==0,class(files[1])!="character")) {
     stop("'files' should be a vector of file names of .fcs files to be used in the analysis")
   }
-  if(!is.null(flowjo_diagnostics_file)) {
+  if(is.null(flowjo_diagnostics_file)) {
     if(!transform_per_channel) {
       if(length(instrument_type)>1) {
         warning(paste0("Consider specifying 'instrument_type'. Default use is 'cytof'. If inputs are from a flow cytometer, use 'flow'. Using ",instrument_type[1]," for now."))
@@ -59,6 +59,9 @@ fcs_join <- function(files,
     } else {
       raw_data <- rbind(raw_data, exprs(fs[[i]]))
     }
+  }
+  if(use_descriptive_column_names) {
+    colnames(raw_data) <- fs[[1]]@parameters@data$desc
   }
   if(!apply_transform) {
     return(list(data = raw_data,
@@ -124,8 +127,8 @@ fcs_join <- function(files,
         if(!colnames(tmp_data)[j] %in% param_data$desc) {
           next
         }
-        hyperparams <- tf_list[[param_data$name[which(param_data$desc==colnames(tmp_data)[j])]]][[2]]
-        use_fun <- tf_list[[param_data$name[which(param_data$desc==colnames(tmp_data)[j])]]][[1]]
+        hyperparams <- tf_list[[param_data$name[which(param_data$desc==colnames(tmp_data)[j])[1]]]][[2]]
+        use_fun <- tf_list[[param_data$name[which(param_data$desc==colnames(tmp_data)[j])[1]]]][[1]]
         if(!use_fun %in% c("hyperlog","biex","fasinh")) {
           stop(paste0("found function [",use_fun,"]: transformation using the flowjo workspace diagnostics file supports 'hyperlog', 'biex', and 'fasinh' transforms."))
         }
