@@ -96,9 +96,9 @@ fcs_join <- function(files,
       keyword_list <- keyword_list[which(sapply(keyword_list,class)=="data.frame")]
       param_data <- do.call(rbind,keyword_list); param_data$desc <- toupper(param_data$desc)
 
-      block_starts <- grep(pattern = "<Transformations>", wsp[,1])
-      block_ends <- grep(pattern = "</Transformations>", wsp[,1])
-      transformations <- wsp[block_starts[1]:block_ends[1],1]
+      block_starts <- grep(pattern = "<Transformations>", workspace[,1])
+      block_ends <- grep(pattern = "</Transformations>", workspace[,1])
+      transformations <- workspace[block_starts[1]:block_ends[1],1]
 
       tf1 <- grep(pattern = "<transforms:", x = transformations); tf2 <- grep(pattern = "</transforms:", x = transformations)
       if(length(tf1)!=length(tf2)) {
