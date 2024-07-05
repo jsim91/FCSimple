@@ -1,6 +1,7 @@
 fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_method = c("cyCombine", "harmony"),
                                  correction_markers = "all", batch_source_regex = "[0-9]+\\-[A-Za-z]+\\-[0-9]+",
-                                 cyCombine_SOMx = 8, cyCombine_SOMy = 8, cyCombine_detect_effects = FALSE)
+                                 cyCombine_SOMx = 8, cyCombine_SOMy = 8, cyCombine_detect_effects = FALSE,
+                                 harmony_cores = 1, harmony_iterations = 10)
 {
   # only cyCombine supported for now
   use_rep <- tolower(use_rep)
@@ -74,7 +75,7 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
     harm_in <- as.matrix(rep_data)
     print(paste0("batches found for harmony correction: ", paste0(unique(fcs_join_obj[["run_date"]]), collapse = ", ")))
     harm_meta <- data.frame(cell_id = 1:nrow(harm_in), batch = fcs_join_obj[["run_date"]])
-    harm_out <- harmony::RunHarmony(data_mat = harm_in, meta_data = harm_meta, vars_use = "batch")
+    harm_out <- harmony::RunHarmony(data_mat = harm_in, meta_data = harm_meta, vars_use = "batch", ncores = harmony_cores, max_iter = harmony_iterations)
     fcs_join_obj[['batch_correction']] <- list(data = harm_out,
                                                harmony_meta = harm_meta,
                                                method = "harmony",
