@@ -6,11 +6,10 @@ import os
 
 in_file = sys.argv[1]
 out_file = sys.argv[2]
-in_param = sys.argv[3
-in_t = float(sys.argv[4])
-in_w = float(sys.argv[5])
-in_m = float(sys.argv[6])
-in_a = float(sys.argv[7])
+in_t = float(sys.argv[3])
+in_w = float(sys.argv[4])
+in_m = float(sys.argv[5])
+in_a = float(sys.argv[6])
 
 data = pd.read_csv(in_file, index_col = 0)
 
