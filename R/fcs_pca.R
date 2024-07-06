@@ -3,6 +3,15 @@ fcs_pca <- function(fcs_join_obj, pca_method = c("prcomp"), num_pc = NULL)
   require(stringr)
   require(ggplot2)
 
+  if('batch_correction' %in% names(fcs_join_obj)) {
+    cordat <- TRUE
+    cl_data <- fcs_join_obj[['batch_correction']][['data']]
+    print("batch_correction found in fcs_join_obj list. Using fcs_join_obj[['batch_correction']][['data']] for clustering.")
+  } else {
+    cordat <- FALSE
+    cl_data <- fcs_join_obj[["data"]]
+    print("batch_correction not found in fcs_join_obj. Using fcs_join_obj[['data']] for clustering.")
+  }
   if(pca_method[1]=="prcomp") {
     set.seed(123) # not really needed
     PCA <- prcomp(x = obj$data)
@@ -52,7 +61,8 @@ fcs_pca <- function(fcs_join_obj, pca_method = c("prcomp"), num_pc = NULL)
   fcs_join_obj[['pca']] <- list(pca_data = pca_data, list(PCs = npc, cumulative_variance = cvar, pca_method = pca_method, elbow_plot = cvar_plt))
   if(!'object_history' %in% names(fcs_join_obj)) {
     print("Consider running FCSimple::fcs_update() on the object.")
+  } else {
+    fcs_join_obj[['object_history']] <- append(fcs_join_obj[['object_history']], paste0("pca on ",ifelse(cordat,'corrected','uncorrected')," data: ",Sys.time()))
   }
-  try(expr = fcs_join_obj[['object_history']] <- append(fcs_join_obj[['object_history']], paste0("pca: ",Sys.time())), silent = TRUE)
   return(fcs_join_obj)
 }

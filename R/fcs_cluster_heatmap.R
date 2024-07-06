@@ -12,7 +12,6 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
   require(circlize)
   require(grid)
 
-  print("print messages are experimental as of 1JUL2024")
   if('batch_correction' %in% names(fcs_join_obj)) {
     if(override_correction) {
       cordat <- FALSE
@@ -92,9 +91,10 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
                                                                 rep_used = ifelse(cordat,"with batch correction","without batch correction"))
   if(!'object_history' %in% names(fcs_join_obj)) {
     print("Consider running FCSimple::fcs_update() on the object.")
+  } else {
+    fcs_join_obj[['object_history']] <- append(fcs_join_obj[['object_history']],
+                                               paste0(tolower(algorithm)," heatmap on ",ifelse(cordat,"corrected","uncorrected")," data: ",Sys.time()))
   }
-  try(expr = fcs_join_obj[['object_history']] <- append(fcs_join_obj[['object_history']],
-                                                        paste0(tolower(algorithm)," heatmap on ",ifelse(cordat,"corrected","uncorrected")," data: ",Sys.time())), silent = TRUE)
   return(fcs_join_obj)
 }
 

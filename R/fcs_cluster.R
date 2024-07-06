@@ -1,5 +1,5 @@
 fcs_cluster <- function(fcs_join_obj,
-                        use_rep = "data",
+                        use_rep = "data", # 'data' or 'pca'
                         language = c("R","Python"),
                         algorithm = c("leiden","flowsom","louvain","phenograph","git"),
                         leiden_louvain_resolution = 1,

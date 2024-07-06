@@ -61,7 +61,7 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
     print("saving correction history in $batch_correction")
     fcs_join_obj[['batch_correction']] <- list(data = exprs_data_corrected,
                                                source = corrected_source,
-                                               method = "cyCombine",
+                                               method = cmeth,
                                                other = list(markers_corrected = marks,
                                                             batches_corrected = unique(exp_data$batch),
                                                             norm_method = "scale",
@@ -72,13 +72,14 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
                                                             session_info = sessionInfo()))
   } else if(correction_method[1]=="harmony") {
     require(harmony)
+    cmeth <- "harmony"
     harm_in <- as.matrix(rep_data)
     print(paste0("batches found for harmony correction: ", paste0(unique(fcs_join_obj[["run_date"]]), collapse = ", ")))
     harm_meta <- data.frame(cell_id = 1:nrow(harm_in), batch = fcs_join_obj[["run_date"]])
     harm_out <- harmony::RunHarmony(data_mat = harm_in, meta_data = harm_meta, vars_use = "batch", ncores = harmony_cores, max_iter = harmony_iterations)
     fcs_join_obj[['batch_correction']] <- list(data = harm_out,
                                                harmony_meta = harm_meta,
-                                               method = "harmony",
+                                               method = cmeth,
                                                other = list(number_of_batches = length(unique(harm_meta$batch)),
                                                             batches = unique(harm_meta$batch),
                                                             datetime = Sys.time(),
@@ -86,7 +87,8 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
   }
   if(!'object_history' %in% names(fcs_join_obj)) {
     print("Consider running FCSimple::fcs_update() on the object.")
+  } else {
+    fcs_join_obj[['object_history']] <- append(fcs_join_obj[['object_history']], paste0(cmeth," on ",use_rep,": ",Sys.time()))
   }
-  try(expr = fcs_join_obj[['object_history']] <- append(fcs_join_obj[['object_history']], paste0(cmeth," on ",use_rep,": ",Sys.time())), silent = TRUE)
   return(fcs_join_obj)
 }

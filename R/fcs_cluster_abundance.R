@@ -34,6 +34,11 @@ fcs_calculate_abundance <- function(fcs_join_obj,
     }
   }
   fcs_join_obj[[report_algorithm]][["abundance"]] <- frequency_matrix
+  if(!'object_history' %in% names(fcs_join_obj)) {
+    print("Consider running FCSimple::fcs_update() on the object.")
+  } else {
+    fcs_join_obj[['object_history']] <- append(fcs_join_obj[['object_history']], paste0(tolower(report_algorithm)," abundance calculated: ",Sys.time()))
+  }
   return(fcs_join_obj)
 }
 
