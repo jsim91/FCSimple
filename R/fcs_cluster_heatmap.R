@@ -1,7 +1,7 @@
 fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "all",
                                 heatmap_color_palette = rev(RColorBrewer::brewer.pal(11, "RdYlBu")),
                                 transpose_heatmap = FALSE, cluster_row = TRUE, cluster_col = TRUE,
-                                override_correction = FALSE)
+                                override_correction = TRUE)
 {
   if(!tolower(algorithm) %in% names(fcs_join_obj)) {
     stop("error in argument 'algorithm': algorithm not found in fcs_join_obj. Try 'View(fcs_join_obj)'")
@@ -23,9 +23,9 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
       print("batch_correction found in fcs_join_obj list. Using fcs_join_obj[['batch_correction']][['data']] for heatmap. Set 'override_correction' to TRUE to use uncorrected data.")
       heatmap_data <- fcs_join_obj[['batch_correction']][['data']]
       if(!'object_history' %in% names(fcs_join_obj)) {
-        print("'object_history' not found in fcs_join_obj. Can not tell if pca was run on object. Proceeding as instructed. Consider running FCSimple::fcs_update() on the object.")
+        print("'object_history' not found in fcs_join_obj. Consider running FCSimple::fcs_update() on the object. Trying to use fcs_join_obj[['batch_correction']][['data']] for heatmap.")
       } else {
-        if(grepl(pattern = "pca", x = fcs_join_obj[['object_history']])) {
+        if(sum(grepl(pattern = "pca", x = fcs_join_obj[['object_history']]))!=0) {
           print("It seems pca was run on this object. Using fcs_join_obj[['batch_correction']][['data']] will plot the median scaled expression scores of the corrected PCs.")
         }
       }
