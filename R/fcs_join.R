@@ -186,7 +186,8 @@ fcs_join <- function(files,
                   raw = tmp_raw,
                   source = src,
                   run_date = stringr::str_extract(string = src, pattern = batch_pattern),
-                  transform_list = tf_list))
+                  transform_list = tf_list,
+                  object_history = paste0("joined: ",Sys.time())))
     }
   }
   if(!transform_per_channel) {
