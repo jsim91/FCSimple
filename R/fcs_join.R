@@ -111,9 +111,6 @@ fcs_join <- function(files,
         stop("mismatch in index lengths..")
       }
       tf_list <- vector("list", length = length(tf1))
-      if(use_fun=="hyperlog") {
-        capture_dir <- system.file(package = "FCSimple")
-      }
       for(i in 1:length(tf_list)) {
         tr_subset <- transformations[tf1[i]:tf2[i]]
         transform_fun_str <- stringr::str_extract(string = gsub("(^[ ]+<transforms:)", "", tr_subset[1]), pattern = "^[A-Za-z]+")
@@ -137,6 +134,7 @@ fcs_join <- function(files,
         }
         if(use_fun=="hyperlog") {
           print(paste0("using hyperlog for ",colnames(tmp_data)[j]))
+          capture_dir <- system.file(package = "FCSimple")
           hyper_t = as.numeric(gsub("T=","",hyperparams[grep("T=",hyperparams)]))
           hyper_w = as.numeric(gsub("W=","",hyperparams[grep("W=",hyperparams)]))
           hyper_m = as.numeric(gsub("M=","",hyperparams[grep("M=",hyperparams)]))
