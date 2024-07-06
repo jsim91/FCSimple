@@ -145,7 +145,11 @@ fcs_join <- function(files,
                                                    M = hyper_m,
                                                    W = hyper_w,
                                                    A = hyper_a)
-          tmp_data[,j] <- eval(transform_fun)(tmp_data)
+          # tmp_data[,j] <- eval(transform_fun)(df = tmp_data)
+          hyper_fn <- eval(transform_fun)
+          return(hyper_fn)
+          # tmp_data[,j] <- hyper_fn(df = tmp_data)
+          # return(eval(transform_fun)(tmp_data))
         } else if(use_fun=="biex") {
           print(paste0("using biexp for ",colnames(tmp_data)[j]))
           widb <- as.numeric(gsub("width=","",hyperparams[grep("width=",hyperparams)]))

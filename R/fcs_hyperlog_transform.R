@@ -4,11 +4,11 @@ fcs_as.hyperlog <- function(fcs_join_obj, hyperlog_transform_T = 100000,
                             hyperlog_transform_A = 2) {
 
   # set parameters
-  fcs_join_obj = # your object
-  hyperlog_transform_T = 100000
-  hyperlog_transform_M = 5
-  hyperlog_transform_W = 0.001
-  hyperlog_transform_A = 2
+  # fcs_join_obj = # your object
+  # hyperlog_transform_T = 100000
+  # hyperlog_transform_M = 5
+  # hyperlog_transform_W = 0.001
+  # hyperlog_transform_A = 2
 
   fcs_join_obj = test_list; hyperlog_transform_T = 100000; hyperlog_transform_M = 5; hyperlog_transform_W = 0.001; hyperlog_transform_A = 2
 
