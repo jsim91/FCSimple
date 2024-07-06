@@ -19,7 +19,7 @@ fcs_join <- function(files,
   require(flowCore)
   # oo <- options(scipen = 100000000000)
   # on.exit(options(oo))
-  options(scipen = 100000000000)
+  options(scipen = 1000000)
   if(any(length(files)==0,class(files[1])!="character")) {
     stop("'files' should be a vector of file names of .fcs files to be used in the analysis")
   }
