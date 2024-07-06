@@ -1,9 +1,10 @@
 fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_method = c("cyCombine", "harmony"),
                                  correction_markers = "all", batch_source_regex = "[0-9]+\\-[A-Za-z]+\\-[0-9]+",
                                  cyCombine_SOMx = 8, cyCombine_SOMy = 8, cyCombine_detect_effects = FALSE,
-                                 harmony_cores = 1, harmony_iterations = 10)
+                                 harmony_cores = 1, harmony_iterations = 10, harmony_covars = c("batch","sample"),
+                                 harmony_lambda = 1)
 {
-  # only cyCombine supported for now
+  # larger harmony_lambda (ridge regression penalty) protect against over correction
   use_rep <- tolower(use_rep)
   if(!use_rep %in% c("data","pca")) {
     stop("'use_rep' indicates what representation of the data will be passed to the algorithm. Use 'data' or 'pca'. 'pca' requires that FCSimple::fcs_pca was already run on the data.")
@@ -18,30 +19,34 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
   }
   if(correction_method[1]=="cyCombine") {
     cmeth <- "cyCombine"
-    cyc_outdir1 <- paste0(getwd(),"/dbe_pre_correction")
-    cyc_outdir2 <- paste0(getwd(),"/dbe_post_correction")
-    rl <- readline(paste0("Based on getwd(), cyCombine detect_batch_effects will be saved here: ",cyc_outdir1,". Is this okay? (y/n) "))
-    dir.create(path = cyc_outdir1, showWarnings = FALSE); dir.create(path = cyc_outdir2, showWarnings = FALSE)
-    if(rl!="y") {
-      stop("please update current working directory so that cyCombine::detect_batch_effects will be saved appropriately.")
-    }
     require(cyCombine)
     require(stringr)
-    exp_data <- rep_data
+    exp_data <- as.data.frame(rep_data)
     if(correction_markers[1]=="all") {
       marks <- cyCombine::get_markers(df = exp_data)
     } else {
       marks <- correction_markers
     }
-    exp_data$samples <- fcs_join_obj$source
-    exp_data$batch <- stringr::str_extract(string = fcs_join_obj$source, pattern = batch_source_regex)
+    # exp_data$samples <- fcs_join_obj$source
+    exp_data$samples <- as.numeric(factor(fcs_join_obj$source))
+    # exp_data$batch <- stringr::str_extract(string = fcs_join_obj$source, pattern = batch_source_regex)
+    exp_data$batch <- as.numeric(factor(stringr::str_extract(string = fcs_join_obj$source, pattern = batch_source_regex)))
     print(paste0(length(unique(exp_data$batch))," batches found for correction: ",paste0(unique(exp_data$batch),collapse = ", ")))
     if(cyCombine_detect_effects) {
+      cyc_outdir1 <- paste0(getwd(),"/dbe_pre_correction")
+      cyc_outdir2 <- paste0(getwd(),"/dbe_post_correction")
+      # rl <- readline(paste0("Based on getwd(), cyCombine detect_batch_effects will be saved here: ",cyc_outdir1,". Is this okay? (y/n) "))
+      paste0("Based on getwd(), cyCombine detect_batch_effects will be saved here: ",cyc_outdir1," ... save location uses getwd() as root.")
+      dir.create(path = cyc_outdir1, showWarnings = FALSE); dir.create(path = cyc_outdir2, showWarnings = FALSE)
+      # if(rl!="y") {
+      #   stop("please update current working directory so that cyCombine::detect_batch_effects will be saved appropriately.")
+      # }
+      require(outliers)
       print("...detecting batch effects before correction...")
-      cyCombine::detect_batch_effect(df = exp_data, out_dir = batch_correction_outdir, norm_method = "scale",
+      cyCombine::detect_batch_effect(df = exp_data, out_dir = cyc_outdir1, norm_method = "scale",
                                      xdim = cyCombine_SOMx, ydim = cyCombine_SOMy, seed = 123, batch_col = "batch",
                                      markers = marks)
-      print(paste0("Consider reviewing cyCombine results here before proceeding beyond batch correction: ",cyc_outdir1))
+      print(paste0("pre-batch correction: ",cyc_outdir1))
     }
     print("...normalizing data...")
     norm_data <- cyCombine::normalize(df = exp_data, markers = marks, norm_method = "scale")
@@ -54,6 +59,7 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
       cyCombine::detect_batch_effect(df = corrected, out_dir = cyc_outdir2, norm_method = "scale",
                                      xdim = cyCombine_SOMx, ydim = cyCombine_SOMy, seed = 123, batch_col = "batch",
                                      markers = marks)
+      print(paste0("post-batch correction: ",cyc_outdir2))
     }
     corrected_val <- as.data.frame(corrected)
     exprs_data_corrected <- corrected_val[,marks]
@@ -75,8 +81,9 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
     cmeth <- "harmony"
     harm_in <- as.matrix(rep_data)
     print(paste0("batches found for harmony correction: ", paste0(unique(fcs_join_obj[["run_date"]]), collapse = ", ")))
-    harm_meta <- data.frame(cell_id = 1:nrow(harm_in), batch = fcs_join_obj[["run_date"]])
-    harm_out <- harmony::RunHarmony(data_mat = harm_in, meta_data = harm_meta, vars_use = "batch", ncores = harmony_cores, max_iter = harmony_iterations)
+    harm_meta <- data.frame(cell_id = 1:nrow(harm_in), batch = fcs_join_obj[["run_date"]], sample = fcs_join_obj[["source"]])
+    harm_out <- harmony::RunHarmony(data_mat = harm_in, meta_data = harm_meta, vars_use = harmony_covars, ncores = harmony_cores,
+                                    max_iter = harmony_iterations, lambda = harmony_lambda)
     fcs_join_obj[['batch_correction']] <- list(data = harm_out,
                                                harmony_meta = harm_meta,
                                                method = cmeth,
