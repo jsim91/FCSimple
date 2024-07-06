@@ -11,7 +11,7 @@ in_w = float(sys.argv[4])
 in_m = float(sys.argv[5])
 in_a = float(sys.argv[6])
 
-data = pd.read_csv(in_file, index_col = 0)
+data = pd.read_csv(in_file)
 
 try:
     os.remove(in_file)
