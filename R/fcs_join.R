@@ -138,23 +138,23 @@ fcs_join <- function(files,
         if(use_fun=="hyperlog") {
           print(paste0("using hyperlog for ",colnames(tmp_data)[j]))
           hyper_t = as.numeric(gsub("T=","",hyperparams[grep("T=",hyperparams)]))
-          hyper_a = as.numeric(gsub("A=","",hyperparams[grep("A=",hyperparams)]))
-          hyper_m = as.numeric(gsub("M=","",hyperparams[grep("M=",hyperparams)]))
           hyper_w = as.numeric(gsub("W=","",hyperparams[grep("W=",hyperparams)]))
+          hyper_m = as.numeric(gsub("M=","",hyperparams[grep("M=",hyperparams)]))
+          hyper_a = as.numeric(gsub("A=","",hyperparams[grep("A=",hyperparams)]))
           if(hyper_a > (hyper_m - (2*hyper_w))) {
             hyper_a <- hyper_m - (2*hyper_w)
           }
           write.csv(x = tmp_data[,j], file = paste0(capture_dir,"/temp_files/__python_hyp_df__.csv"))
-          system(command = paste0("python ",paste0(capture_dir,"/python/run_cluster.py")," ",
-                                  paste0(capture_dir,"/temp_files/__python_cl_input__.mtx")," ",capture_dir,"/temp_files ",tolower(algorithm)," ",leiden_louvain_resolution))
-          read_clus <- read.csv(paste0(capture_dir,"/temp_files/__tmp_cl__.csv"), check.names = FALSE)
-          if(file.exists(paste0(capture_dir,"/temp_files/__tmp_cl__.csv"))) {
-            file.remove(paste0(capture_dir,"/temp_files/__tmp_cl__.csv"))
+          system(command = paste0("python ",paste0(capture_dir,"/python/transf_hyperlog.py")," ",paste0(capture_dir,"/temp_files/__python_hyp_df__.csv")," ",capture_dir,"/temp_files ",
+                                  hyper_t," ",hyper_w,"",hyper_m,"",hyper_a))
+          read_exprs <- read.csv(paste0(capture_dir,"/temp_files/__tmp_exprs__.csv"), check.names = FALSE)
+          if(file.exists(paste0(capture_dir,"/temp_files/__tmp_exprs__.csv"))) {
+            file.remove(paste0(capture_dir,"/temp_files/__tmp_exprs__.csv"))
           }
-          if(file.exists(paste0(capture_dir,"/temp_files/__python_cl_input__.mtx"))) {
-            file.remove(paste0(capture_dir,"/temp_files/__python_cl_input__.mtx"))
+          if(file.exists(paste0(capture_dir,"/temp_files/__python_hyp_df__.csv"))) {
+            file.remove(paste0(capture_dir,"/temp_files/__python_hyp_df__.csv"))
           }
-          cluster_numbers <- read_clus[,1]
+          tmp_data[,j] <- read_exprs[,1]
           # transform_fun <- flowCore::hyperlogtGml2(parameters = as.character(colnames(tmp_data)[j]),
           #                                          'T' = hyper_t,
           #                                          M = hyper_m,
@@ -162,7 +162,7 @@ fcs_join <- function(files,
           #                                          A = hyper_a)
           # tmp_data[,j] <- eval(transform_fun)(tmp_data)
           # some_data <- eval(transform_fun)(tmp_data)
-          return(some_data)
+          # return(some_data)
         } else if(use_fun=="biex") {
           print(paste0("using biexp for ",colnames(tmp_data)[j]))
           widb <- as.numeric(gsub("width=","",hyperparams[grep("width=",hyperparams)]))
