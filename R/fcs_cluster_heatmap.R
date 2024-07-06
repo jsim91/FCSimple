@@ -106,6 +106,7 @@ fcs_plot_heatmap <- function(fcs_join_obj, algorithm, outdir = getwd(), add_time
   if(tolower(algorithm)=="dbscan") {
     fname <- paste0(outdir,"/",tolower(algorithm),"_cluster_heatmap_dbscan.pdf")
   } else {
+    cordat <- ifelse(grepl(pattern = "with batch", x = fcs_join_obj[[paste0(tolower(algorithm),"_heatmap")]][['rep_used']]),TRUE,FALSE)
     if(add_timestamp) {
       fname <- paste0(outdir,"/",tolower(algorithm),"_",ifelse(cordat,"cor","uncor"),"_cluster_heatmap_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf")
     } else {
