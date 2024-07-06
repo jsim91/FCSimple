@@ -17,8 +17,9 @@ fcs_join <- function(files,
                      downsample_size = c(NA,25000),
                      batch_pattern = "[0-9]+\\-[A-Za-z]+\\-[0-9]+") {
   require(flowCore)
-  oo <- options(scipen = 100000000000)
-  on.exit(options(oo))
+  # oo <- options(scipen = 100000000000)
+  # on.exit(options(oo))
+  options(scipen = 100000000000)
   if(any(length(files)==0,class(files[1])!="character")) {
     stop("'files' should be a vector of file names of .fcs files to be used in the analysis")
   }
