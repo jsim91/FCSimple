@@ -17,6 +17,8 @@ fcs_join <- function(files,
                      downsample_size = c(NA,25000),
                      batch_pattern = "[0-9]+\\-[A-Za-z]+\\-[0-9]+") {
   require(flowCore)
+  oo <- options(scipen = 100000000000)
+  on.exit(options(oo))
   if(any(length(files)==0,class(files[1])!="character")) {
     stop("'files' should be a vector of file names of .fcs files to be used in the analysis")
   }
@@ -142,9 +144,9 @@ fcs_join <- function(files,
           if(hyper_a > (hyper_m - (2*hyper_w))) {
             hyper_a <- hyper_m - (2*hyper_w)
           }
-          write.csv(x = tmp_data[,j], file = paste0(capture_dir,"/temp_files/__python_hyp_df__.csv"))
+          write.csv(x = tmp_data[,j], file = paste0(capture_dir,"/temp_files/__python_hyp_df__.csv"), row.names = FALSE)
           system(command = paste0("python ",paste0(capture_dir,"/python/transf_hyperlog.py")," ",paste0(capture_dir,"/temp_files/__python_hyp_df__.csv")," ",capture_dir,"/temp_files ",
-                                  hyper_t," ",hyper_w,"",hyper_m,"",hyper_a))
+                                  hyper_t," ",hyper_w," ",hyper_m," ",hyper_a))
           read_exprs <- read.csv(paste0(capture_dir,"/temp_files/__tmp_exprs__.csv"), check.names = FALSE)
           if(file.exists(paste0(capture_dir,"/temp_files/__tmp_exprs__.csv"))) {
             file.remove(paste0(capture_dir,"/temp_files/__tmp_exprs__.csv"))
