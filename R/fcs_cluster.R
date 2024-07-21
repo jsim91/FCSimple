@@ -94,7 +94,7 @@ fcs_cluster <- function(fcs_join_obj,
           print(paste0("searching with ",num_core," core"))
         }
         options(future.globals.maxSize= Inf)
-        future::plan("multisession", workers = 20)
+        future::plan("multisession", workers = num_cores)
 
         num_neighbors <- adjacency_knn + 1
         sub_data <- vector(mode="list",length=num_core)
