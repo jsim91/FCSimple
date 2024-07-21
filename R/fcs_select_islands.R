@@ -61,10 +61,12 @@ fcs_select_islands <- function(fcs_join_obj,
   if(length(grep("DATE|date|Date",names(fcs_join_obj)))!=0) {
     fcs_obj_pared <- list(data = fcs_join_obj[["data"]][dbscan_keep_rows,],
                           source = fcs_join_obj[["source"]][dbscan_keep_rows],
-                          run_date = fcs_join_obj[["run_date"]][dbscan_keep_rows])
+                          run_date = fcs_join_obj[["run_date"]][dbscan_keep_rows],
+                          subset_cells = dbscan_keep_rows)
   } else {
     fcs_obj_pared <- list(data = fcs_join_obj[["data"]][dbscan_keep_rows,],
-                          source = fcs_join_obj[["source"]][dbscan_keep_rows])
+                          source = fcs_join_obj[["source"]][dbscan_keep_rows],
+                          subset_cells = dbscan_keep_rows)
   }
   return(fcs_obj_pared)
 }

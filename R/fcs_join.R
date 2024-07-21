@@ -16,6 +16,27 @@ fcs_join <- function(files,
                      transform_per_channel = TRUE,
                      downsample_size = c(NA,25000),
                      batch_pattern = "[0-9]+\\-[A-Za-z]+\\-[0-9]+") {
+  # testing
+  # files <- list.files(path = "J:/oakes_flow/scenith_full_pilot/box_dl", full.names = TRUE)
+  # flowjo_diagnostics_file = "J:/oakes_flow/scenith_full_pilot/josh_transforms/workspace_transforms_2.txt"
+  # apply_transform = TRUE
+  # instrument_type = "flow"
+  # use_descriptive_column_names = TRUE
+  # transform_function = NULL
+  # transform_type = "hyperlog"
+  # asinh_transform_cofactor = 5
+  # biexp_transform_pos = 4.5
+  # biexp_transform_neg = 0
+  # biexp_transform_width = -10
+  # hyperlog_transform_T = 100000
+  # hyperlog_transform_M = 5
+  # hyperlog_transform_W = 0.001
+  # hyperlog_transform_A = 2
+  # transform_per_channel = TRUE
+  # downsample_size = NA
+  # batch_pattern = "[0-9]+\\-[A-Za-z]+\\-[0-9]+"
+
+
   require(flowCore)
   # oo <- options(scipen = 100000000000)
   # on.exit(options(oo))
@@ -83,7 +104,10 @@ fcs_join <- function(files,
       tform_block_end <- grep(pattern = "</Transformations>", x = workspace[,1])[1]
       transform_data <- workspace[tform_block_start:tform_block_end,1]
       desc_row <- grep(pattern = 'P[0-9]+(S|R|N)', workspace[,1])#[1:ncol(csv_list[[1]])]
-      desc_row <- desc_row[-which(duplicated(workspace[desc_row,1]))]
+      which_dupl <- which(duplicated(workspace[desc_row,1]))
+      if(length(which_dupl)!=0) {
+        desc_row <- desc_row[-which(duplicated(workspace[desc_row,1]))]
+      }
       max_n <- max(as.numeric(gsub("P","",stringr::str_extract(string = workspace[desc_row,], pattern = "P[0-9]+"))))
       keyword_list <- vector("list", length = max_n); names(keyword_list) <- paste0("P",1:length(keyword_list))
       for(i in 1:length(keyword_list)) {
@@ -127,11 +151,11 @@ fcs_join <- function(files,
       tmp_raw <- raw_data
       tmp_data <- raw_data
       for(j in 1:ncol(tmp_data)) {
-        if(!colnames(tmp_data)[j] %in% param_data$desc) {
+        if(!toupper(colnames(tmp_data)[j]) %in% toupper(param_data$desc)) {
           next
         }
-        hyperparams <- tf_list[[param_data$name[which(param_data$desc==colnames(tmp_data)[j])[1]]]][[2]]
-        use_fun <- tf_list[[param_data$name[which(param_data$desc==colnames(tmp_data)[j])[1]]]][[1]]
+        hyperparams <- tf_list[[param_data$name[which(toupper(param_data$desc)==toupper(colnames(tmp_data)[j]))[1]]]][[2]]
+        use_fun <- tf_list[[param_data$name[which(toupper(param_data$desc)==toupper(colnames(tmp_data)[j]))[1]]]][[1]]
         if(!use_fun %in% c("hyperlog","biex","fasinh")) {
           stop(paste0("found function [",use_fun,"]: transformation using the flowjo workspace diagnostics file supports 'hyperlog', 'biex', and 'fasinh' transforms."))
         }

@@ -26,7 +26,7 @@ hyperlog_xform = fk.transforms.HyperlogTransform(
     param_a=in_a
 )
 
-sample_from_df = fk.Sample(data, sample_id='my_sample_from_dataframe')
+sample_from_df = fk.Sample(fcs_path_or_data = data, sample_id='my_sample_from_dataframe', channel_labels=['x'], subsample=0)
 sample_from_df.apply_transform(hyperlog_xform)
 df_events = sample_from_df.as_dataframe(source='xform')
 df_events.to_csv(out_file + '/__tmp_exprs__.csv', index = False)
