@@ -29,8 +29,8 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   set1_full <- compare_list[[1]]
   set2_full <- compare_list[[2]]
   total_data <- as.data.frame(fcs_join_obj[["data"]])
-  total_data$src <- fcs_join_obj[["source"]]
-  source_names <- total_data$src
+  total_data$source <- fcs_join_obj[["source"]]
+  source_names <- total_data$source
   if(mean(gsub("^.+/","",unlist(compare_list)) %in% unique(source_names))!=0) {
     if(tolower(reduction)=="umap") {
       if("umap" %in% tolower(names(fcs_join_obj))) {
@@ -50,15 +50,15 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   }
   set1 <- gsub("^.+/","",set1_full)
   set2 <- gsub("^.+/","",set2_full)
-  if(length(which(total_data$src %in% gsub("^.+/","",set1)))==0) {
+  if(length(which(total_data$source %in% gsub("^.+/","",set1)))==0) {
     stop("error in argument 'compare_list': no file names in compare_list[[1]] match data set")
   }
-  if(length(which(total_data$src %in% gsub("^.+/","",set2)))==0) {
+  if(length(which(total_data$source %in% gsub("^.+/","",set2)))==0) {
     stop("error in argument 'compare_list': no file names in compare_list[[2]] match data set")
   }
-  set1_ind <- which(total_data$src %in% gsub("^.+/","",set1))
-  set2_ind <- which(total_data$src %in% gsub("^.+/","",set2))
-  other_ind <- which(!total_data$src %in% gsub("^.+/","",c(set1,set2)))
+  set1_ind <- which(total_data$source %in% gsub("^.+/","",set1))
+  set2_ind <- which(total_data$source %in% gsub("^.+/","",set2))
+  other_ind <- which(!total_data$source %in% gsub("^.+/","",c(set1,set2)))
   set_blank <- rep(NA,times=nrow(total_data))
   set_blank[set1_ind] <- set1_label; set_blank[set2_ind] <- set2_label
   if(length(other_ind)!=0){
@@ -75,7 +75,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
     set_list <- list(set1 = dimred_data[set1_ind,], set2 = dimred_data[set2_ind,])
   }
   for(i in 1:length(set_list)) {
-    set_list[[i]] <- split(x = set_list[[i]], f = set_list[[i]]$src)
+    set_list[[i]] <- split(x = set_list[[i]], f = set_list[[i]]$source)
   }
   set1_size <- sum(sapply(set_list[[1]],nrow)); set2_size <- sum(sapply(set_list[[2]],nrow))
   if(set1_size>set2_size) {
@@ -354,11 +354,11 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
 
   clustered_data <- do.call(rbind, list(set1_spots, set2_spots, set_ns))
   clustered_data$cluster[grep("0$",clustered_data$cluster)] <- "ns"
-  usrc <- unique(clustered_data$src); uclus <- unique(clustered_data$cluster)
+  usrc <- unique(clustered_data$source); uclus <- unique(clustered_data$cluster)
   freq_mat <- matrix(data = NA, nrow = length(usrc), ncol = length(uclus))
   row.names(freq_mat) <- usrc; colnames(freq_mat) <- uclus
   for(i in 1:nrow(freq_mat)) {
-    tmp_values <- clustered_data$cluster[which(clustered_data$src==row.names(freq_mat)[i])]
+    tmp_values <- clustered_data$cluster[which(clustered_data$source==row.names(freq_mat)[i])]
     for(j in 1:ncol(freq_mat)) {
       freq_mat[i,j] <- mean(tmp_values==colnames(freq_mat)[j]) * 100
     }
