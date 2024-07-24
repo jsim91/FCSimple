@@ -5,6 +5,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
                      relative_cluster_distance = 30, file_output_prefix = NULL,
                      use_MEM = TRUE, max_alloc = 200000, plot_intensities = FALSE)
 {
+
   require(flowCore)
   require(ggplot2)
   require(ggrastr)
@@ -220,7 +221,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
           plot.caption = element_text(size = 12, hjust = 0.5))
 
   ggsave(filename = paste0(file_output_prefix,ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_by_category_",
-                                            strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"), plot = pl_bins,
+                           strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"), plot = pl_bins,
          device = "pdf", path = outdir, width = 10, height = 10, units = "in", dpi = 900)
 
   get_high <- which(row_mean>neighbor_significance_threshold)
@@ -233,7 +234,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   region_table <- table(map_set$bin)
   write.csv(x = data.frame(regions = region_table),
             file = file.path(outdir,paste0(file_output_prefix,ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_regions_found_",
-                          strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".csv")), row.names = TRUE)
+                                           strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".csv")), row.names = TRUE)
   if(length(region_table)==1) {
     print("no significant regions found. Exiting function.")
     return(0)
@@ -363,8 +364,8 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
       freq_mat[i,j] <- mean(tmp_values==colnames(freq_mat)[j]) * 100
     }
   }
-  write.csv(x = freq_mat, file = file.path(outdir,paste0(outdir,"/",file_output_prefix,"trex_significant_cluster_frequencies_",
-                                        strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".csv")), row.names = TRUE)
+  write.csv(x = freq_mat, file = file.path(outdir,paste0(file_output_prefix,"trex_significant_cluster_frequencies_",
+                                                         strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".csv")), row.names = TRUE)
 
   require(CATALYST)
   require(ComplexHeatmap)
@@ -427,6 +428,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   if(use_MEM) {
     # require(cytoMEM)
     require(MEM)
+    require(stringr)
     mem_input <- cbind(heatmap_data,data.frame(cluster = factor(clustered_data$cluster)))
     mem_input$cluster <- as.numeric(mem_input$cluster)
     match_clusters <- data.frame(descriptive_cluster = clustered_data$cluster,
@@ -532,9 +534,9 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
       colnames(arg1)[1] <- "col1"
       if(method=="color") {
         if(tolower(reduction)=="umap"){
-          plt <- ggplot(data = arg1, mapping = aes_string(x = "UMAP1", y = "UMAP2", color = colnames(arg1)[1]))
+          plt <- ggplot(data = arg1, mapping = aes(x = UMAP1, y = UMAP2, color = col1))
         } else if(tolower(reduction)=="tsne") {
-          plt <- ggplot(data = arg1, mapping = aes_string(x = "tSNE1", y = "tSNE2", color = colnames(arg1)[1]))
+          plt <- ggplot(data = arg1, mapping = aesg(x = tSNE1, y = tSNE2, color = col1))
         }
         plt <- plt +
           geom_point_rast(size = 0.8, pch = 19, alpha = 0.1) +
@@ -548,9 +550,9 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
                 legend.position = "bottom")
       } else if(method=="fill") {
         if(tolower(reduction)=="umap") {
-          plt <- ggplot(data = arg1, mapping = aes_string(x = "UMAP1", y = "UMAP2", fill = colnames(arg1)[1]))
+          plt <- ggplot(data = arg1, mapping = aes(x = UMAP1, y = UMAP2, fill = col1))
         } else if(tolower(reduction)=="tsne") {
-          plt <- ggplot(data = arg1, mapping = aes_string(x = "tSNE1", y = "tSNE2", fill = colnames(arg1)[1]))
+          plt <- ggplot(data = arg1, mapping = aes(x = tSNE1, y = tSNE2, fill = col1))
         }
         plt <- plt +
           geom_point_rast(size = 0.8, pch = 21, stroke = 0.05) +
@@ -592,5 +594,4 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
            plot = gridExtra::marrangeGrob(grobs = arranged_list, nrow=1, ncol=1, top = ""),
            device = "pdf", path = outdir, width = 12, height = 12, units = "in", dpi = 900)
   }
-  # return(fcs_join_obj)
 }
