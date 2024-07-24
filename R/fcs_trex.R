@@ -220,7 +220,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
           plot.caption = element_text(size = 12, hjust = 0.5))
 
   ggsave(filename = paste0(file_output_prefix,ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_by_category_",
-                           strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"), plot = pl_bins,
+                                            strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"), plot = pl_bins,
          device = "pdf", path = outdir, width = 10, height = 10, units = "in", dpi = 900)
 
   get_high <- which(row_mean>neighbor_significance_threshold)
@@ -232,8 +232,8 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   map_set$bin[which(!1:nrow(map_set) %in% c(get_high,get_low))] <- "not significant"
   region_table <- table(map_set$bin)
   write.csv(x = data.frame(regions = region_table),
-            file = paste0(file_output_prefix,ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_regions_found_",
-                          strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".csv"), row.names = TRUE)
+            file = file.path(outdir,paste0(file_output_prefix,ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_regions_found_",
+                          strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".csv")), row.names = TRUE)
   if(length(region_table)==1) {
     print("no significant regions found. Exiting function.")
     return(0)
@@ -363,8 +363,8 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
       freq_mat[i,j] <- mean(tmp_values==colnames(freq_mat)[j]) * 100
     }
   }
-  write.csv(x = freq_mat, file = paste0(outdir,"/",file_output_prefix,"trex_significant_cluster_frequencies_",
-                                        strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".csv"), row.names = TRUE)
+  write.csv(x = freq_mat, file = file.path(outdir,paste0(outdir,"/",file_output_prefix,"trex_significant_cluster_frequencies_",
+                                        strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".csv")), row.names = TRUE)
 
   require(CATALYST)
   require(ComplexHeatmap)
@@ -448,11 +448,11 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
       }
     }
 
-    build_heatmaps(mcalc, cluster.MEM = "none", cluster.medians = "none",
-                   display.thresh = 1,  output.files = TRUE, labels = FALSE,
-                   only.MEMheatmap = TRUE)
+    MEM::build.heatmaps(mcalc, cluster.MEM = "none", cluster.medians = "none",
+                        display.thresh = 1,  output.files = TRUE, labels = FALSE,
+                        only.MEMheatmap = TRUE)
   }
-  mem_outs <- list.files(path = paste0(getwd(),"/output files"), full.names = TRUE)
+  mem_outs <- list.files(path = file.path(outdir,paste0(getwd(),"/output files")), full.names = TRUE)
   for(i in 1:length(mem_outs)) {
     file.copy(from = mem_outs[i], to = outdir, overwrite = TRUE,
               recursive = FALSE, copy.mode = TRUE)
@@ -514,7 +514,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
           legend.position = "none")
 
   listed_plots <- mget(c("pl_lab","pl_sig_lab"))
-  ggsave(filename = paste0(file_output_prefix,ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_significant_labeled_",
+  ggsave(filename = paste0(ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_significant_labeled_",
                            strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
          plot = gridExtra::arrangeGrob(grobs = listed_plots, nrow=2, ncol=1),
          device = "pdf", path = outdir, width = 10, height = 20, units = "in", dpi = 900)
