@@ -17,17 +17,16 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   require(gridExtra)
 
   # workflow source: https://github.com/cytolab/T-REX
-  # testing
-  # fcs_join_obj = fcs_1
-  # compare_list = compare_groups[c(2,4)]
+  # fcs_join_obj = fcs_2
+  # compare_list = compare_groups[c(1,2)]
   # reduction = "UMAP"
-  # outdir = paste0("J:/CW_mouse_1/outs/all_by_date/HFD_HIVp_vs_LFD_HIVp_trex_date1",
+  # outdir = paste0("J:/CW_mouse_1/outs/all_by_date/HFD_HIVn_vs_HFD_HIVp_trex_date2",
   #                 ifelse(sample_equal_tissue,"_equal_tissue"))
   # point_alpha = 0.25
-  # neighborhood_size = 10
+  # neighborhood_size = 30
   # percentile_breaks = c(0,5,10,15,85,90,95,100)
   # neighbor_significance_threshold = 0.9
-  # cluster_min_size = 20
+  # cluster_min_size = 50
   # relative_cluster_distance = 30
   # file_output_prefix = NULL
   # use_MEM = TRUE
@@ -367,11 +366,11 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
     set2_spots$cluster <- paste0(set2_label,"_",scan_set2_cluster)
   }
 
-  set_ns$cluster <- rep("ns_0",nrow(set_ns))
+  set_ns$cluster <- rep("ns",nrow(set_ns))
 
   clustered_data <- do.call(rbind, list(set1_spots, set2_spots, set_ns))
   # clustered_data$cluster[grep("0$",clustered_data$cluster)] <- "ns"
-  clustered_data$cluster[grep("^ns_",clustered_data$cluster)] <- "ns"
+  # clustered_data$cluster[grep("^ns_",clustered_data$cluster)] <- "ns"
   usrc <- unique(clustered_data$source); uclus <- unique(clustered_data$cluster)
   freq_mat <- matrix(data = NA, nrow = length(usrc), ncol = length(uclus))
   row.names(freq_mat) <- usrc; colnames(freq_mat) <- uclus
@@ -425,7 +424,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   ranno2 <- rowAnnotation(frequency=anno_text(paste0(size_anno_nums,"%"),
                                               gp=gpar(fontsize=10,fontface="bold")))
   backend.matrix <- backend.matrix[order(row.names(backend.matrix)),]
-  if(length(uclus)<=1) {
+  if(length(uclus)>=1) {
     heatmap_output <- Heatmap(backend.matrix,col=color.map.fun,
                               row_names_side="left",
                               name="median\nscaled\nexpression",
