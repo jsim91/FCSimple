@@ -17,6 +17,22 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   require(gridExtra)
 
   # workflow source: https://github.com/cytolab/T-REX
+  # testing
+  # fcs_join_obj = fcs_1
+  # compare_list = compare_groups[c(2,4)]
+  # reduction = "UMAP"
+  # outdir = paste0("J:/CW_mouse_1/outs/all_by_date/HFD_HIVp_vs_LFD_HIVp_trex_date1",
+  #                 ifelse(sample_equal_tissue,"_equal_tissue"))
+  # point_alpha = 0.25
+  # neighborhood_size = 10
+  # percentile_breaks = c(0,5,10,15,85,90,95,100)
+  # neighbor_significance_threshold = 0.9
+  # cluster_min_size = 20
+  # relative_cluster_distance = 30
+  # file_output_prefix = NULL
+  # use_MEM = TRUE
+  # max_alloc = 200000
+  # plot_intensities = TRUE
 
   if(!is.null(file_output_prefix)) {
     file_output_prefix <- paste0(file_output_prefix,"_")
@@ -354,7 +370,8 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   set_ns$cluster <- rep("ns_0",nrow(set_ns))
 
   clustered_data <- do.call(rbind, list(set1_spots, set2_spots, set_ns))
-  clustered_data$cluster[grep("0$",clustered_data$cluster)] <- "ns"
+  # clustered_data$cluster[grep("0$",clustered_data$cluster)] <- "ns"
+  clustered_data$cluster[grep("^ns_",clustered_data$cluster)] <- "ns"
   usrc <- unique(clustered_data$source); uclus <- unique(clustered_data$cluster)
   freq_mat <- matrix(data = NA, nrow = length(usrc), ncol = length(uclus))
   row.names(freq_mat) <- usrc; colnames(freq_mat) <- uclus
@@ -366,160 +383,161 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   }
   write.csv(x = freq_mat, file = file.path(outdir,paste0(file_output_prefix,"trex_significant_cluster_frequencies_",
                                                          strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".csv")), row.names = TRUE)
+  if(length(uclus)<=1) {
+    require(CATALYST)
+    require(ComplexHeatmap)
+    require(circlize)
+    require(grid)
+    require(RColorBrewer)
 
-  require(CATALYST)
-  require(ComplexHeatmap)
-  require(circlize)
-  require(grid)
-  require(RColorBrewer)
+    number_of_cols <- ncol(fcs_join_obj[["data"]])
+    event_sources = 1:nrow(clustered_data)
+    cluster_numbers = clustered_data$cluster
+    include_channels = colnames(clustered_data)[1:number_of_cols]
+    heatmap_data = clustered_data[,1:number_of_cols]
 
-  number_of_cols <- ncol(fcs_join_obj[["data"]])
-  event_sources = 1:nrow(clustered_data)
-  cluster_numbers = clustered_data$cluster
-  include_channels = colnames(clustered_data)[1:number_of_cols]
-  heatmap_data = clustered_data[,1:number_of_cols]
-
-  scaled.global <- CATALYST:::.scale_exprs(t(heatmap_data[,include_channels]), 1, 0.01)
-  global.t <- t(scaled.global)
-  backend.matrix <- matrix(data=NA,nrow=length(unique(cluster_numbers)),ncol=ncol(global.t))
-  cluster_numbers <- as.character(cluster_numbers)
-  row.names(backend.matrix) <- unique(cluster_numbers)[order(unique(cluster_numbers))]
-  colnames(backend.matrix) <- colnames(global.t)
-  for(i in 1:nrow(backend.matrix)) {
-    get.clus <- which(cluster_numbers==row.names(backend.matrix)[i])
-    for(j in 1:ncol(backend.matrix)){
-      backend.matrix[i,j] <- median(global.t[get.clus,j])
-    }
-  }
-  hm_pal = rev(RColorBrewer::brewer.pal(11, "RdYlBu"))
-  z <- backend.matrix
-  color.map.fun = circlize::colorRamp2(seq(min(z),max(z), l = n <- 100), colorRampPalette(hm_pal)(n))
-  ncell <- rep(NA,times=length(unique(cluster_numbers)))
-  names(ncell) <- unique(cluster_numbers)[order(unique(cluster_numbers))]
-  for(i in 1:length(ncell)) {
-    ncell[i] <- sum(cluster_numbers==names(ncell)[i])
-  }
-  pop.freq <- matrix(data=ncell,ncol=1)
-  row.names(pop.freq) <- names(ncell)
-  size_anno_nums <- round((pop.freq/sum(pop.freq))*100,2)
-  ranno1 <- rowAnnotation(`Cluster\nSize`=anno_barplot(pop.freq,border=F,width=unit(1.75, "cm"),
-                                                       axis_param=list(gp=gpar(fontsize=9)), axis = TRUE),
-                          annotation_name_gp=gpar(fontsize=10,fontface="bold"), name = "Cluster\nSize")
-  ranno2 <- rowAnnotation(frequency=anno_text(paste0(size_anno_nums,"%"),
-                                              gp=gpar(fontsize=10,fontface="bold")))
-  backend.matrix <- backend.matrix[order(row.names(backend.matrix)),]
-  heatmap_output <- Heatmap(backend.matrix,col=color.map.fun,
-                            row_names_side="left",
-                            name="median\nscaled\nexpression",
-                            heatmap_legend_param=list(at=c(0,0.2,0.4,0.6,0.8,1),legend_height=unit(3,"cm"),
-                                                      grid_width=unit(0.6,"cm"),title_position="topleft",
-                                                      labels_gp=gpar(fontsize=11),title_gp=gpar(fontsize=11)),
-                            row_names_gp=gpar(fontsize=13,fontface="bold"),column_names_gp=gpar(fontsize=12,fontface="bold"),
-                            row_gap=unit(1,"mm"),column_gap=unit(1,"mm"),row_dend_gp=gpar(lwd=1.2),row_dend_width=unit(1,"cm"),
-                            column_dend_gp = gpar(lwd=1.2), column_dend_height = unit(1,"cm")) +
-    ranno1 + ranno2
-
-  ggsave(filename = paste0(file_output_prefix,ifelse(tolower(reduction)=="umap","UMAP","tSNE"),
-                           "_trex_significant_cluster_heatmap_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
-         plot = grid::grid.grabExpr(draw(heatmap_output)), device = "pdf",
-         path = outdir, width = ncol(backend.matrix)/2 + 1,
-         height = nrow(backend.matrix)/2 + 1.5, units = "in", dpi = 900, limitsize = FALSE)
-
-  if(use_MEM) {
-    # require(cytoMEM)
-    require(MEM)
-    require(stringr)
-    mem_input <- cbind(heatmap_data,data.frame(cluster = factor(clustered_data$cluster)))
-    mem_input$cluster <- as.numeric(mem_input$cluster)
-    match_clusters <- data.frame(descriptive_cluster = clustered_data$cluster,
-                                 numeric_cluster = mem_input$cluster)
-    match_clusters <- match_clusters[-which(duplicated(match_clusters$descriptive_cluster)),]
-    clus_order <- order(match_clusters$numeric_cluster)
-
-    mcalc <- MEM::MEM(exp_data = mem_input, transform=FALSE, choose.markers=FALSE,
-                      rename.markers=FALSE, choose.ref=FALSE)
-
-    check_mem <- sapply(mcalc,function(x) return(nrow(x[[1]])))
-    for(i in 1:length(check_mem)) {
-      if(is.null(unlist(check_mem[i]))) {
-        next
-      }
-      if(check_mem[i]==nrow(match_clusters)) {
-        mcalc[[i]][[1]] <- mcalc[[i]][[1]][clus_order,]
-        row.names(mcalc[[i]][[1]]) <- match_clusters$descriptive_cluster[clus_order]
+    scaled.global <- CATALYST:::.scale_exprs(t(heatmap_data[,include_channels]), 1, 0.01)
+    global.t <- t(scaled.global)
+    backend.matrix <- matrix(data=NA,nrow=length(unique(cluster_numbers)),ncol=ncol(global.t))
+    cluster_numbers <- as.character(cluster_numbers)
+    row.names(backend.matrix) <- unique(cluster_numbers)[order(unique(cluster_numbers))]
+    colnames(backend.matrix) <- colnames(global.t)
+    for(i in 1:nrow(backend.matrix)) {
+      get.clus <- which(cluster_numbers==row.names(backend.matrix)[i])
+      for(j in 1:ncol(backend.matrix)){
+        backend.matrix[i,j] <- median(global.t[get.clus,j])
       }
     }
-
-    MEM::build.heatmaps(mcalc, cluster.MEM = "none", cluster.medians = "none",
-                        display.thresh = 1,  output.files = TRUE, labels = FALSE,
-                        only.MEMheatmap = TRUE)
-  }
-  mem_outs <- list.files(path = file.path(outdir,paste0(getwd(),"/output files")), full.names = TRUE)
-  for(i in 1:length(mem_outs)) {
-    file.copy(from = mem_outs[i], to = outdir, overwrite = TRUE,
-              recursive = FALSE, copy.mode = TRUE)
-    file.remove(mem_outs[i])
-  }
-
-  if(tolower(reduction)=="umap") {
-    plot_data <- clustered_data[,c("UMAP1","UMAP2","cluster")]
-  } else if(tolower(reduction)=="tsne") {
-    plot_data <- clustered_data[,c("tSNE1","tSNE2","cluster")]
-  }
-  sig_clus <- plot_data[-which(plot_data$cluster=="ns"),]
-  xclus <- rep(NA,length(unique(sig_clus$cluster))); names(xclus) <- unique(sig_clus$cluster); yclus <- xclus
-  if(tolower(reduction)=="umap"){
-    for(i in 1:length(xclus)) {
-      xclus[i] <- median(sig_clus$UMAP1[which(sig_clus$cluster==names(xclus)[i])])
-      yclus[i] <- median(sig_clus$UMAP2[which(sig_clus$cluster==names(yclus)[i])])
+    hm_pal = rev(RColorBrewer::brewer.pal(11, "RdYlBu"))
+    z <- backend.matrix
+    color.map.fun = circlize::colorRamp2(seq(min(z),max(z), l = n <- 100), colorRampPalette(hm_pal)(n))
+    ncell <- rep(NA,times=length(unique(cluster_numbers)))
+    names(ncell) <- unique(cluster_numbers)[order(unique(cluster_numbers))]
+    for(i in 1:length(ncell)) {
+      ncell[i] <- sum(cluster_numbers==names(ncell)[i])
     }
-  } else if(tolower(reduction)=="tsne"){
-    for(i in 1:length(xclus)) {
-      xclus[i] <- median(sig_clus$tSNE1[which(sig_clus$cluster==names(xclus)[i])])
-      yclus[i] <- median(sig_clus$tSNE2[which(sig_clus$cluster==names(yclus)[i])])
+    pop.freq <- matrix(data=ncell,ncol=1)
+    row.names(pop.freq) <- names(ncell)
+    size_anno_nums <- round((pop.freq/sum(pop.freq))*100,2)
+    ranno1 <- rowAnnotation(`Cluster\nSize`=anno_barplot(pop.freq,border=F,width=unit(1.75, "cm"),
+                                                         axis_param=list(gp=gpar(fontsize=9)), axis = TRUE),
+                            annotation_name_gp=gpar(fontsize=10,fontface="bold"), name = "Cluster\nSize")
+    ranno2 <- rowAnnotation(frequency=anno_text(paste0(size_anno_nums,"%"),
+                                                gp=gpar(fontsize=10,fontface="bold")))
+    backend.matrix <- backend.matrix[order(row.names(backend.matrix)),]
+    heatmap_output <- Heatmap(backend.matrix,col=color.map.fun,
+                              row_names_side="left",
+                              name="median\nscaled\nexpression",
+                              heatmap_legend_param=list(at=c(0,0.2,0.4,0.6,0.8,1),legend_height=unit(3,"cm"),
+                                                        grid_width=unit(0.6,"cm"),title_position="topleft",
+                                                        labels_gp=gpar(fontsize=11),title_gp=gpar(fontsize=11)),
+                              row_names_gp=gpar(fontsize=13,fontface="bold"),column_names_gp=gpar(fontsize=12,fontface="bold"),
+                              row_gap=unit(1,"mm"),column_gap=unit(1,"mm"),row_dend_gp=gpar(lwd=1.2),row_dend_width=unit(1,"cm"),
+                              column_dend_gp = gpar(lwd=1.2), column_dend_height = unit(1,"cm")) +
+      ranno1 + ranno2
+
+    ggsave(filename = paste0(file_output_prefix,ifelse(tolower(reduction)=="umap","UMAP","tSNE"),
+                             "_trex_significant_cluster_heatmap_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
+           plot = grid::grid.grabExpr(draw(heatmap_output)), device = "pdf",
+           path = outdir, width = ncol(backend.matrix)/2 + 1,
+           height = nrow(backend.matrix)/2 + 1.5, units = "in", dpi = 900, limitsize = FALSE)
+
+    if(use_MEM) {
+      # require(cytoMEM)
+      require(MEM)
+      require(stringr)
+      mem_input <- cbind(heatmap_data,data.frame(cluster = factor(clustered_data$cluster)))
+      mem_input$cluster <- as.numeric(mem_input$cluster)
+      match_clusters <- data.frame(descriptive_cluster = clustered_data$cluster,
+                                   numeric_cluster = mem_input$cluster)
+      match_clusters <- match_clusters[-which(duplicated(match_clusters$descriptive_cluster)),]
+      clus_order <- order(match_clusters$numeric_cluster)
+
+      mcalc <- MEM::MEM(exp_data = mem_input, transform=FALSE, choose.markers=FALSE,
+                        rename.markers=FALSE, choose.ref=FALSE)
+
+      check_mem <- sapply(mcalc,function(x) return(nrow(x[[1]])))
+      for(i in 1:length(check_mem)) {
+        if(is.null(unlist(check_mem[i]))) {
+          next
+        }
+        if(check_mem[i]==nrow(match_clusters)) {
+          mcalc[[i]][[1]] <- mcalc[[i]][[1]][clus_order,]
+          row.names(mcalc[[i]][[1]]) <- match_clusters$descriptive_cluster[clus_order]
+        }
+      }
+
+      MEM::build.heatmaps(mcalc, cluster.MEM = "none", cluster.medians = "none",
+                          display.thresh = 1,  output.files = TRUE, labels = FALSE,
+                          only.MEMheatmap = TRUE)
     }
-  }
-  if(tolower(reduction)=="umap") {
-    pl_lab <- ggplot(data = plot_data, mapping = aes(x = UMAP1, y = UMAP2, color = cluster))
-  } else if(tolower(reduction)=="tsne") {
-    pl_lab <- ggplot(data = plot_data, mapping = aes(x = tSNE1, y = tSNE2, color = cluster))
-  }
-  pl_lab <- pl_lab +
-    geom_point_rast(pch = 19, size = 0.5, alpha = 0.1) +
-    guides(color = guide_legend(override.aes = list(size = 5, alpha = 1))) +
-    annotate("text_repel", x = xclus, y = yclus, label = names(xclus), size = 5) +
-    theme_void() +
-    theme(legend.title = element_blank(),
-          axis.title = element_blank(),
-          axis.text = element_blank(),
-          legend.text = element_text(size = 14),
-          legend.position = "none")
+    mem_outs <- list.files(path = file.path(outdir,paste0(getwd(),"/output files")), full.names = TRUE)
+    for(i in 1:length(mem_outs)) {
+      file.copy(from = mem_outs[i], to = outdir, overwrite = TRUE,
+                recursive = FALSE, copy.mode = TRUE)
+      file.remove(mem_outs[i])
+    }
 
-  sig_only <- plot_data[-which(plot_data$cluster=="ns"),]
-  if(tolower(reduction)=="umap") {
-    pl_sig_lab <- ggplot(data = sig_only, mapping = aes(x = UMAP1, y = UMAP2, color = cluster)) +
-      geom_point_rast(pch = 19, size = 0.7, alpha = 0.5) +
-      xlim(range(plot_data$UMAP1)) + ylim(range(plot_data$UMAP2))
-  } else if(tolower(reduction)=="tsne") {
-    pl_sig_lab <- ggplot(data = sig_only, mapping = aes(x = tSNE1, y = tSNE2, color = cluster)) +
-      geom_point_rast(pch = 19, size = 0.7, alpha = 0.5) +
-      xlim(range(plot_data$tSNE1)) + ylim(range(plot_data$tSNE2))
-  }
-  pl_sig_lab <- pl_sig_lab +
-    guides(color = guide_legend(override.aes = list(size = 5, alpha = 1))) +
-    annotate("text_repel", x = xclus, y = yclus, label = names(xclus), size = 5) +
-    theme_void() +
-    theme(legend.title = element_blank(),
-          axis.title = element_blank(),
-          axis.text = element_blank(),
-          legend.text = element_text(size = 14),
-          legend.position = "none")
+    if(tolower(reduction)=="umap") {
+      plot_data <- clustered_data[,c("UMAP1","UMAP2","cluster")]
+    } else if(tolower(reduction)=="tsne") {
+      plot_data <- clustered_data[,c("tSNE1","tSNE2","cluster")]
+    }
+    sig_clus <- plot_data[-which(plot_data$cluster=="ns"),]
+    xclus <- rep(NA,length(unique(sig_clus$cluster))); names(xclus) <- unique(sig_clus$cluster); yclus <- xclus
+    if(tolower(reduction)=="umap"){
+      for(i in 1:length(xclus)) {
+        xclus[i] <- median(sig_clus$UMAP1[which(sig_clus$cluster==names(xclus)[i])])
+        yclus[i] <- median(sig_clus$UMAP2[which(sig_clus$cluster==names(yclus)[i])])
+      }
+    } else if(tolower(reduction)=="tsne"){
+      for(i in 1:length(xclus)) {
+        xclus[i] <- median(sig_clus$tSNE1[which(sig_clus$cluster==names(xclus)[i])])
+        yclus[i] <- median(sig_clus$tSNE2[which(sig_clus$cluster==names(yclus)[i])])
+      }
+    }
+    if(tolower(reduction)=="umap") {
+      pl_lab <- ggplot(data = plot_data, mapping = aes(x = UMAP1, y = UMAP2, color = cluster))
+    } else if(tolower(reduction)=="tsne") {
+      pl_lab <- ggplot(data = plot_data, mapping = aes(x = tSNE1, y = tSNE2, color = cluster))
+    }
+    pl_lab <- pl_lab +
+      geom_point_rast(pch = 19, size = 0.5, alpha = 0.1) +
+      guides(color = guide_legend(override.aes = list(size = 5, alpha = 1))) +
+      annotate("text_repel", x = xclus, y = yclus, label = names(xclus), size = 5) +
+      theme_void() +
+      theme(legend.title = element_blank(),
+            axis.title = element_blank(),
+            axis.text = element_blank(),
+            legend.text = element_text(size = 14),
+            legend.position = "none")
 
-  listed_plots <- mget(c("pl_lab","pl_sig_lab"))
-  ggsave(filename = paste0(ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_significant_labeled_",
-                           strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
-         plot = gridExtra::arrangeGrob(grobs = listed_plots, nrow=2, ncol=1),
-         device = "pdf", path = outdir, width = 10, height = 20, units = "in", dpi = 900)
+    sig_only <- plot_data[-which(plot_data$cluster=="ns"),]
+    if(tolower(reduction)=="umap") {
+      pl_sig_lab <- ggplot(data = sig_only, mapping = aes(x = UMAP1, y = UMAP2, color = cluster)) +
+        geom_point_rast(pch = 19, size = 0.7, alpha = 0.5) +
+        xlim(range(plot_data$UMAP1)) + ylim(range(plot_data$UMAP2))
+    } else if(tolower(reduction)=="tsne") {
+      pl_sig_lab <- ggplot(data = sig_only, mapping = aes(x = tSNE1, y = tSNE2, color = cluster)) +
+        geom_point_rast(pch = 19, size = 0.7, alpha = 0.5) +
+        xlim(range(plot_data$tSNE1)) + ylim(range(plot_data$tSNE2))
+    }
+    pl_sig_lab <- pl_sig_lab +
+      guides(color = guide_legend(override.aes = list(size = 5, alpha = 1))) +
+      annotate("text_repel", x = xclus, y = yclus, label = names(xclus), size = 5) +
+      theme_void() +
+      theme(legend.title = element_blank(),
+            axis.title = element_blank(),
+            axis.text = element_blank(),
+            legend.text = element_text(size = 14),
+            legend.position = "none")
+
+    listed_plots <- mget(c("pl_lab","pl_sig_lab"))
+    ggsave(filename = paste0(ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_significant_labeled_",
+                             strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
+           plot = gridExtra::arrangeGrob(grobs = listed_plots, nrow=2, ncol=1),
+           device = "pdf", path = outdir, width = 10, height = 20, units = "in", dpi = 900)
+  }
 
   if(plot_intensities) {
     intens_list <- vector("list", length = number_of_cols); names(intens_list) <- colnames(join_data)[1:number_of_cols]
