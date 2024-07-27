@@ -18,15 +18,15 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
 
   # workflow source: https://github.com/cytolab/T-REX
   # fcs_join_obj = fcs_2
-  # compare_list = compare_groups[c(1,2)]
+  # compare_list = compare_groups[c(2,4)]
   # reduction = "UMAP"
-  # outdir = paste0("J:/CW_mouse_1/outs/all_by_date/HFD_HIVn_vs_HFD_HIVp_trex_date2",
+  # outdir = paste0("J:/CW_mouse_1/outs/all_by_date/HFD_HIVp_vs_LFD_HIVp_trex_date1",
   #                 ifelse(sample_equal_tissue,"_equal_tissue"))
   # point_alpha = 0.25
-  # neighborhood_size = 30
+  # neighborhood_size = 10
   # percentile_breaks = c(0,5,10,15,85,90,95,100)
   # neighbor_significance_threshold = 0.9
-  # cluster_min_size = 50
+  # cluster_min_size = 20
   # relative_cluster_distance = 30
   # file_output_prefix = NULL
   # use_MEM = TRUE
@@ -366,11 +366,10 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
     set2_spots$cluster <- paste0(set2_label,"_",scan_set2_cluster)
   }
 
-  set_ns$cluster <- rep("ns",nrow(set_ns))
+  set_ns$cluster <- rep("ns_0",nrow(set_ns))
 
   clustered_data <- do.call(rbind, list(set1_spots, set2_spots, set_ns))
-  # clustered_data$cluster[grep("0$",clustered_data$cluster)] <- "ns"
-  # clustered_data$cluster[grep("^ns_",clustered_data$cluster)] <- "ns"
+  clustered_data$cluster[grep("_0$",clustered_data$cluster)] <- "ns"
   usrc <- unique(clustered_data$source); uclus <- unique(clustered_data$cluster)
   freq_mat <- matrix(data = NA, nrow = length(usrc), ncol = length(uclus))
   row.names(freq_mat) <- usrc; colnames(freq_mat) <- uclus
@@ -418,13 +417,14 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   pop.freq <- matrix(data=ncell,ncol=1)
   row.names(pop.freq) <- names(ncell)
   size_anno_nums <- round((pop.freq/sum(pop.freq))*100,2)
-  ranno1 <- rowAnnotation(`Cluster\nSize`=anno_barplot(pop.freq,border=F,width=unit(1.75, "cm"),
-                                                       axis_param=list(gp=gpar(fontsize=9)), axis = TRUE),
-                          annotation_name_gp=gpar(fontsize=10,fontface="bold"), name = "Cluster\nSize")
-  ranno2 <- rowAnnotation(frequency=anno_text(paste0(size_anno_nums,"%"),
-                                              gp=gpar(fontsize=10,fontface="bold")))
-  backend.matrix <- backend.matrix[order(row.names(backend.matrix)),]
-  if(length(uclus)>=1) {
+  if(length(uclus)>1) {
+    ranno1 <- rowAnnotation(`Cluster\nSize`=anno_barplot(pop.freq,border=F,width=unit(1.75, "cm"),
+                                                         axis_param=list(gp=gpar(fontsize=9)), axis = TRUE),
+                            annotation_name_gp=gpar(fontsize=10,fontface="bold"), name = "Cluster\nSize")
+    ranno2 <- rowAnnotation(frequency=anno_text(paste0(size_anno_nums,"%"),
+                                                gp=gpar(fontsize=10,fontface="bold")))
+    backend.matrix <- backend.matrix[order(row.names(backend.matrix)),]
+    # if(length(uclus)>1) {
     heatmap_output <- Heatmap(backend.matrix,col=color.map.fun,
                               row_names_side="left",
                               name="median\nscaled\nexpression",
@@ -441,7 +441,6 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
            plot = grid::grid.grabExpr(draw(heatmap_output)), device = "pdf",
            path = outdir, width = ncol(backend.matrix)/2 + 1,
            height = nrow(backend.matrix)/2 + 1.5, units = "in", dpi = 900, limitsize = FALSE)
-
     if(use_MEM) {
       # require(cytoMEM)
       require(MEM)
@@ -470,74 +469,76 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
       MEM::build.heatmaps(mcalc, cluster.MEM = "none", cluster.medians = "none",
                           display.thresh = 1,  output.files = TRUE, labels = FALSE,
                           only.MEMheatmap = TRUE)
-    }
-    mem_outs <- list.files(path = file.path(outdir,paste0(getwd(),"/output files")), full.names = TRUE)
-    for(i in 1:length(mem_outs)) {
-      file.copy(from = mem_outs[i], to = outdir, overwrite = TRUE,
-                recursive = FALSE, copy.mode = TRUE)
-      file.remove(mem_outs[i])
-    }
-
-    if(tolower(reduction)=="umap") {
-      plot_data <- clustered_data[,c("UMAP1","UMAP2","cluster")]
-    } else if(tolower(reduction)=="tsne") {
-      plot_data <- clustered_data[,c("tSNE1","tSNE2","cluster")]
-    }
-    sig_clus <- plot_data[-which(plot_data$cluster=="ns"),]
-    xclus <- rep(NA,length(unique(sig_clus$cluster))); names(xclus) <- unique(sig_clus$cluster); yclus <- xclus
-    if(tolower(reduction)=="umap"){
-      for(i in 1:length(xclus)) {
-        xclus[i] <- median(sig_clus$UMAP1[which(sig_clus$cluster==names(xclus)[i])])
-        yclus[i] <- median(sig_clus$UMAP2[which(sig_clus$cluster==names(yclus)[i])])
-      }
-    } else if(tolower(reduction)=="tsne"){
-      for(i in 1:length(xclus)) {
-        xclus[i] <- median(sig_clus$tSNE1[which(sig_clus$cluster==names(xclus)[i])])
-        yclus[i] <- median(sig_clus$tSNE2[which(sig_clus$cluster==names(yclus)[i])])
+      mem_outs <- list.files(path = file.path(getwd(),"output files"), full.names = TRUE)
+      for(i in 1:length(mem_outs)) {
+        old_fil <- mem_outs[i]
+        new_fil <- gsub(pattern = "/ ","/",old_fil)
+        file.rename(from = old_fil, to = new_fil)
+        file.copy(from = new_fil, to = outdir, overwrite = TRUE,
+                  recursive = FALSE, copy.mode = TRUE)
+        file.remove(new_fil)
       }
     }
-    if(tolower(reduction)=="umap") {
-      pl_lab <- ggplot(data = plot_data, mapping = aes(x = UMAP1, y = UMAP2, color = cluster))
-    } else if(tolower(reduction)=="tsne") {
-      pl_lab <- ggplot(data = plot_data, mapping = aes(x = tSNE1, y = tSNE2, color = cluster))
-    }
-    pl_lab <- pl_lab +
-      geom_point_rast(pch = 19, size = 0.5, alpha = 0.1) +
-      guides(color = guide_legend(override.aes = list(size = 5, alpha = 1))) +
-      annotate("text_repel", x = xclus, y = yclus, label = names(xclus), size = 5) +
-      theme_void() +
-      theme(legend.title = element_blank(),
-            axis.title = element_blank(),
-            axis.text = element_blank(),
-            legend.text = element_text(size = 14),
-            legend.position = "none")
-
-    sig_only <- plot_data[-which(plot_data$cluster=="ns"),]
-    if(tolower(reduction)=="umap") {
-      pl_sig_lab <- ggplot(data = sig_only, mapping = aes(x = UMAP1, y = UMAP2, color = cluster)) +
-        geom_point_rast(pch = 19, size = 0.7, alpha = 0.5) +
-        xlim(range(plot_data$UMAP1)) + ylim(range(plot_data$UMAP2))
-    } else if(tolower(reduction)=="tsne") {
-      pl_sig_lab <- ggplot(data = sig_only, mapping = aes(x = tSNE1, y = tSNE2, color = cluster)) +
-        geom_point_rast(pch = 19, size = 0.7, alpha = 0.5) +
-        xlim(range(plot_data$tSNE1)) + ylim(range(plot_data$tSNE2))
-    }
-    pl_sig_lab <- pl_sig_lab +
-      guides(color = guide_legend(override.aes = list(size = 5, alpha = 1))) +
-      annotate("text_repel", x = xclus, y = yclus, label = names(xclus), size = 5) +
-      theme_void() +
-      theme(legend.title = element_blank(),
-            axis.title = element_blank(),
-            axis.text = element_blank(),
-            legend.text = element_text(size = 14),
-            legend.position = "none")
-
-    listed_plots <- mget(c("pl_lab","pl_sig_lab"))
-    ggsave(filename = paste0(ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_significant_labeled_",
-                             strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
-           plot = gridExtra::arrangeGrob(grobs = listed_plots, nrow=2, ncol=1),
-           device = "pdf", path = outdir, width = 10, height = 20, units = "in", dpi = 900)
   }
+  if(tolower(reduction)=="umap") {
+    plot_data <- clustered_data[,c("UMAP1","UMAP2","cluster")]
+  } else if(tolower(reduction)=="tsne") {
+    plot_data <- clustered_data[,c("tSNE1","tSNE2","cluster")]
+  }
+  sig_clus <- plot_data[-which(plot_data$cluster=="ns"),]
+  xclus <- rep(NA,length(unique(sig_clus$cluster))); names(xclus) <- unique(sig_clus$cluster); yclus <- xclus
+  if(tolower(reduction)=="umap"){
+    for(i in 1:length(xclus)) {
+      xclus[i] <- median(sig_clus$UMAP1[which(sig_clus$cluster==names(xclus)[i])])
+      yclus[i] <- median(sig_clus$UMAP2[which(sig_clus$cluster==names(yclus)[i])])
+    }
+  } else if(tolower(reduction)=="tsne"){
+    for(i in 1:length(xclus)) {
+      xclus[i] <- median(sig_clus$tSNE1[which(sig_clus$cluster==names(xclus)[i])])
+      yclus[i] <- median(sig_clus$tSNE2[which(sig_clus$cluster==names(yclus)[i])])
+    }
+  }
+  if(tolower(reduction)=="umap") {
+    pl_lab <- ggplot(data = plot_data, mapping = aes(x = UMAP1, y = UMAP2, color = cluster))
+  } else if(tolower(reduction)=="tsne") {
+    pl_lab <- ggplot(data = plot_data, mapping = aes(x = tSNE1, y = tSNE2, color = cluster))
+  }
+  pl_lab <- pl_lab +
+    geom_point_rast(pch = 19, size = 0.5, alpha = 0.1) +
+    guides(color = guide_legend(override.aes = list(size = 5, alpha = 1))) +
+    annotate("text_repel", x = xclus, y = yclus, label = names(xclus), size = 5) +
+    theme_void() +
+    theme(legend.title = element_blank(),
+          axis.title = element_blank(),
+          axis.text = element_blank(),
+          legend.text = element_text(size = 14),
+          legend.position = "none")
+
+  sig_only <- plot_data[-which(plot_data$cluster=="ns"),]
+  if(tolower(reduction)=="umap") {
+    pl_sig_lab <- ggplot(data = sig_only, mapping = aes(x = UMAP1, y = UMAP2, color = cluster)) +
+      geom_point_rast(pch = 19, size = 0.7, alpha = 0.5) +
+      xlim(range(plot_data$UMAP1)) + ylim(range(plot_data$UMAP2))
+  } else if(tolower(reduction)=="tsne") {
+    pl_sig_lab <- ggplot(data = sig_only, mapping = aes(x = tSNE1, y = tSNE2, color = cluster)) +
+      geom_point_rast(pch = 19, size = 0.7, alpha = 0.5) +
+      xlim(range(plot_data$tSNE1)) + ylim(range(plot_data$tSNE2))
+  }
+  pl_sig_lab <- pl_sig_lab +
+    guides(color = guide_legend(override.aes = list(size = 5, alpha = 1))) +
+    annotate("text_repel", x = xclus, y = yclus, label = names(xclus), size = 5) +
+    theme_void() +
+    theme(legend.title = element_blank(),
+          axis.title = element_blank(),
+          axis.text = element_blank(),
+          legend.text = element_text(size = 14),
+          legend.position = "none")
+
+  listed_plots <- mget(c("pl_lab","pl_sig_lab"))
+  ggsave(filename = paste0(ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_significant_labeled_",
+                           strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
+         plot = gridExtra::arrangeGrob(grobs = listed_plots, nrow=2, ncol=1),
+         device = "pdf", path = outdir, width = 10, height = 20, units = "in", dpi = 900)
 
   if(plot_intensities) {
     intens_list <- vector("list", length = number_of_cols); names(intens_list) <- colnames(join_data)[1:number_of_cols]
