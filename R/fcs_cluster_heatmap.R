@@ -1,7 +1,7 @@
 fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "all",
                                 heatmap_color_palette = rev(RColorBrewer::brewer.pal(11, "RdYlBu")),
                                 transpose_heatmap = FALSE, cluster_row = TRUE, cluster_col = TRUE,
-                                override_correction = TRUE)
+                                override_correction = TRUE, return_heatmap_data = FALSE)
 {
   if(!tolower(algorithm) %in% names(fcs_join_obj)) {
     stop("error in argument 'algorithm': algorithm not found in fcs_join_obj. Try 'View(fcs_join_obj)'")
@@ -73,6 +73,9 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
   backend.matrix <- backend.matrix[order(as.numeric(row.names(backend.matrix))),]
   if(transpose_heatmap) {
     backend.matrix <- t(backend.matrix)
+  }
+  if(return_heatmap_data) {
+    return(backend.matrix)
   }
   heatmap_output <- Heatmap(backend.matrix,col=color.map.fun,
                             row_names_side="left",
