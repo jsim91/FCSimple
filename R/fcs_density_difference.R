@@ -59,12 +59,12 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
     cluster_algorithm <- cluster_algorithm[1]
   }
   if(annotate_clusters) {
-    obj_clusters <- fcs_join_obj[[tolower(cluster_algorithm)]][["clusters"]]
+    obj_clusters <- as.character(fcs_join_obj[[tolower(cluster_algorithm)]][["clusters"]])
     unique_clus <- unique(obj_clusters); unique_clus <- unique_clus[order(as.numeric(unique_clus))]
     clusx <- rep(NA,length(unique_clus)); names(clusx) <- unique_clus; clusy <- clusx
     for(i in 1:length(clusx)) {
-      clusx[i] <- median(reduction_coords[,1][which(obj_clusters==as.numeric(names(clusx)[i]))])
-      clusy[i] <- median(reduction_coords[,2][which(obj_clusters==as.numeric(names(clusx)[i]))])
+      clusx[i] <- median(reduction_coords[,1][which(obj_clusters==names(clusx)[i])])
+      clusy[i] <- median(reduction_coords[,2][which(obj_clusters==names(clusx)[i])])
     }
   }
 
