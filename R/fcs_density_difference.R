@@ -206,8 +206,9 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
           axis.title = element_text(face = "bold", size = axis_title_text_size, color = "white"),
           panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank())
-
-  back_lab <- plt_dens_back + annotate("shadowtext", x = clusx, y = clusy, label = names(clusx), size = cluster_number_annotation_size)
+  if(annotate_clusters) {
+    back_lab <- plt_dens_back + annotate("shadowtext", x = clusx, y = clusy, label = names(clusx), size = cluster_number_annotation_size)
+  }
 
   timestamp <- strftime(Sys.time(),"%Y-%m-%d_%H%M%S")
   if(add_timestamp) {
