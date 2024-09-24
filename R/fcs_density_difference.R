@@ -207,7 +207,7 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
           panel.grid.major = element_blank(), panel.grid.minor = element_blank(),
           panel.background = element_blank())
   if(annotate_clusters) {
-    back_lab <- plt_dens_back + annotate("shadowtext", x = clusx, y = clusy, label = names(clusx), size = cluster_number_annotation_size)
+    plt_dens_back <- plt_dens_back + annotate("shadowtext", x = clusx, y = clusy, label = names(clusx), size = cluster_number_annotation_size)
   }
 
   timestamp <- strftime(Sys.time(),"%Y-%m-%d_%H%M%S")
@@ -248,7 +248,7 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
                   panel.grid.minor = element_blank(),
                   panel.border = element_blank())
 
-  umap_arr <- ggpubr::ggarrange(plotlist = list(back_lab + rm_box, plt_dens_diff + rm_box + theme(legend.position = "none", axis.title = element_blank())), nrow = 1)
+  umap_arr <- ggpubr::ggarrange(plotlist = list(plt_dens_back + rm_box, plt_dens_diff + rm_box + theme(legend.position = "none", axis.title = element_blank())), nrow = 1)
 
   ggsave(filename = paste0(fname_bottom,".pdf"),
          plot = plt_dens_back, device = "pdf",
