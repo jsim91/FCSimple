@@ -25,7 +25,7 @@ fcs_calculate_abundance <- function(fcs_join_obj,
   for(i in 1:nrow(frequency_matrix)) {
     tmp_numbers <- cluster_numbers[which(cluster_source==row.names(frequency_matrix)[i])]
     for(j in 1:ncol(frequency_matrix)) {
-      fval <- mean(tmp_numbers==as.numeric(colnames(frequency_matrix)[j]))
+      fval <- mean(tmp_numbers==colnames(frequency_matrix)[j])
       if(report_as=="frequency") {
         frequency_matrix[i,j] <- fval * 100
       } else if(report_as=="fraction") {
