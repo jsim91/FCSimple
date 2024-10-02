@@ -12,7 +12,7 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
   require(ggpubr)
 
   reduction_coords <- fcs_join_obj[[tolower(reduction)]][["coordinates"]]
-  cluster_numbers <- as.numeric(as.character(fcs_join_obj[[tolower(algorithm)]][["clusters"]]))
+  cluster_numbers <- as.character(fcs_join_obj[[tolower(algorithm)]][["clusters"]])
   uclus <- unique(cluster_numbers)[order(unique(cluster_numbers))]
 
   # https://stackoverflow.com/questions/8197559/emulate-ggplot2-default-color-palette
@@ -30,8 +30,8 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
 
   xval <- rep(NA,times=length(uclus)); names(xval) <- uclus; yval <- xval
   for(i in 1:length(xval)) {
-    xval[i] <- median(reduction_coords[,1][which(cluster_numbers==as.numeric(names(xval)[i]))])
-    yval[i] <- median(reduction_coords[,2][which(cluster_numbers==as.numeric(names(yval)[i]))])
+    xval[i] <- median(reduction_coords[,1][which(cluster_numbers==names(xval)[i])])
+    yval[i] <- median(reduction_coords[,2][which(cluster_numbers==names(yval)[i])])
   }
 
   if(!is.na(cluster_substitute_names[1])) {
