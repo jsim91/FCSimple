@@ -35,7 +35,7 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
     heatmap_data <- fcs_join_obj[["data"]]
   }
   event_source <- fcs_join_obj[["source"]]
-  cluster_numbers <- as.numeric(as.character(fcs_join_obj[[tolower(algorithm)]][["clusters"]]))
+  cluster_numbers <- as.character(fcs_join_obj[[tolower(algorithm)]][["clusters"]])
   if(include_parameters[1]=="all") {
     include_channels <- colnames(heatmap_data)
   } else {
@@ -45,7 +45,6 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
   scaled.global <- CATALYST:::.scale_exprs(t(heatmap_data[,include_channels]), 1, 0.01)
   global.t <- t(scaled.global)
   backend.matrix <- matrix(data=NA,nrow=length(unique(cluster_numbers)),ncol=ncol(global.t))
-  cluster_numbers <- as.character(cluster_numbers)
   row.names(backend.matrix) <- unique(cluster_numbers)[order(unique(cluster_numbers))]
   colnames(backend.matrix) <- colnames(global.t)
   for(i in 1:nrow(backend.matrix)) {
@@ -58,7 +57,7 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
   z <- backend.matrix
   color.map.fun = circlize::colorRamp2(seq(min(z),max(z), l = n <- 100), colorRampPalette(hm_pal)(n))
   ncell <- rep(NA,times=length(unique(cluster_numbers)))
-  names(ncell) <- unique(cluster_numbers)[order(as.numeric(unique(cluster_numbers)))]
+  names(ncell) <- unique(cluster_numbers)[order(unique(cluster_numbers))]
   for(i in 1:length(ncell)) {
     ncell[i] <- sum(cluster_numbers==names(ncell)[i])
   }
@@ -70,7 +69,7 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
                           annotation_name_gp=gpar(fontsize=10,fontface="bold"), name = "Cluster\nSize")
   ranno2 <- rowAnnotation(frequency=anno_text(paste0(size_anno_nums,"%"),
                                               gp=gpar(fontsize=10,fontface="bold")))
-  backend.matrix <- backend.matrix[order(as.numeric(row.names(backend.matrix))),]
+  backend.matrix <- backend.matrix[order(row.names(backend.matrix)),]
   if(transpose_heatmap) {
     backend.matrix <- t(backend.matrix)
   }
