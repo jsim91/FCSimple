@@ -5,7 +5,7 @@ fcs_update <- function(fcs_join_obj, instrument_type = c("cytof","flow"))
     return(fcs_join_obj)
   } else {
     if(any(length(instrument_type)!=1, !instrument_type %in% c("cytof","flow"))) {
-      stop("'collection_instrument should be one of: 'cytof' or 'flow'")
+      stop("'collection_instrument should be one of: 'cytof' for mass cytometry or 'flow' for fluorescence cytometry")
     } else {
       fcs_join_obj[['collection_instrument']] <- instrument_type
       fcs_join_obj[['object_history']] <- paste0("updated: ",Sys.time())
