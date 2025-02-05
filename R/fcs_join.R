@@ -41,6 +41,9 @@ fcs_join <- function(files,
   # oo <- options(scipen = 100000000000)
   # on.exit(options(oo))
   options(scipen = 1000000)
+  if(all(length(instrument_type)!=1, instrument_type %in% c("cytof","flow"))) {
+    stop("'instrument_type' must be one of: 'cytof' or 'flow'")
+  }
   if(any(length(files)==0,class(files[1])!="character")) {
     stop("'files' should be a vector of file names of .fcs files to be used in the analysis")
   }
@@ -91,6 +94,7 @@ fcs_join <- function(files,
     return(list(data = raw_data,
                 raw = raw_data,
                 source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow))),
+                collection_instrument = instrument_type, 
                 object_history = paste0("joined: ",Sys.time())))
   }
   if(!is.null(flowjo_diagnostics_file)) {
@@ -211,6 +215,7 @@ fcs_join <- function(files,
                   source = src,
                   run_date = stringr::str_extract(string = src, pattern = batch_pattern),
                   transform_list = tf_list,
+                  collection_instrument = instrument_type,
                   object_history = paste0("joined: ",Sys.time())))
     }
   }
@@ -242,6 +247,7 @@ fcs_join <- function(files,
                   raw = raw_data,
                   source = src,
                   run_date = stringr::str_extract(string = src, pattern = batch_pattern),
+                  collection_instrument = instrument_type,
                   object_history = paste0("joined: ",Sys.time())))
     } else if(tolower(instrument_type)=="flow") {
       if(transform_type=="asinh") {
@@ -321,6 +327,7 @@ fcs_join <- function(files,
                     raw = raw_data,
                     source = src,
                     run_date = stringr::str_extract(string = src, pattern = batch_pattern),
+                    collection_instrument = instrument_type,
                     object_history = paste0("joined: ",Sys.time())))
       # } else {
       #   return(list(data = tmp_data,
