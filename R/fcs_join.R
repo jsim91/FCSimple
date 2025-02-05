@@ -42,7 +42,7 @@ fcs_join <- function(files,
   # on.exit(options(oo))
   options(scipen = 1000000)
   if(all(length(instrument_type)!=1, instrument_type %in% c("cytof","flow"))) {
-    stop("'instrument_type' must be one of: 'cytof' or 'flow'")
+    stop("'instrument_type' must be one of: 'cytof' for mass cytometry or 'flow' for fluorescence cytometry")
   }
   if(any(length(files)==0,class(files[1])!="character")) {
     stop("'files' should be a vector of file names of .fcs files to be used in the analysis")
