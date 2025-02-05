@@ -69,7 +69,7 @@ fcs_plot_distribution <- function(fcs_join_obj,
     if(add_timestamp) {
       fname <- paste0(outdir,"/panel_distributions_by_batch_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf")
     } else {
-      fname <- ppaste0(outdir,"/panel_distributions_by_batch.pdf")
+      fname <- paste0(outdir,"/panel_distributions_by_batch.pdf")
     }
     ggsave(filename = fname,
            plot = ggpubr::ggarrange(plotlist = plot_set, nrow = ceiling(sqrt(length(plot_set))),
