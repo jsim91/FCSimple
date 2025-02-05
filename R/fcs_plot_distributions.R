@@ -11,6 +11,9 @@ fcs_plot_distribution <- function(fcs_join_obj,
   require(ggplot2)
   require(ggridges)
 
+  if(!'collection_instrument' %in% names(fcs_join_obj)) {
+    stop("'fcs_join_obj[['collection_instrument']] not found; do fcs_update() on your object and specify what instrument type the data was collected with first, either 'cytof' for mass cytometry or 'flow' for fluorescence cytometry")
+  }
   obj_data <- as.data.frame(fcs_join_obj[["data"]])
   if(tolower(separate_by)=="date") {
     if(!"run_date" %in% names(fcs_join_obj)){
