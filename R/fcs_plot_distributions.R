@@ -4,7 +4,7 @@ fcs_plot_distribution <- function(fcs_join_obj,
                                   outdir = getwd(),
                                   plot_palette = NULL,
                                   rm_zero = FALSE,
-                                  trim_quantile = 0,
+                                  trim_quantile = NULL,
                                   add_timestamp = TRUE)
 {
   require(ggpubr)
@@ -47,7 +47,7 @@ fcs_plot_distribution <- function(fcs_join_obj,
       data_split[[i]] <- data.frame(val1 = obj_data[,which(colnames(obj_data)==names(data_split)[i])])
       colnames(data_split[[i]])[1] <- colnames(obj_data)[i]
     }
-    plot_set <- lapply(X = data_split, FUN = plot_none, rm0 = rm_zero, trq = trim_quantile)
+    plot_set <- lapply(X = data_split, FUN = plot_none, rm0 = rm_zero, trq = trim_quantile, instr_type = fcs_join_obj[['collection_instrument']])
     if(add_timestamp) {
       fname <- paste0(outdir,"/panel_distributions_concatenation_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf")
     } else {
@@ -62,7 +62,7 @@ fcs_plot_distribution <- function(fcs_join_obj,
     if(!"batch" %in% colnames(data_split[[1]])) {
       stop("error in argument 'separate_by': no run date found, cannot plot by run date/batch")
     }
-    plot_set <- lapply(X = data_split, FUN = plot_date, rm0 = rm_zero, trq = trim_quantile)
+    plot_set <- lapply(X = data_split, FUN = plot_date, rm0 = rm_zero, trq = trim_quantile, instr_type = fcs_join_obj[['collection_instrument']])
     if(add_timestamp) {
       fname <- paste0(outdir,"/panel_distributions_by_batch_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf")
     } else {
@@ -74,7 +74,7 @@ fcs_plot_distribution <- function(fcs_join_obj,
            device = "pdf", width = ceiling(sqrt(length(plot_set)))*2.5, height = ceiling(sqrt(length(plot_set)))*2.5,
            units = "in", dpi = 900, limitsize = FALSE)
   } else if(tolower(separate_by) == "cluster") {
-    plot_set <- lapply(X = data_split, FUN = plot_cluster, rm0 = rm_zero, trq = trim_quantile)
+    plot_set <- lapply(X = data_split, FUN = plot_cluster, rm0 = rm_zero, trq = trim_quantile, instr_type = fcs_join_obj[['collection_instrument']])
     if(add_timestamp) {
       fname <- paste0(outdir,"/panel_distributions_by_cluster_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf")
     } else {
@@ -88,29 +88,49 @@ fcs_plot_distribution <- function(fcs_join_obj,
   }
 }
 
-plot_none <- function(input_data, rm0, trq)
+plot_none <- function(input_data, rm0, trq, instr_type)
 {
   cache_colname <- colnames(input_data)[1]
-  if(rm0) {
-    rm0_ind <- which(input_data[,1]==0)
-    if(length(rm0_ind)!=0) {
-      densdat <- input_data[-which(input_data[,1]==0),1]
-    } else {
-      densdat <- input_data[,1]
+  if(instr_type=="flow") {
+    if(rm0) {
+      warning("remove 0s set to TRUE while instrument_type is 'flow'; leaving 0 values.")
     }
-    if(trq!=0) {
+    densdat <- input_data[,1]
+    if(!is.null(trq)) {
+      if(length(trq)!=2) {
+        stop("'trim_quantile' should be a vector of length 2")
+      } 
       trim_q <- as.numeric(quantile(x = densdat, probs = trq))
-      densdat <- densdat[-which(densdat>trim_q)]
+      drop_index <- union(which(densdat>max(trim_q)),which(densdat<min(trim_q)))
+      densdat <- densdat[-drop_index]
     }
     xval <- density(densdat)$x; yval <- density(densdat)$y
-  } else {
-    if(trq!=0) {
-      trim_q <- as.numeric(quantile(x = input_data[,1], probs = trq))
-      densdat <- input_data[-which(input_data[,1]>trim_q),]
+  }
+  if(instr_type=="cytof") {
+    if(rm0) {
+      rm0_ind <- which(input_data[,1]==0)
+      if(length(rm0_ind)!=0) {
+        densdat <- input_data[-which(input_data[,1]==0),1]
+      } else {
+        densdat <- input_data[,1]
+      }
+      if(!is.null(trq)) {
+        if(length(trq)!=1) {
+          stop("'trim_quantile' should be a singlet numeric value")
+        } 
+        trim_q <- as.numeric(quantile(x = densdat, probs = trq))
+        densdat <- densdat[-which(densdat>trim_q)]
+      }
+      xval <- density(densdat)$x; yval <- density(densdat)$y
     } else {
-      densdat <- input_data[,1]
+      if(!is.null(trq)) {
+        trim_q <- as.numeric(quantile(x = input_data[,1], probs = trq))
+        densdat <- input_data[-which(input_data[,1]>trim_q),]
+      } else {
+        densdat <- input_data[,1]
+      }
+      xval <- density(densdat)$x; yval <- density(densdat)$y
     }
-    xval <- density(densdat)$x; yval <- density(densdat)$y
   }
   dens_data <- data.frame(xval = xval, yval = yval)
   plt1 <- ggplot(data = dens_data, mapping = aes(x = xval, y = yval)) +
@@ -124,23 +144,44 @@ plot_none <- function(input_data, rm0, trq)
   return(plt1)
 }
 
-plot_date <- function(input_data, rm0, trq)
+plot_date <- function(input_data, rm0, trq, instr_type)
 {
   capture_channel <- colnames(input_data)[1]
   colnames(input_data)[1] <- "tmp"
-  if(rm0) {
-    rm0_ind <- which(input_data[,1]==0)
-    if(length(rm0_ind)!=0) {
-      densdat <- input_data[-which(input_data[,1]==0),]
+  if(instr_type=="flow") {
+    if(rm0) {
+      warning("remove 0s set to TRUE while instrument_type is 'flow'; leaving 0 values.")
     }
-    if(trq!=0) {
+    if(!is.null(trq)) {
+      if(length(trq)!=2) {
+          stop("'trim_quantile' should be a vector of length 2")
+        }
       trim_q <- as.numeric(quantile(x = input_data[,1], probs = trq))
-      input_data <- input_data[-which(input_data[,1]>trim_q),]
+      drop_index <- union(which(input_data[,1]>max(trim_q)),which(input_data[,1]<min(trim_q)))
+      input_data <- input_data[-drop_index,]
     }
-  } else {
-    if(trq!=0) {
-      trim_q <- as.numeric(quantile(x = input_data[,1], probs = trq))
-      input_data <- input_data[-which(input_data[,1]>trim_q),]
+  }
+  if(instr_type=="cytof") {
+    if(rm0) {
+      rm0_ind <- which(input_data[,1]==0)
+      if(length(rm0_ind)!=0) {
+        input_data <- input_data[-which(input_data[,1]==0),]
+      }
+      if(!is.null(trq)) {
+        if(length(trq)!=1) {
+          stop("'trim_quantile' should be a singlet numeric value")
+        } 
+        trim_q <- as.numeric(quantile(x = input_data[,1], probs = trq))
+        input_data <- input_data[-which(input_data[,1]>trim_q),]
+      }
+    } else {
+      if(!is.null(trq)) {
+        if(length(trq)!=1) {
+          stop("'trim_quantile' should be a singlet numeric value")
+        } 
+        trim_q <- as.numeric(quantile(x = input_data[,1], probs = trq))
+        input_data <- input_data[-which(input_data[,1]>trim_q),]
+      }
     }
   }
   plt1 <- ggplot(data = input_data, mapping = aes(x = tmp, group = batch,
@@ -154,23 +195,38 @@ plot_date <- function(input_data, rm0, trq)
   return(plt1)
 }
 
-plot_cluster <- function(input_data, rm0, trq)
+plot_cluster <- function(input_data, rm0, trq, instr_type)
 {
   capture_channel <- colnames(input_data)[1]
   colnames(input_data)[1] <- "tmp"
-  if(rm0) {
-    rm0_ind <- which(input_data[,1]==0)
-    if(length(rm0_ind)!=0) {
-      densdat <- input_data[-which(input_data[,1]==0),]
+  if(instr_type=="flow") {
+    if(rm0) {
+      warning("remove 0s set to TRUE while instrument_type is 'flow'; leaving 0 values.")
     }
-    if(trq!=0) {
+    if(!is.null(trq)) {
+      if(length(trq)!=2) {
+          stop("'trim_quantile' should be a vector of length 2")
+        }
       trim_q <- as.numeric(quantile(x = input_data[,1], probs = trq))
-      input_data <- input_data[-which(input_data[,1]>trim_q),]
+      drop_index <- union(which(input_data[,1]>max(trim_q)),which(input_data[,1]<min(trim_q)))
+      input_data <- input_data[-drop_index,]
     }
-  } else {
-    if(trq!=0) {
-      trim_q <- as.numeric(quantile(x = input_data[,1], probs = trq))
-      input_data <- input_data[-which(input_data[,1]>trim_q),]
+  }
+  if(instr_type=="cytof") {
+    if(rm0) {
+      rm0_ind <- which(input_data[,1]==0)
+      if(length(rm0_ind)!=0) {
+        input_data <- input_data[-which(input_data[,1]==0),]
+      }
+      if(!is.null(trq)) {
+        trim_q <- as.numeric(quantile(x = input_data[,1], probs = trq))
+        input_data <- input_data[-which(input_data[,1]>trim_q),]
+      }
+    } else {
+      if(!is.null(trq)) {
+        trim_q <- as.numeric(quantile(x = input_data[,1], probs = trq))
+        input_data <- input_data[-which(input_data[,1]>trim_q),]
+      }
     }
   }
   plt1 <- ggplot(data = input_data, mapping = aes(x = tmp, y = cluster)) +
