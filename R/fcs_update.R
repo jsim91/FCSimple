@@ -4,10 +4,10 @@ fcs_update <- function(fcs_join_obj, instrument_type = c("cytof","flow"))
     stop("object is already up to date")
     return(fcs_join_obj)
   } else {
-    if(any(length(collection_instrument)!=1, !collection_instrument %in% c("cytof","flow"))) {
+    if(any(length(instrument_type)!=1, !instrument_type %in% c("cytof","flow"))) {
       stop("'collection_instrument should be one of: 'cytof' or 'flow'")
     } else {
-      fcs_join_obj[['collection_instrument']] <- collection_instrument
+      fcs_join_obj[['collection_instrument']] <- instrument_type
       fcs_join_obj[['object_history']] <- paste0("updated: ",Sys.time())
       return(fcs_join_obj)
     }
