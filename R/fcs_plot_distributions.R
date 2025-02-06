@@ -1,4 +1,5 @@
 fcs_plot_distribution <- function(fcs_join_obj,
+                                  override_correction = TRUE, 
                                   separate_by = c("none", "date", "cluster"),
                                   plot_algorithm = c("leiden","flowsom","louvain","phenograph","git"),
                                   outdir = getwd(),
@@ -11,10 +12,22 @@ fcs_plot_distribution <- function(fcs_join_obj,
   require(ggplot2)
   require(ggridges)
 
+  use_rep <- tolower(use_rep)
+  if('batch_correction' %in% names(fcs_join_obj)) {
+    if("override_correction") {
+      print("Batch_correction found in fcs_join_obj list with 'override_correction' set to TRUE. Using fcs_join_obj[['data']] for plotting. To use batch-corrected features, set 'override_correction' to FALSE.")
+      obj_data <- fcs_join_obj[['data']]
+    } else {
+      print("Batch_correction found in fcs_join_obj list with 'override_correction' set to FALSE. Using fcs_join_obj[['batch_correction']][['data']] for plotting. To use uncorrected features, set 'override_correction' to TRUE")
+      obj_data <- fcs_join_obj[['batch_correction']][['data']]
+    }
+  } else {
+    print("batch_correction not found in fcs_join_obj list. Proceeding with fcs_join_obj[['data']].")
+    obj_data <- as.data.frame(fcs_join_obj[["data"]])
+  }
   if(!'collection_instrument' %in% names(fcs_join_obj)) {
     stop("'fcs_join_obj[['collection_instrument']] not found; do fcs_update() on your object and specify what instrument_type the data was collected with first, either 'cytof' for mass cytometry or 'flow' for fluorescence cytometry")
   }
-  obj_data <- as.data.frame(fcs_join_obj[["data"]])
   if(tolower(separate_by)=="date") {
     if(!"run_date" %in% names(fcs_join_obj)){
       print("Unable to find run date. Using separate_by = 'none' instead.")
