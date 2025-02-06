@@ -1,4 +1,5 @@
 fcs_project_parameters <- function(fcs_join_obj,
+                                   override_correction = TRUE, 
                                    reduction = c("UMAP","tSNE"),
                                    parameters = "all",
                                    outdir = getwd(),
@@ -15,7 +16,17 @@ fcs_project_parameters <- function(fcs_join_obj,
   if(length(reduction)!=1) {
     stop("error in argument 'reduction': use either 'UMAP' or 'tSNE'")
   }
-  join_data <- fcs_join_obj[["data"]]
+  if("batch_correction" %in% names(fcs_join_obj)) {
+    if(override_correction) {
+      print("batch_correction found in fcs_join_obj and override_correction set to TRUE. Using fcs_join_obj[['data']] for projections. To use batch-corrected features, set 'override_correction' to FALSE.")
+      join_data <- fcs_join_obj[["data"]]
+    } else {
+      print("batch_correction found in fcs_join_obj and override_correction set to FALSE. Using fcs_join_obj[['batch_correction']][['data']] for projections. To use original features, set 'override_correction' to TRUE.")
+      join_data <- fcs_join_obj[["batch_correction"]][["data"]]
+    }
+  } else {
+    join_data <- fcs_join_obj[["data"]]
+  }
   reduction_coords <- fcs_join_obj[[tolower(reduction)]][["coordinates"]]
   if(nrow(join_data)<1) {
     stop("error in 'reduction': unable to find specified reduction")
