@@ -11,8 +11,7 @@ fcs_plot_distribution <- function(fcs_join_obj,
   require(ggpubr)
   require(ggplot2)
   require(ggridges)
-
-  use_rep <- tolower(use_rep)
+  
   if('batch_correction' %in% names(fcs_join_obj)) {
     if("override_correction") {
       print("Batch_correction found in fcs_join_obj list with 'override_correction' set to TRUE. Using fcs_join_obj[['data']] for plotting. To use batch-corrected features, set 'override_correction' to FALSE.")
