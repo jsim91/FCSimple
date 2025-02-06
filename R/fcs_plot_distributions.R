@@ -15,10 +15,10 @@ fcs_plot_distribution <- function(fcs_join_obj,
   if('batch_correction' %in% names(fcs_join_obj)) {
     if(override_correction) {
       print("Batch_correction found in fcs_join_obj list with 'override_correction' set to TRUE. Using fcs_join_obj[['data']] for plotting. To use batch-corrected features, set 'override_correction' to FALSE.")
-      obj_data <- fcs_join_obj[['data']]
+      obj_data <- as.data.frame(fcs_join_obj[['data']])
     } else {
       print("Batch_correction found in fcs_join_obj list with 'override_correction' set to FALSE. Using fcs_join_obj[['batch_correction']][['data']] for plotting. To use uncorrected features, set 'override_correction' to TRUE")
-      obj_data <- fcs_join_obj[['batch_correction']][['data']]
+      obj_data <- as.data.frame(fcs_join_obj[['batch_correction']][['data']])
     }
   } else {
     print("batch_correction not found in fcs_join_obj list. Proceeding with fcs_join_obj[['data']].")
