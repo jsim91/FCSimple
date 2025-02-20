@@ -125,7 +125,7 @@ fcs_join <- function(files,
         if(length(desc)==0) {
           desc <- ""
         }
-        if(name=="" & desc=="") {
+        if(name=="" && desc=="") {
           break
         }
         keyword_list[[i]] <- data.frame(desc = desc, name = name)
