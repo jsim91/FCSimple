@@ -102,10 +102,10 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
       geom_boxplot(fill = "#bfbfbf", lwd = 0.5, alpha = 0.4, width = 0.4)
     if(pair_test) {
       plt <- plt + geom_line(mapping = aes(group = group), color = "black", linewidth = pls) +
-        geom_point(mapping = aes(fill = compare_group), pch = 21, size = size_of_dots*3, color = "black") +
+        geom_point(mapping = aes(fill = compare_group), pch = 21, size = size_of_dots*3, color = plc) +
         stat_compare_means(method = "wilcox", comparisons = compare_these, size = pts, paired = TRUE)
     } else {
-      plt <- plt + geom_dotplot(data = plot_input, aes(fill = compare_group), color = "black", stroke = 1,
+      plt <- plt + geom_dotplot(data = plot_input, aes(fill = compare_group), color = plc, stroke = 0.5,
                                 binaxis = "y", stackdir = "center", position = "dodge", binpositions="all",
                                 dotsize = size_of_dots) +
         stat_compare_means(method = "wilcox", comparisons = compare_these, size = pts, paired = FALSE)
