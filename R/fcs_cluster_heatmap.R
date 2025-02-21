@@ -1,7 +1,8 @@
 fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "all",
                                 heatmap_color_palette = rev(RColorBrewer::brewer.pal(11, "RdYlBu")),
                                 transpose_heatmap = FALSE, cluster_row = TRUE, cluster_col = TRUE,
-                                override_correction = TRUE, return_heatmap_data = FALSE)
+                                override_correction = TRUE, return_heatmap_data = FALSE, 
+                                heatmap_linewidth = 0.5)
 {
   if(!tolower(algorithm) %in% names(fcs_join_obj)) {
     stop("error in argument 'algorithm': algorithm not found in fcs_join_obj. Try 'View(fcs_join_obj)'")
@@ -83,7 +84,7 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
                                                       grid_width=unit(0.6,"cm"),title_position="topleft",
                                                       labels_gp=gpar(fontsize=11),title_gp=gpar(fontsize=11)),
                             row_names_gp=gpar(fontsize=13,fontface="bold"),column_names_gp=gpar(fontsize=12,fontface="bold"),
-                            rect_gp = gpar(lwd = 0.4, col = "black"), border = "black",
+                            rect_gp = gpar(lwd = heatmap_linewidth, col = "black"), border = "black",
                             cluster_columns = ifelse(cluster_col,TRUE,FALSE), cluster_rows = ifelse(cluster_row,TRUE,FALSE),
                             row_gap=unit(1,"mm"),column_gap=unit(1,"mm"),row_dend_gp=gpar(lwd=1.2),row_dend_width=unit(1,"cm"),
                             column_dend_gp = gpar(lwd=1.2), column_dend_height = unit(1,"cm")) +
