@@ -106,7 +106,7 @@ fcs_plot_distribution <- function(fcs_join_obj,
     names(data_split) <- colnames(obj_data)[1:(ncol(obj_data)-1)]
     for(i in 1:length(data_split)) {
       data_split[[i]] <- data.frame(val1 = obj_data[,which(colnames(obj_data)==names(data_split)[i])],
-                                    batch = obj_data[,"condition"])
+                                    condition = obj_data[,"condition"])
       colnames(data_split[[i]])[1] <- colnames(obj_data)[i]
     }
     plot_set <- lapply(X = data_split, FUN = plot_condition, rm0 = rm_zero, trq = trim_quantile, instr_type = fcs_join_obj[['collection_instrument']])
