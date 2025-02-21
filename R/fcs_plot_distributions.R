@@ -120,6 +120,7 @@ fcs_plot_distribution <- function(fcs_join_obj,
                                     ncol = ceiling(sqrt(length(plot_set))), legend = "bottom", common.legend = TRUE),
            device = "pdf", width = ceiling(sqrt(length(plot_set)))*2.5, height = ceiling(sqrt(length(plot_set)))*2.5,
            units = "in", dpi = 900, limitsize = FALSE)
+    }
 }
 
 plot_none <- function(input_data, rm0, trq, instr_type)
@@ -299,7 +300,7 @@ plot_condition <- function(input_data, rm0, trq, instr_type)
       if(!is.null(trq)) {
         if(length(trq)!=1) {
           stop("'trim_quantile' should be a singlet numeric value")
-        } 
+        }
         trim_q <- as.numeric(quantile(x = input_data[,1], probs = trq))
         input_data <- input_data[-which(input_data[,1]>trim_q),]
       }
