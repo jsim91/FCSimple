@@ -3,7 +3,7 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
                               algorithm = c("leiden","flowsom","louvain","phenograph","git"),
                               Rcolorbrewer_palette = "RdYlBu", # must be a colorbrewer palette that's 11 long such as Spectral or RdYlBu
                               dot_size = 1, overlay_heatmap_numbers = TRUE, paired_test = FALSE, 
-                              p_text_size = 5, paired_lined_stroke = 0.1)
+                              p_text_size = 5, paired_line_stroke = 0.1, paired_line_color = "black")
 {
   require(ggplot2)
   require(ggpubr)
@@ -77,7 +77,7 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
                         size_of_dots = dot_size, cell_type_denom = denominator_cell_type,
                         heatmap_overlay_values = overlay_heatmap_numbers, fm = force_max,
                         abundance_alg = algorithm, pair_test = paired_test, 
-                        pts = p_text_size, pls = paired_lined_stroke) {
+                        pts = p_text_size, pls = paired_line_stroke, plc = paired_line_color) {
 
     # testing #
     # abundance_alg <- algorithm
