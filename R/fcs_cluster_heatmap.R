@@ -83,6 +83,7 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
                                                       grid_width=unit(0.6,"cm"),title_position="topleft",
                                                       labels_gp=gpar(fontsize=11),title_gp=gpar(fontsize=11)),
                             row_names_gp=gpar(fontsize=13,fontface="bold"),column_names_gp=gpar(fontsize=12,fontface="bold"),
+                            rect_gp = gpar(lwd = 0.4, col = "black"), border = "black",
                             cluster_columns = ifelse(cluster_col,TRUE,FALSE), cluster_rows = ifelse(cluster_row,TRUE,FALSE),
                             row_gap=unit(1,"mm"),column_gap=unit(1,"mm"),row_dend_gp=gpar(lwd=1.2),row_dend_width=unit(1,"cm"),
                             column_dend_gp = gpar(lwd=1.2), column_dend_height = unit(1,"cm")) +
