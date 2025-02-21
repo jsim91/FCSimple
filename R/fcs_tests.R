@@ -101,7 +101,7 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
     plt <- ggplot(data = plot_input, mapping = aes(x = compare_group, y = frequency, color = compare_group)) +
       geom_boxplot(fill = "#bfbfbf", lwd = 0.5, alpha = 0.4, width = 0.4)
     if(pair_test) {
-      plt <- plt + geom_line(mapping = aes(group = group), color = "black", stroke = paired_lined_stroke) +
+      plt <- plt + geom_line(mapping = aes(group = group), color = "black", linewidth = paired_lined_stroke) +
         geom_point(mapping = aes(fill = compare_group), pch = 21, size = size_of_dots*3, color = "black") +
         stat_compare_means(method = "wilcox", comparisons = compare_these, size = pts, paired = TRUE)
     } else {
