@@ -2,7 +2,8 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
                               abundance = NA, heatmap_matrix = NA, force_max = FALSE,
                               algorithm = c("leiden","flowsom","louvain","phenograph","git"),
                               Rcolorbrewer_palette = "RdYlBu", # must be a colorbrewer palette that's 11 long such as Spectral or RdYlBu
-                              dot_size = 1, overlay_heatmap_numbers = TRUE, paired_test = FALSE)
+                              dot_size = 1, overlay_heatmap_numbers = TRUE, paired_test = FALSE, 
+                              p_text_size = 5, paired_lined_stroke = 0.1)
 {
   require(ggplot2)
   require(ggpubr)
@@ -75,7 +76,8 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
                         backmat = hm_tiles, use_palette = Rcolorbrewer_palette,
                         size_of_dots = dot_size, cell_type_denom = denominator_cell_type,
                         heatmap_overlay_values = overlay_heatmap_numbers, fm = force_max,
-                        abundance_alg = algorithm, pair_test = paired_test) {
+                        abundance_alg = algorithm, pair_test = paired_test, 
+                        pts = p_text_size, pls = paired_lined_stroke) {
 
     # testing #
     # abundance_alg <- algorithm
@@ -99,14 +101,14 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
     plt <- ggplot(data = plot_input, mapping = aes(x = compare_group, y = frequency, color = compare_group)) +
       geom_boxplot(fill = "#bfbfbf", lwd = 0.5, alpha = 0.4, width = 0.4)
     if(pair_test) {
-      plt <- plt + geom_line(mapping = aes(group = group), color = "black") +
+      plt <- plt + geom_line(mapping = aes(group = group), color = "black", stroke = paired_lined_stroke) +
         geom_point(mapping = aes(fill = compare_group), pch = 21, size = size_of_dots*3, color = "black") +
-        stat_compare_means(method = "wilcox", comparisons = compare_these, size = 4.5, paired = TRUE)
+        stat_compare_means(method = "wilcox", comparisons = compare_these, size = pts, paired = TRUE)
     } else {
       plt <- plt + geom_dotplot(data = plot_input, aes(fill = compare_group), color = "black", stroke = 1,
                                 binaxis = "y", stackdir = "center", position = "dodge", binpositions="all",
                                 dotsize = size_of_dots) +
-        stat_compare_means(method = "wilcox", comparisons = compare_these, size = 4.5, paired = FALSE)
+        stat_compare_means(method = "wilcox", comparisons = compare_these, size = pts, paired = FALSE)
     }
     plt <- plt + scale_y_continuous(expand = expansion(mult = c(0.05, 0.15))) +
       labs(y = paste0("% of ",cell_type_denom), title = paste0("cluster ",capture_cluster)) +
