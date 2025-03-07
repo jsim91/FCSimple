@@ -1,5 +1,5 @@
 fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparisons, denominator_cell_type,
-                              abundance = NA, heatmap_matrix = NA, force_max = FALSE,
+                              x_order = NA, abundance = NA, heatmap_matrix = NA, force_max = FALSE,
                               algorithm = c("leiden","flowsom","louvain","phenograph","git"),
                               Rcolorbrewer_palette = "RdYlBu", # must be a colorbrewer palette that's 11 long such as Spectral or RdYlBu
                               dot_size = 1, overlay_heatmap_numbers = TRUE, paired_test = FALSE, 
@@ -76,7 +76,7 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
                         backmat = hm_tiles, use_palette = Rcolorbrewer_palette,
                         size_of_dots = dot_size, cell_type_denom = denominator_cell_type,
                         heatmap_overlay_values = overlay_heatmap_numbers, fm = force_max,
-                        abundance_alg = algorithm, pair_test = paired_test, 
+                        abundance_alg = algorithm, pair_test = paired_test, xord = x_order, 
                         pts = p_text_size, pls = paired_line_stroke, plc = paired_line_color) {
 
     # testing #
@@ -91,6 +91,12 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
 
     plot_input <- input[[1]]
     hm_input <- input[[2]]
+
+    if(!is.na(xord)) {
+      plot_input$compare_group <- factor(plot_input$compare_group, levels = xord)
+    } else {
+      plot_input$compare_group <- factor(plot_input$compare_group)
+    }
 
     hm_pal <- rev(RColorBrewer::brewer.pal(11, use_palette))
     color.map.fun = circlize::colorRamp2(seq(0,1, l = n <- 100), colorRampPalette(hm_pal)(n))
