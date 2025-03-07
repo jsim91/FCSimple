@@ -3,7 +3,8 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
                               algorithm = c("leiden","flowsom","louvain","phenograph","git"),
                               Rcolorbrewer_palette = "RdYlBu", # must be a colorbrewer palette that's 11 long such as Spectral or RdYlBu
                               dot_size = 1, overlay_heatmap_numbers = TRUE, paired_test = FALSE, 
-                              p_text_size = 5, paired_line_stroke = 0.1, paired_line_color = "black")
+                              p_text_size = 5, paired_line_stroke = 0.1, paired_line_color = "black", 
+                              heatmap_fontsize = 8)
 {
   require(ggplot2)
   require(ggpubr)
@@ -73,7 +74,7 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
   }
 
   test_plot <- function(input, dplot_col = plot_cols, compare_these = my_compare,
-                        backmat = hm_tiles, use_palette = Rcolorbrewer_palette,
+                        backmat = hm_tiles, use_palette = Rcolorbrewer_palette, hmfs = heatmap_fontsize, 
                         size_of_dots = dot_size, cell_type_denom = denominator_cell_type,
                         heatmap_overlay_values = overlay_heatmap_numbers, fm = force_max,
                         abundance_alg = algorithm, pair_test = paired_test, xord = x_order, 
@@ -138,7 +139,7 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
       hm_sub <- ComplexHeatmap::Heatmap(matrix = hm_input, col = color.map.fun, cluster_columns = FALSE,
                                         show_heatmap_legend = FALSE,
                                         cell_fun = function(j, i, x, y, width, height, fill) {
-                                          grid.text(sprintf("%.2f", hm_input[i, j]), x, y, gp = gpar(fontsize = 8))
+                                          grid.text(sprintf("%.2f", hm_input[i, j]), x, y, gp = gpar(fontsize = hmfs))
                                         })
     } else {
       hm_sub <- ComplexHeatmap::Heatmap(matrix = hm_input, col = color.map.fun, cluster_columns = FALSE,
