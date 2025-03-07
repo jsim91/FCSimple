@@ -76,9 +76,6 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
       }
       return(mypl)
     }
-    if(!is.null(plot_groups)) {
-      plt_input <- plt_input[which(plt_input),]
-    }
     if(is.na(split_factor[1])) {
       plt_reduction <- pl_fun(plin = plt_input)
     } else {
