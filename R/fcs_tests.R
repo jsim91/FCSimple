@@ -1,5 +1,5 @@
 fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparisons, denominator_cell_type,
-                              x_order = NA, abundance = NA, heatmap_matrix = NA, force_max = FALSE,
+                              x_order = NULL, abundance = NA, heatmap_matrix = NA, force_max = FALSE,
                               algorithm = c("leiden","flowsom","louvain","phenograph","git"),
                               Rcolorbrewer_palette = "RdYlBu", # must be a colorbrewer palette that's 11 long such as Spectral or RdYlBu
                               dot_size = 1, overlay_heatmap_numbers = TRUE, paired_test = FALSE, 
@@ -92,7 +92,7 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
     plot_input <- input[[1]]
     hm_input <- input[[2]]
 
-    if(!is.na(xord)) {
+    if(!is.null(xord)) {
       plot_input$compare_group <- factor(plot_input$compare_group, levels = xord)
     } else {
       plot_input$compare_group <- factor(plot_input$compare_group)
