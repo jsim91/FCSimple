@@ -9,6 +9,13 @@ Description: More about what it does (maybe more than one line)
 License: What license is it under?
 Encoding: UTF-8
 LazyData: true
-Depends: uwot, Rtsne, FNN, Matrix, igraph, circlize, grid, ggplot2, ggpubr, ggrastr, ggridges, dbscan, ggrepel, viridis, grid, gridExtra, RColorBrewer, shiny, shinythemes, dbscan, metR, cyCombine, harmony, outliers
+Imports:
+    uwot, Rtsne, FNN, Matrix, igraph, circlize, 
+    grid, ggplot2, ggpubr, ggrastr, ggridges, dbscan, 
+    ggrepel, viridis, gridExtra, RColorBrewer, shiny, 
+    shinythemes, metR, harmony, outliers
+Suggests:
+    BiocStyle, knitr, rmarkdown
+Remotes:
+    biosurf/cyCombine
 VignetteBuilder: knitr
-Suggests: BiocStyle, knitr, rmarkdown
