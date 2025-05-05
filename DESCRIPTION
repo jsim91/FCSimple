@@ -13,9 +13,10 @@ Imports:
     uwot, Rtsne, FNN, Matrix, igraph, circlize, 
     grid, ggplot2, ggpubr, ggrastr, ggridges, dbscan, 
     ggrepel, viridis, gridExtra, RColorBrewer, shiny, 
-    shinythemes, metR, harmony, outliers
+    shinythemes, metR, harmony, outliers, future.apply
 Suggests:
     BiocStyle, knitr, rmarkdown
 Remotes:
     biosurf/cyCombine
+    Bioconductor/ComplexHeatmap
 VignetteBuilder: knitr
