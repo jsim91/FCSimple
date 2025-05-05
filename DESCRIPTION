@@ -20,4 +20,5 @@ Suggests:
 Remotes:
     biosurf/cyCombine
     Bioconductor/ComplexHeatmap
+    Bioconductor/CATALYST
 VignetteBuilder: knitr
