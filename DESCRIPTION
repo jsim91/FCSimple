@@ -13,7 +13,8 @@ Imports:
     uwot, Rtsne, FNN, Matrix, igraph, circlize, 
     grid, ggplot2, ggpubr, ggrastr, ggridges, dbscan, 
     ggrepel, viridis, gridExtra, RColorBrewer, shiny, 
-    shinythemes, metR, harmony, outliers, future.apply
+    shinythemes, metR, harmony, outliers, future.apply, 
+    RANN
 Suggests:
     BiocStyle, knitr, rmarkdown
 Remotes:
