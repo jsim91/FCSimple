@@ -21,4 +21,5 @@ Remotes:
     biosurf/cyCombine
     Bioconductor/ComplexHeatmap
     Bioconductor/CATALYST
+    Bioconductor/flowWorkspace
 VignetteBuilder: knitr
