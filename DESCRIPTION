@@ -18,8 +18,8 @@ Imports:
 Suggests:
     BiocStyle, knitr, rmarkdown
 Remotes:
-    biosurf/cyCombine
-    Bioconductor/ComplexHeatmap
-    Bioconductor/CATALYST
-    Bioconductor/flowWorkspace
+    biosurf/cyCombine, 
+    Bioconductor/ComplexHeatmap, 
+    Bioconductor/CATALYST, 
+    Bioconductor/flowWorkspace, 
 VignetteBuilder: knitr
