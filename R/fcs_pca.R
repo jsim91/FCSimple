@@ -16,7 +16,7 @@ fcs_pca <- function(fcs_join_obj, pca_method = c("prcomp"), num_pc = NULL)
     set.seed(123) # not really needed
     PCA <- prcomp(x = obj_data)
     reset_seed <- sample(1:5, size = 1)
-    rm(set.seed); rm(reset_seed)
+    rm(reset_seed)
     if(!is.null(num_pc)) {
       if(num_pc<1) {
         stop("'num_pc must be either NULL or a whole number greater than 0")
