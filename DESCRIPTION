@@ -14,7 +14,7 @@ Imports:
     grid, ggplot2, ggpubr, ggrastr, ggridges, dbscan, 
     ggrepel, viridis, gridExtra, RColorBrewer, shiny, 
     shinythemes, metR, harmony, outliers, future.apply, 
-    RANN, shadowtext
+    RANN, shadowtext, stringr
 Suggests:
     BiocStyle, knitr, rmarkdown
 Remotes:
