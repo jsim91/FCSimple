@@ -58,7 +58,7 @@ fcs_pca <- function(fcs_join_obj, pca_method = c("prcomp"), num_pc = NULL)
           axis.text = element_text(size = 14))
 
   print("storing PCA information in $pca")
-  fcs_join_obj[['pca']] <- list(pca_data = pca_data, list(PCs = npc, cumulative_variance = cvar, pca_method = pca_method, elbow_plot = cvar_plt))
+  fcs_join_obj[['pca']] <- list(pca_data = pc_data, list(PCs = npc, cumulative_variance = cvar, pca_method = pca_method, elbow_plot = cvar_plt))
   if(!'object_history' %in% names(fcs_join_obj)) {
     print("Consider running FCSimple::fcs_update() on the object.")
   } else {
