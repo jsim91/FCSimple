@@ -14,7 +14,7 @@ fcs_pca <- function(fcs_join_obj, pca_method = c("prcomp"), num_pc = NULL)
   }
   if(pca_method[1]=="prcomp") {
     set.seed(123) # not really needed
-    PCA <- prcomp(x = obj_data$data)
+    PCA <- prcomp(x = obj_data)
     reset_seed <- sample(1:5, size = 1)
     rm(set.seed); rm(reset_seed)
     if(!is.null(num_pc)) {
