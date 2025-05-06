@@ -5,16 +5,16 @@ fcs_pca <- function(fcs_join_obj, pca_method = c("prcomp"), num_pc = NULL)
 
   if('batch_correction' %in% names(fcs_join_obj)) {
     cordat <- TRUE
-    cl_data <- fcs_join_obj[['batch_correction']][['data']]
+    obj_data <- fcs_join_obj[['batch_correction']][['data']]
     print("batch_correction found in fcs_join_obj list. Using fcs_join_obj[['batch_correction']][['data']] for clustering.")
   } else {
     cordat <- FALSE
-    cl_data <- fcs_join_obj[["data"]]
+    obj_data <- fcs_join_obj[["data"]]
     print("batch_correction not found in fcs_join_obj. Using fcs_join_obj[['data']] for clustering.")
   }
   if(pca_method[1]=="prcomp") {
     set.seed(123) # not really needed
-    PCA <- prcomp(x = obj$data)
+    PCA <- prcomp(x = obj_data$data)
     reset_seed <- sample(1:5, size = 1)
     rm(set.seed); rm(reset_seed)
     if(!is.null(num_pc)) {
