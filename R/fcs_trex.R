@@ -442,8 +442,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
            path = outdir, width = ncol(backend.matrix)/2 + 1,
            height = nrow(backend.matrix)/2 + 1.5, units = "in", dpi = 900, limitsize = FALSE)
     if(use_MEM) {
-      # require(cytoMEM)
-      require(MEM)
+      require(cytoMEM)
       require(stringr)
       mem_input <- cbind(heatmap_data,data.frame(cluster = factor(clustered_data$cluster)))
       mem_input$cluster <- as.numeric(mem_input$cluster)
@@ -452,7 +451,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
       match_clusters <- match_clusters[-which(duplicated(match_clusters$descriptive_cluster)),]
       clus_order <- order(match_clusters$numeric_cluster)
 
-      mcalc <- MEM::MEM(exp_data = mem_input, transform=FALSE, choose.markers=FALSE,
+      mcalc <- cytoMEM::MEM(exp_data = mem_input, transform=FALSE, choose.markers=FALSE,
                         rename.markers=FALSE, choose.ref=FALSE)
 
       check_mem <- sapply(mcalc,function(x) return(nrow(x[[1]])))
@@ -466,7 +465,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
         }
       }
 
-      MEM::build.heatmaps(mcalc, cluster.MEM = "none", cluster.medians = "none",
+      cytoMEM::build_heatmaps(mcalc, cluster.MEM = "none", cluster.medians = "none",
                           display.thresh = 1,  output.files = TRUE, labels = FALSE,
                           only.MEMheatmap = TRUE)
       mem_outs <- list.files(path = file.path(getwd(),"output files"), full.names = TRUE)
