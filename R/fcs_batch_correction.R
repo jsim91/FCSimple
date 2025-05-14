@@ -2,7 +2,7 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
                                  correction_markers = "all", batch_source_regex = "[0-9]+\\-[A-Za-z]+\\-[0-9]+",
                                  cyCombine_SOMx = 8, cyCombine_SOMy = 8, cyCombine_detect_effects = FALSE,
                                  harmony_cores = 1, harmony_iterations = 10, harmony_covars = c("batch","sample"),
-                                 harmony_lambda = 1)
+                                 harmony_lambda = 1, harmony_sample_element = 'source')
 {
   # larger harmony_lambda (ridge regression penalty) protect against over correction
   use_rep <- tolower(use_rep)
@@ -81,7 +81,7 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
     cmeth <- "harmony"
     harm_in <- as.matrix(rep_data)
     print(paste0("batches found for harmony correction: ", paste0(unique(fcs_join_obj[["run_date"]]), collapse = ", ")))
-    harm_meta <- data.frame(cell_id = 1:nrow(harm_in), batch = fcs_join_obj[["run_date"]], sample = fcs_join_obj[["source"]])
+    harm_meta <- data.frame(cell_id = 1:nrow(harm_in), batch = fcs_join_obj[["run_date"]], sample = fcs_join_obj[[harmony_sample_element]])
     harm_out <- harmony::RunHarmony(data_mat = harm_in, meta_data = harm_meta, vars_use = harmony_covars, ncores = harmony_cores,
                                     max_iter = harmony_iterations, lambda = harmony_lambda)
     fcs_join_obj[['batch_correction']] <- list(data = harm_out,
