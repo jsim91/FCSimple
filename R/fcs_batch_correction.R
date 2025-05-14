@@ -30,7 +30,7 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
     # exp_data$samples <- fcs_join_obj$source
     exp_data$samples <- as.numeric(factor(fcs_join_obj$source))
     # exp_data$batch <- stringr::str_extract(string = fcs_join_obj$source, pattern = batch_source_regex)
-    exp_data$batch <- as.numeric(factor(stringr::str_extract(string = fcs_join_obj$source, pattern = batch_source_regex)))
+    exp_data$batch <- as.numeric(factor(fcs_join_obj[["run_date"]]))
     print(paste0(length(unique(exp_data$batch))," batches found for correction: ",paste0(unique(exp_data$batch),collapse = ", ")))
     if(cyCombine_detect_effects) {
       cyc_outdir1 <- paste0(getwd(),"/dbe_pre_correction")
