@@ -137,7 +137,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
           legend.position = "bottom")
 
   ggsave(filename = paste0(file_output_prefix,ifelse(tolower(reduction)=="umap","UMAP_","tSNE_trex_"),strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"), plot = pl,
-         device = "pdf", path = outdir, width = 10, height = 10, units = "in", dpi = 900)
+         device = "pdf", path = outdir, width = 10, height = 10, units = "in", dpi = 300)
 
   if(tolower(reduction)=="umap") {
     map <- join_data[,c("UMAP1","UMAP2","set")]
@@ -237,7 +237,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
 
   ggsave(filename = paste0(file_output_prefix,ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_by_category_",
                            strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"), plot = pl_bins,
-         device = "pdf", path = outdir, width = 10, height = 10, units = "in", dpi = 900)
+         device = "pdf", path = outdir, width = 10, height = 10, units = "in", dpi = 300)
 
   get_high <- which(row_mean>neighbor_significance_threshold)
   get_low <- which(row_mean<(1-neighbor_significance_threshold))
@@ -302,7 +302,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
 
   ggsave(filename = paste0(file_output_prefix,ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_significant_",
                            strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"), plot = pl_hl,
-         device = "pdf", path = outdir, width = 10, height = 10, units = "in", dpi = 900)
+         device = "pdf", path = outdir, width = 10, height = 10, units = "in", dpi = 300)
 
   if(length(which(total_data$bin==paste0(set1_label," - ",neighbor_significance_threshold * 100,"%")))==0) {
     set1_spots <- total_data[1,]
@@ -440,7 +440,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
                              "_trex_significant_cluster_heatmap_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
            plot = grid::grid.grabExpr(draw(heatmap_output)), device = "pdf",
            path = outdir, width = ncol(backend.matrix)/2 + 1,
-           height = nrow(backend.matrix)/2 + 1.5, units = "in", dpi = 900, limitsize = FALSE)
+           height = nrow(backend.matrix)/2 + 1.5, units = "in", dpi = 300, limitsize = FALSE)
     if(use_MEM) {
       require(cytoMEM)
       require(stringr)
@@ -524,7 +524,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
       xlim(range(plot_data$tSNE1)) + ylim(range(plot_data$tSNE2))
   }
   pl_sig_lab <- pl_sig_lab +
-    guides(color = guide_legend(override.aes = list(size = 5, alpha = 1))) +
+    # guides(color = guide_legend(override.aes = list(size = 5, alpha = 1))) +
     annotate("text_repel", x = xclus, y = yclus, label = names(xclus), size = 5) +
     theme_void() +
     theme(legend.title = element_blank(),
@@ -532,12 +532,19 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
           axis.text = element_blank(),
           legend.text = element_text(size = 14),
           legend.position = "none")
+  pl_sig_no_lab <- pl_sig_lab + 
+    theme_void() +
+    theme(legend.title = element_blank(),
+          axis.title = element_blank(),
+          axis.text = element_blank(),
+          legend.text = element_text(size = 14),
+          legend.position = "none")
 
-  listed_plots <- mget(c("pl_lab","pl_sig_lab"))
+  listed_plots <- mget(c("pl_lab","pl_sig_lab","pl_sig_no_lab"))
   ggsave(filename = paste0(ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_significant_labeled_",
                            strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
-         plot = gridExtra::arrangeGrob(grobs = listed_plots, nrow=2, ncol=1),
-         device = "pdf", path = outdir, width = 10, height = 20, units = "in", dpi = 900)
+         plot = gridExtra::arrangeGrob(grobs = listed_plots, nrow=3, ncol=1),
+         device = "pdf", path = outdir, width = 10, height = 30, units = "in", dpi = 300)
 
   if(plot_intensities) {
     intens_list <- vector("list", length = number_of_cols); names(intens_list) <- colnames(join_data)[1:number_of_cols]
@@ -610,6 +617,6 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
     ggsave(filename = paste0(file_output_prefix,ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_heatmaps_",
                              strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
            plot = gridExtra::marrangeGrob(grobs = arranged_list, nrow=1, ncol=1, top = ""),
-           device = "pdf", path = outdir, width = 12, height = 12, units = "in", dpi = 900)
+           device = "pdf", path = outdir, width = 12, height = 12, units = "in", dpi = 300)
   }
 }
