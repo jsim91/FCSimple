@@ -523,8 +523,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
       geom_point_rast(pch = 19, size = 0.7, alpha = 0.5) +
       xlim(range(plot_data$tSNE1)) + ylim(range(plot_data$tSNE2))
   }
-  pl_sig_lab <- pl_sig_lab +
-    # guides(color = guide_legend(override.aes = list(size = 5, alpha = 1))) +
+  pl_sig_1 <- pl_sig_lab + 
     annotate("text_repel", x = xclus, y = yclus, label = names(xclus), size = 5) +
     theme_void() +
     theme(legend.title = element_blank(),
@@ -532,7 +531,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
           axis.text = element_blank(),
           legend.text = element_text(size = 14),
           legend.position = "none")
-  pl_sig_no_lab <- pl_sig_lab + 
+  pl_sig_2 <- pl_sig_lab + 
     theme_void() +
     theme(legend.title = element_blank(),
           axis.title = element_blank(),
@@ -540,7 +539,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
           legend.text = element_text(size = 14),
           legend.position = "none")
 
-  listed_plots <- mget(c("pl_lab","pl_sig_lab","pl_sig_no_lab"))
+  listed_plots <- mget(c("pl_lab","pl_sig_1","pl_sig_2"))
   ggsave(filename = paste0(ifelse(tolower(reduction)=="umap","UMAP","tSNE"),"_trex_significant_labeled_",
                            strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf"),
          plot = gridExtra::arrangeGrob(grobs = listed_plots, nrow=3, ncol=1),
