@@ -260,14 +260,14 @@ fcs_plot_quadrants <- function(df,
   tot <- length(x)
   pct_ul <- sum(x < xcut & y >= ycut)/tot * 100
   pct_ur <- sum(x >= xcut & y >= ycut)/tot * 100
-  pct_ll <- sum(x < xcut & y <  ycut)/tot * 100
   pct_lr <- sum(x >= xcut & y <  ycut)/tot * 100
-  labs   <- sprintf("%.1f%%", c(pct_ul, pct_ur, pct_ll, pct_lr))
+  pct_ll <- sum(x < xcut & y <  ycut)/tot * 100
+  labs   <- sprintf("%.1f%%", c(pct_ul, pct_ur, pct_lr, pct_ll))
   
-  pos_df <- data.frame(x = c(min(x), max(x), min(x), max(x)),
+  pos_df <- data.frame(x = c(min(x), max(x), max(x), min(x)),
                        y = c(max(y), max(y), min(y), min(y)),
-                       label = labs,
-                       hjust = c(0, 1, 0, 1),
+                       label = paste0(paste0('Q',1:4,'\n'),labs),
+                       hjust = c(0, 1, 1, 0),
                        vjust = c(1, 1, 0, 0))
   capture_cnames <- colnames(df)
   colnames(df) <- c('xcol','ycol')
