@@ -1,3 +1,94 @@
+fcs_gate_singlets <- function(df,
+                          a = "SSC-A",
+                          h = "SSC-H",
+                          method = c("lm","rlm"),
+                          trim_frac = 0.01,   # drop extreme 1% when fitting
+                          curvature_eps = 0.001
+) {
+  require(MASS)
+  
+  method <- match.arg(method)
+  x <- df[,a];  y <- df[,h]
+  
+  # compute the quantile bounds once
+  x_lo <- quantile(x, trim_frac)
+  x_hi <- quantile(x, 1 - trim_frac)
+  y_lo <- quantile(y, trim_frac)
+  y_hi <- quantile(y, 1 - trim_frac)
+  
+  # subset to the central X% in both dims for model fitting
+  idx <- which(
+    (x >= x_lo & x <= x_hi) &
+      (y >= y_lo & y <= y_hi)
+  )
+  
+  # fit the line
+  fit <- switch(method,
+                lm  = lm(y ~ x, data = df[idx,]),
+                rlm = rlm(y ~ x, data = df[idx,])
+  )
+  
+  # compute raw residuals
+  res <- resid(fit)  # y - ŷ
+  rev_res_d <- density(-res)
+  # cut the residuals
+  cuts <- get_em_cutpoint(x = -res, general_method = 'flex', curvature_eps = curvature_eps)
+  
+  cutpoint <- -cuts$cut
+  
+  keep <- res >= cutpoint
+  fraction_keep <- (sum(keep)/nrow(df))*100
+  if(fraction_keep<90) {
+    warning(print(paste0('percent of events in singlet gate: ',as.character(round(fraction_keep,1)),'%. Consider adjusting curvature_eps')))
+  } else {
+    print(paste0('percent of events in singlet gate: ',as.character(round(fraction_keep,1)),'%'))
+  }
+  return(df[keep,])
+}
+
+fcs_plot_singlets <- function(df,
+                          alpha = 0.25,
+                          psize = 0.6,
+                          n = 100,
+                          bins = 12) {
+  require(ggplot2)
+  require(scales)
+  
+  if(ncol(df)!=2) {
+    stop("'df' should have exactly two columns")
+  }
+  downsample_size <- 100000
+  if(nrow(df)>downsample_size) {
+    set.seed(123); df <- df[sample(1:nrow(df),downsample_size,replace=F),]
+  }
+  x <- df[,1];  y <- df[,2]
+  
+  capture_cnames <- colnames(df)
+  colnames(df) <- c('xcol','ycol')
+  
+  h <- c(diff(range(df[,1]))/30,
+         diff(range(df[,2]))/30)
+  
+  pl <- ggplot(df, aes(x = xcol, y = ycol)) + 
+    geom_point(color = "black", alpha = alpha, size = psize)
+  if(bins>0) {
+    pl <- pl + 
+      stat_density_2d(geom = "contour",
+                      colour = "cyan",
+                      h = h,
+                      n = n,
+                      bins = bins,
+                      size = 0.75)
+  }
+    pl <- pl + 
+    theme_bw() +
+    labs(x = capture_cnames[1], y = capture_cnames[2]) + 
+    theme(axis.title = element_text(size = 20, face = 'bold'), 
+          axis.text = element_text(size = 14), 
+          plot.title = element_text(size = 24, hjust = 0.5, face = 'bold'))
+  return(pl)
+}
+
 get_em_cutpoint <- function(x, 
                             em_method = c('mclust','mix'),
                             general_method = NULL,
@@ -151,7 +242,7 @@ plot_gmm <- function(x, m2, cut=NULL) {
   }
 }
 
-plot_quadrants <- function(df,
+fcs_plot_quadrants <- function(df,
                            xcut, 
                            ycut,
                            alpha = 0.25,
