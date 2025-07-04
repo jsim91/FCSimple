@@ -1,4 +1,5 @@
 todo:
+- ensure tail gate works when tail < prominent peak
 - hierarchy setup and support
 - ensure subsetting of gated regions is derived correctly from hiearchy
 - ensure cells gate works on other flow projects where the distribution may be slightly different
