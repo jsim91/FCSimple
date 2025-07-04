@@ -1,3 +1,26 @@
+fcs_gate_cells <- function(df, 
+                           side_a="SSC-A",
+                           forward_a="FSC-A"
+) {
+  # check that area features exist in df
+  if(mean(c(side_a,forward_a) %in% colnames(df))!=1) {
+    stop("df columns must include both 'side_a' and 'forward_a'")
+  }
+  # find gaussians on area parameters
+  mcl <- Mclust(data = df[,c('SSC-A','FSC-A')], modelNames = 'VVV')
+  # get gaussian centers (means)
+  ctrs <- as.data.frame(t(mcl[["parameters"]][["mean"]]))
+  # euclidean distance from origin
+  ctrs$origin_dist <- apply(X = ctrs, MARGIN = 1, FUN = function(arg) return(sqrt(arg[1]^2 + arg[2]^2)))
+  # keep centers that are NOT the nearest and farthest from the origin
+  # closest assumes debris/dead cells; farthest assumes doublets
+  keep_ctrs <- (1:nrow(ctrs))[-c(which.min(ctrs$origin_dist), which.max(ctrs$origin_dist))]
+  # get cells associated with cell gaussians
+  keep_points <- which(mcl$classification %in% keep_ctrs)
+  # subset and return
+  return(df[keep_points,])
+}
+
 fcs_gate_singlets <- function(df,
                           a = "SSC-A",
                           h = "SSC-H",
