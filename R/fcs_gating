@@ -328,6 +328,51 @@ fcs_plot_gmm <- function(x, m2, cut=NULL) {
   }
 }
 
+plot_gmm_fit <- function(x, fit, cut = NULL, linewidth = 3) {
+  d <- density(x, n = 512)
+  plot(d, main = "Data + Fitted GMM", lwd = linewidth, col = "black")
+  
+  if (!is.null(fit$parameters)) {
+    # an Mclust object
+    p  <- fit$parameters$pro
+    mu <- fit$parameters$mean
+    sd <- sqrt(fit$parameters$variance$sigmasq)
+  } else if (! is.null(fit$lambda)) {
+    # a mixtools::normalmixEM object
+    p  <- fit$lambda
+    mu <- fit$mu
+    # note: fit$sigma is already the standard deviations
+    sd <- fit$sigma
+  } else {
+    stop("plot_gmm: unrecognized model object. ",
+         "Pass an Mclust or normalmixEM fit.")
+  }
+  
+  xs <- seq(min(x), max(x), length = 500)
+  y1 <- p[1] * dnorm(xs, mu[1], sd[1])
+  y2 <- p[2] * dnorm(xs, mu[2], sd[2])
+  lines(xs, y1,      col = "firebrick", lwd = linewidth, lty = 2)
+  lines(xs, y2,      col = "steelblue", lwd = linewidth, lty = 2)
+  lines(xs, y1 + y2, col = "darkgreen", lwd = linewidth, lty = 3)
+  
+  if (!is.null(cut)) {
+    abline(v = cut, col = "purple", lwd = linewidth, lty = 4)
+    legend("topright",
+           legend = c("KDE", "Comp1", "Comp2", "Mixture", "Cut"),
+           col    = c("black","firebrick","steelblue","darkgreen","purple"),
+           lty    = c(1,2,2,3,4),
+           lwd    = rep(linewidth,5),
+           bty    = "n")
+  } else {
+    legend("topright",
+           legend = c("KDE", "Comp1", "Comp2", "Mixture"),
+           col    = c("black","firebrick","steelblue","darkgreen"),
+           lty    = c(1,2,2,3),
+           lwd    = rep(linewidth,4),
+           bty    = "n")
+  }
+}
+
 fcs_plot_quadrants <- function(df,
                            xcut, 
                            ycut,
