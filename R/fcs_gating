@@ -160,7 +160,7 @@ fcs_plot_singlets <- function(df,
   if(bins>0) {
     pl <- pl + 
       stat_density_2d(geom = "contour",
-                      colour = "cyan",
+                      color = "cyan",
                       h = h,
                       n = n,
                       bins = bins,
@@ -409,25 +409,25 @@ fcs_plot_quadrants <- function(df,
   pl <- ggplot(df, aes(x = xcol, y = ycol)) + 
     geom_point(color = "black", alpha = alpha, size = psize) + 
     stat_density_2d(geom = "contour",
-                    colour = "cyan",
+                    color = "cyan",
                     h = h,
                     n = n,
                     bins = bins,
                     size = 0.75) + 
     geom_vline(xintercept = xcut,
                linetype = 6,
-               colour = "purple",
+               color = "purple",
                size = 1.2) +
     geom_hline(yintercept = ycut,
                linetype = 6,
-               colour = "purple",
+               color = "purple",
                size = 1.2) + 
     geom_text(data = pos_df,
               aes(x = x, y = y, label = label, hjust = hjust, vjust = vjust),
               inherit.aes = FALSE,
               size = 6,
               fontface = 'bold', 
-              colour  = "black") + 
+              color  = "black") + 
     theme_bw() +
     labs(x = capture_cnames[1], y = capture_cnames[2]) + 
     theme(axis.title = element_text(size = 20, face = 'bold'), 
