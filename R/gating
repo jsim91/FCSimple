@@ -1,0 +1,215 @@
+get_em_cutpoint <- function(x, 
+                            em_method = c('mclust','mix'),
+                            general_method = NULL,
+                            post.thresh = 0.5,
+                            prom_tol = 0.05,
+                            flex_tail = 0.75,
+                            bw_adjust = 2,     
+                            n_grid = 512,   
+                            curvature_eps = 0.01, 
+                            return.model = TRUE) {
+  require(pracma)
+  require(mclust)
+  require(mixtools)
+  
+  em_method <- match.arg(em_method)
+  
+  # validate general_method
+  if (!is.null(general_method) && ! general_method %in% c('gmm','flex')) {
+    stop("'general_method' must be one of: 'gmm', 'flex', or NULL")
+  }
+  
+  # --- 1) GMM phase (either Mclust or mixtools) ---
+  if (is.null(general_method) || general_method=='gmm') {
+    
+    if (em_method=='mclust') {
+      # univariate GMM via mclust
+      fit <- tryCatch(
+        Mclust(x, G = 2, modelNames = 'V',
+               control = emControl(itmax=2000, tol=1e-8),
+               verbose = FALSE),
+        error = function(e) NULL
+      )
+      ok  <- !is.null(fit) && all(fit$parameters$pro > prom_tol)
+      
+      if (ok) {
+        pi1 <- fit$parameters$pro[1]
+        pi2 <- fit$parameters$pro[2]
+        mu1 <- fit$parameters$mean[1]
+        mu2 <- fit$parameters$mean[2]
+        sd1 <- sqrt(fit$parameters$variance$sigmasq[1])
+        sd2 <- sqrt(fit$parameters$variance$sigmasq[2])
+      }
+      
+    } else if (em_method=='mix') {
+      # univariate GMM via mixtools
+      lower_guess <- quantile(x, 0.05)
+      upper_guess <- quantile(x, 0.95)
+      fit <- tryCatch(
+        normalmixEM(x,
+                    k      = 2,
+                    mu     = c(lower_guess, upper_guess),
+                    sigma  = rep(sd(x),2),
+                    lambda = c(0.5,0.5)),
+        error = function(e) NULL
+      )
+      ok <- !is.null(fit) && all(fit$lambda > prom_tol)
+      
+      if (ok) {
+        pi1 <- fit$lambda[1]
+        pi2 <- fit$lambda[2]
+        mu1 <- fit$mu[1]
+        mu2 <- fit$mu[2]
+        sd1 <- fit$sigma[1]
+        sd2 <- fit$sigma[2]
+      }
+    }
+    
+    # if the GMM converged and proportions pass the threshold
+    if (ok) {
+      λ <- post.thresh/(1-post.thresh)
+      h <- function(z) pi1*dnorm(z,mu1,sd1) -
+        λ  *pi2*dnorm(z,mu2,sd2)
+      lo <- min(mu1, mu2)
+      hi <- max(mu1, mu2)
+      
+      cut_gmm <- tryCatch(
+        uniroot(h, lower=lo, upper=hi)$root,
+        error = function(e) NA
+      )
+      
+      if (!is.na(cut_gmm)) {
+        method_tag <- if (em_method=='mix') 
+          sprintf("mix-EM(τ=%.2g)", post.thresh)
+        else
+          sprintf("Mclust-GMM(τ=%.2g)", post.thresh)
+        res <- list(cut = cut_gmm, method = method_tag)
+        if (return.model) res$model <- fit
+        return(res)
+      }
+    }
+  }
+  
+  # --- 2) Flex‐point fallback ---
+  d   <- density(x, adjust = bw_adjust, n = n_grid)
+  xg  <- d$x;   yg <- d$y
+  dx  <- mean(diff(xg))
+  d2  <- c(NA, diff(yg,2)/dx^2, NA)
+  absd2 <- abs(d2)
+  
+  peaks <- findpeaks(-absd2, nups=1, ndowns=1)[,2]
+  qt    <- quantile(x, flex_tail)
+  cand  <- peaks[xg[peaks] > qt & absd2[peaks] < curvature_eps]
+  
+  cut_flex <- if (length(cand)==0) {
+    median(x)
+  } else {
+    xg[cand[which.min(abs(xg[cand] - qt))]]
+  }
+  
+  list(cut = cut_flex, method = "flex-fallback")
+}
+
+plot_gmm <- function(x, m2, cut=NULL) {
+  # raw data density
+  d <- density(x, n=512)
+  plot(d, main="Data + Fitted GMM", lwd=2, col="black")
+  
+  # extract params
+  p   <- m2$parameters$pro
+  mu  <- m2$parameters$mean
+  sd  <- sqrt(m2$parameters$variance$sigmasq)
+  
+  # x-axis for curves
+  xs <- seq(min(x), max(x), length=500)
+  
+  # component densities
+  y1 <- p[1] * dnorm(xs, mu[1], sd[1])
+  y2 <- p[2] * dnorm(xs, mu[2], sd[2])
+  
+  # overlay
+  lines(xs, y1, col="firebrick", lwd=2, lty=2)
+  lines(xs, y2, col="steelblue", lwd=2, lty=2)
+  lines(xs, y1+y2, col="darkgreen", lwd=2, lty=3)
+  
+  # optionally draw cut‐point
+  if(!is.null(cut)) {
+    abline(v=cut, col="purple", lwd=2, lty=4)
+    legend("topright",
+           legend=c("KDE","Comp1","Comp2","Mixture","Cut"),
+           col   =c("black","firebrick","steelblue","darkgreen","purple"),
+           lty   =c(1,2,2,3,4),
+           lwd   =c(2,2,2,2,2),
+           bty   ="n")
+  } else {
+    legend("topright",
+           legend=c("KDE","Comp1","Comp2","Mixture"),
+           col   =c("black","firebrick","steelblue","darkgreen"),
+           lty   =c(1,2,2,3),
+           lwd   =c(2,2,2,2),
+           bty   ="n")
+  }
+}
+
+plot_quadrants <- function(df,
+                           xcut, 
+                           ycut,
+                           alpha = 0.25,
+                           psize = 0.6,
+                           n = 100,
+                           bins = 12) {
+  require(ggplot2)
+  require(scales)
+  
+  downsample_size <- 100000
+  if(nrow(df)>downsample_size) {
+    set.seed(123); df <- df[sample(1:nrow(df),downsample_size,replace=F),]
+  }
+  x <- df[,1];  y <- df[,2]
+  tot <- length(x)
+  pct_ul <- sum(x < xcut & y >= ycut)/tot * 100
+  pct_ur <- sum(x >= xcut & y >= ycut)/tot * 100
+  pct_ll <- sum(x < xcut & y <  ycut)/tot * 100
+  pct_lr <- sum(x >= xcut & y <  ycut)/tot * 100
+  labs   <- sprintf("%.1f%%", c(pct_ul, pct_ur, pct_ll, pct_lr))
+  
+  pos_df <- data.frame(x = c(min(x), max(x), min(x), max(x)),
+                       y = c(max(y), max(y), min(y), min(y)),
+                       label = labs,
+                       hjust = c(0, 1, 0, 1),
+                       vjust = c(1, 1, 0, 0))
+  capture_cnames <- colnames(df)
+  colnames(df) <- c('xcol','ycol')
+  
+  h <- c(diff(range(df[,1]))/30,
+         diff(range(df[,2]))/30)
+  
+  pl <- ggplot(df, aes(x = xcol, y = ycol)) + 
+    geom_point(color = "black", alpha = alpha, size = psize) + 
+    stat_density_2d(geom = "contour",
+                    colour = "cyan",
+                    h = h,
+                    n = n,
+                    bins = bins,
+                    size = 0.75) + 
+    geom_vline(xintercept = xcut,
+               linetype = 6,
+               colour = "purple",
+               size = 1.2) +
+    geom_hline(yintercept = ycut,
+               linetype = 6,
+               colour = "purple",
+               size = 1.2) + 
+    geom_text(data = pos_df,
+              aes(x = x, y = y, label = label, hjust = hjust, vjust = vjust),
+              inherit.aes = FALSE,
+              size = 6,
+              fontface = 'bold', 
+              colour  = "black") + 
+    theme_bw() +
+    labs(x = capture_cnames[1], y = capture_cnames[2]) + 
+    theme(axis.title = element_text(size = 20, face = 'bold'), 
+          axis.text = element_text(size = 14), 
+          plot.title = element_text(size = 24, hjust = 0.5, face = 'bold'))
+  return(pl)
+}
