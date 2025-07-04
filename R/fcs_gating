@@ -1,24 +1,87 @@
-fcs_gate_cells <- function(df, 
-                           side_a="SSC-A",
-                           forward_a="FSC-A"
-) {
-  # check that area features exist in df
-  if(mean(c(side_a,forward_a) %in% colnames(df))!=1) {
-    stop("df columns must include both 'side_a' and 'forward_a'")
+fcs_gate_cells <- function(df,
+                           side_a = "SSC-A",
+                           forward_a = "FSC-A",
+                           drop_nearest = 1,
+                           drop_farthest = 1) {
+  require(mclust)
+  require(sp)
+  
+  if (!all(c(side_a, forward_a) %in% names(df))) {
+    stop("df must contain columns '", side_a, "' and '", forward_a, "'")
   }
-  # find gaussians on area parameters
-  mcl <- Mclust(data = df[,c('SSC-A','FSC-A')], modelNames = 'VVV')
-  # get gaussian centers (means)
-  ctrs <- as.data.frame(t(mcl[["parameters"]][["mean"]]))
-  # euclidean distance from origin
-  ctrs$origin_dist <- apply(X = ctrs, MARGIN = 1, FUN = function(arg) return(sqrt(arg[1]^2 + arg[2]^2)))
-  # keep centers that are NOT the nearest and farthest from the origin
-  # closest assumes debris/dead cells; farthest assumes doublets
-  keep_ctrs <- (1:nrow(ctrs))[-c(which.min(ctrs$origin_dist), which.max(ctrs$origin_dist))]
-  # get cells associated with cell gaussians
-  keep_points <- which(mcl$classification %in% keep_ctrs)
-  # subset and return
-  return(df[keep_points,])
+  
+  mcl <- Mclust(df[,c(side_a, forward_a)], modelNames = "VVV")
+  
+  ctrs <- as.data.frame(t(mcl$parameters$mean))
+  names(ctrs) <- c(side_a, forward_a)
+  ctrs$dist <- sqrt(ctrs[[side_a]]^2 + ctrs[[forward_a]]^2)
+  
+  G <- nrow(ctrs)
+  
+  if (drop_nearest + drop_farthest >= G) {
+    stop("drop_nearest + drop_farthest must be less than the total number of components (", G, ")")
+  }
+  if (drop_nearest < 0 || drop_farthest < 0) {
+    stop("drop_nearest and drop_farthest must be non-negative integers")
+  }
+  
+  ord <- order(ctrs$dist)
+  
+  to_drop <- integer(0)
+  if (drop_nearest  > 0) to_drop <- c(to_drop, ord[seq_len(drop_nearest)])
+  if (drop_farthest > 0) to_drop <- c(to_drop, ord[(G - drop_farthest + 1L):G])
+  
+  keep_clusters <- setdiff(seq_len(G), to_drop)
+  
+  cls <- mcl$classification
+  good_idx <- which(cls %in% keep_clusters)
+  good_df  <- df[good_idx, , drop=FALSE]
+  
+  hull_i <- chull(good_df[[side_a]], good_df[[forward_a]])
+  hull_pts <- good_df[hull_i, c(side_a, forward_a)]
+  
+  pip <- point.in.polygon(df[[side_a]], 
+                          df[[forward_a]],
+                          hull_pts[[side_a]], 
+                          hull_pts[[forward_a]])
+  inside <- pip > 0
+  gated  <- df[inside, , drop=FALSE]
+  
+  outlist <- list(cells = gated,
+                  hull_vertices = hull_pts,
+                  kept_clusters = keep_clusters,
+                  dropped_clusters = to_drop)
+  return(outlist)
+}
+
+fcs_plot_cells <- function(df_all, 
+                           gate_res,
+                           side_a = "SSC-A",
+                           forward_a = "FSC-A") {
+  require(ggplot2)
+  require(rlang)
+  
+  cells <- gate_res$cells
+  hull <- gate_res$hull
+  
+  x_sym <- sym(side_a)
+  y_sym <- sym(forward_a)
+  
+  pl <- ggplot(df_all, aes(x = !!x_sym, y = !!y_sym)) + 
+    geom_point(color = "grey20", size = 0.8, alpha = 0.5) + 
+    geom_point(data = cells,
+               aes(x = !!x_sym, y = !!y_sym),
+               color = "blue", size = 1, alpha = 0.5) +
+    geom_polygon(data = hull,
+                 aes(x = !!x_sym, y = !!y_sym),
+                 fill  = NA,
+                 color = "red", size = 1.5) + 
+    theme_bw() +
+    labs(x = side_a, y = forward_a) + 
+    theme(axis.title = element_text(size = 20, face = 'bold'), 
+          axis.text = element_text(size = 14), 
+          plot.title = element_text(size = 24, hjust = 0.5, face = 'bold'))
+  return(pl)
 }
 
 fcs_gate_singlets <- function(df,
@@ -224,7 +287,7 @@ get_em_cutpoint <- function(x,
   list(cut = cut_flex, method = "flex-fallback")
 }
 
-plot_gmm <- function(x, m2, cut=NULL) {
+fcs_plot_gmm <- function(x, m2, cut=NULL) {
   # raw data density
   d <- density(x, n=512)
   plot(d, main="Data + Fitted GMM", lwd=2, col="black")
