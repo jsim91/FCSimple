@@ -175,6 +175,31 @@ fcs_plot_singlets <- function(df,
   return(pl)
 }
 
+#’ @title    EM Cut‐point Estimation
+#’ @description
+#’ Fit a two‐component GMM via either mclust or mixtools and find the posterior cutpoint.
+#’
+#’ @param x              Numeric vector of observations.
+#’ @param em_method      Which EM backend: 'mclust' or 'mix'.
+#’ @param general_method GMM‐based ('gmm') or flex‐point fallback ('flex').
+#’ @param post.thresh    Posterior threshold for cut‐point (default 0.5).
+#’ @param prom_tol       Minimum component proportion to accept (default 0.05).
+#’ @param flex_tail      Quantile for flex‐point fallback (default 0.75).
+#’ @param bw_adjust      Bandwidth adjustment for density() (default 2).
+#’ @param n_grid         Grid length for density() (default 512).
+#’ @param curvature_eps  Curvature tolerance for flex‐point (default 0.01).
+#’ @param return.model   If TRUE, return the fitted EM model in the output.
+#’
+#’ @return A list with components  
+#’   * cut: the numeric cut‐point  
+#’   * method: character tag  
+#’   * model: (optional) the EM fit object  
+#’
+#’ @importFrom mclust Mclust emControl
+#’ @importFrom mixtools normalmixEM
+#’ @importFrom stats quantile dnorm density uniroot sd
+#’ @importFrom pracma findpeaks
+#’ @export
 fcs_get_em_cutpoint <- function(x, 
                                 em_method = c('mclust','mix'),
                                 general_method = NULL,
@@ -185,10 +210,6 @@ fcs_get_em_cutpoint <- function(x,
                                 n_grid = 512,   
                                 curvature_eps = 0.01, 
                                 return.model = TRUE) {
-  require(pracma)
-  require(mclust)
-  require(mixtools)
-  
   em_method <- match.arg(em_method)
   
   # validate general_method
