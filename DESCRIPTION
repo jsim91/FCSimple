@@ -15,7 +15,8 @@ Imports:
     ggrepel, viridis, gridExtra, RColorBrewer, shiny, 
     shinythemes, metR, harmony, outliers, future.apply, 
     RANN, shadowtext, stringr, formattable, ComplexHeatmap, 
-    CATALYST, flowWorkspace, cytoMEM
+    CATALYST, flowWorkspace, cytoMEM, scales, mclust, sp, 
+    rlang, MASS, pracma, mixtools
 Suggests:
     BiocStyle, knitr, rmarkdown
 Remotes:
