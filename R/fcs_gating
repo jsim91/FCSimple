@@ -328,7 +328,7 @@ fcs_plot_gmm <- function(x, m2, cut=NULL) {
   }
 }
 
-plot_gmm_fit <- function(x, fit, cut = NULL, linewidth = 3) {
+fcs_plot_gmm_fit <- function(x, fit, cut = NULL, linewidth = 3) {
   d <- density(x, n = 512)
   plot(d, main = "Data + Fitted GMM", lwd = linewidth, col = "black")
   
