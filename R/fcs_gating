@@ -118,7 +118,7 @@ fcs_gate_singlets <- function(df,
   res <- resid(fit)  # y - ŷ
   rev_res_d <- density(-res)
   # cut the residuals
-  cuts <- get_em_cutpoint(x = -res, general_method = 'flex', curvature_eps = curvature_eps)
+  cuts <- fcs_get_em_cutpoint(x = -res, general_method = 'flex', curvature_eps = curvature_eps)
   
   cutpoint <- -cuts$cut
   
@@ -175,16 +175,16 @@ fcs_plot_singlets <- function(df,
   return(pl)
 }
 
-get_em_cutpoint <- function(x, 
-                            em_method = c('mclust','mix'),
-                            general_method = NULL,
-                            post.thresh = 0.5,
-                            prom_tol = 0.05,
-                            flex_tail = 0.75,
-                            bw_adjust = 2,     
-                            n_grid = 512,   
-                            curvature_eps = 0.01, 
-                            return.model = TRUE) {
+fcs_get_em_cutpoint <- function(x, 
+                                em_method = c('mclust','mix'),
+                                general_method = NULL,
+                                post.thresh = 0.5,
+                                prom_tol = 0.05,
+                                flex_tail = 0.75,
+                                bw_adjust = 2,     
+                                n_grid = 512,   
+                                curvature_eps = 0.01, 
+                                return.model = TRUE) {
   require(pracma)
   require(mclust)
   require(mixtools)
