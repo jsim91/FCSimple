@@ -1,5 +1,5 @@
 todo:
-- function that plots all gates set and hierachy and writes to single multi-panel figure
+- function that plots all gates set with hierachy (tree, parent, and current gate name included in title?) and writes to single multi-panel figure
 - ensure tail gate works when tail < prominent peak
 - test general gating functionality on multiple projects where fluorescence signature may differ
 - resolve function conflicts
