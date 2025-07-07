@@ -1,3 +1,15 @@
+fcs_gating_object <- function(fcs_obj) {
+  print(paste0("Initiating an object for gating with the assumption that data to be gated was collected using fluorescence cytometry. Cytof is not supported (currently)."))
+  print("Data for gating is assumed to be in slot fcs_obj[['data']].")
+  list_obj <- list(data = fcs_obj$data, 
+                   source = fcs_obj$source)
+  if('run_date' %in% names(fcs_obj)) {
+    list_obj[['run_date']] <- fcs_obj$run_date
+  }
+  list_obj <- FCSimple::fcs_update(fcs_join_obj = list_obj, instrument_type = 'flow')
+  return(list_obj)
+}
+
 fcs_gate_cells <- function(df,
                            side_a = "SSC-A",
                            forward_a = "FSC-A",
