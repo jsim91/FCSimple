@@ -208,7 +208,7 @@ fcs_plot_singlets <- function(df,
 #’ @export
 fcs_get_em_cutpoint <- function(x, 
                                 em_method = c('mclust','mix'),
-                                general_method = NULL,
+                                general_method = c('gmm','flex','mean'),
                                 post.thresh = 0.5,
                                 prom_tol = 0.05,
                                 flex_tail = 0.75,
@@ -219,22 +219,24 @@ fcs_get_em_cutpoint <- function(x,
   em_method <- match.arg(em_method)
   
   # validate general_method
-  if (!is.null(general_method) && ! general_method %in% c('gmm','flex','both')) {
-    stop("'general_method' must be one of: 'gmm', 'flex', or NULL")
+  if (!is.null(general_method) && ! general_method %in% c('gmm','flex','mean')) {
+    stop("'general_method' must be one of: 'gmm', 'flex', 'mean', or NULL")
   }
   
   # --- 1) GMM phase (either Mclust or mixtools) ---
-  if (is.null(general_method) || general_method %in% c('gmm','both')) {
-    
+  if (is.null(general_method) || general_method %in% c('gmm','mean')) {
+    if(is.null(general_method)) {
+      general_method <- 'gmm'
+    }
     if (em_method=='mclust') {
       # univariate GMM via mclust
       fit <- tryCatch(
         Mclust(x, G = 2, modelNames = 'V',
-               control = emControl(itmax=2000, tol=1e-8),
+               control = emControl(itmax = 2000, tol = 1e-8),
                verbose = FALSE),
         error = function(e) NULL
       )
-      ok  <- !is.null(fit) && all(fit$parameters$pro > prom_tol)
+      ok <- !is.null(fit) && all(fit$parameters$pro > prom_tol)
       
       if (ok) {
         pi1 <- fit$parameters$pro[1]
@@ -251,9 +253,9 @@ fcs_get_em_cutpoint <- function(x,
       upper_guess <- quantile(x, 0.95)
       fit <- tryCatch(
         normalmixEM(x,
-                    k      = 2,
-                    mu     = c(lower_guess, upper_guess),
-                    sigma  = rep(sd(x),2),
+                    k = 2,
+                    mu = c(lower_guess, upper_guess),
+                    sigma = rep(sd(x),2),
                     lambda = c(0.5,0.5)),
         error = function(e) NULL
       )
@@ -289,7 +291,7 @@ fcs_get_em_cutpoint <- function(x,
           sprintf("Mclust-GMM(τ=%.2g)", post.thresh)
         res <- list(cut = cut_gmm, method = method_tag)
         if (return.model) res$model <- fit
-        if(general_method!='both') {
+        if(general_method!='mean') {
           return(res)
         }
       }
@@ -298,15 +300,15 @@ fcs_get_em_cutpoint <- function(x,
   ok <- TRUE
   
   # --- 2) Flex‐point fallback ---
-  d   <- density(x, adjust = bw_adjust, n = n_grid)
-  xg  <- d$x;   yg <- d$y
-  dx  <- mean(diff(xg))
-  d2  <- c(NA, diff(yg,2)/dx^2, NA)
+  d <- density(x, adjust = bw_adjust, n = n_grid)
+  xg <- d$x;   yg <- d$y
+  dx <- mean(diff(xg))
+  d2 <- c(NA, diff(yg,2)/dx^2, NA)
   absd2 <- abs(d2)
   
   peaks <- findpeaks(-absd2, nups=1, ndowns=1)[,2]
-  qt    <- quantile(x, flex_tail)
-  cand  <- peaks[xg[peaks] > qt & absd2[peaks] < curvature_eps]
+  qt <- quantile(x, flex_tail)
+  cand <- peaks[xg[peaks] > qt & absd2[peaks] < curvature_eps]
   
   cut_flex <- if (length(cand)==0) {
     median(x)
@@ -329,9 +331,9 @@ fcs_plot_gmm <- function(x, m2, cut=NULL) {
   plot(d, main="Data + Fitted GMM", lwd=2, col="black")
   
   # extract params
-  p   <- m2$parameters$pro
-  mu  <- m2$parameters$mean
-  sd  <- sqrt(m2$parameters$variance$sigmasq)
+  p <- m2$parameters$pro
+  mu <- m2$parameters$mean
+  sd <- sqrt(m2$parameters$variance$sigmasq)
   
   # x-axis for curves
   xs <- seq(min(x), max(x), length=500)
