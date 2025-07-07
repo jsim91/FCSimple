@@ -1,10 +1,9 @@
 todo:
-- resolve function conflicts
-- ensure tail gate works when tail < prominent peak
-- hierarchy setup and support
-- ensure subsetting of gated regions is derived correctly from hierarchy
-- ensure cells gate works on other flow projects where the distribution may be slightly different
 - function that plots all gates set and hierachy and writes to single multi-panel figure
+- ensure tail gate works when tail < prominent peak
+- test general gating functionality on multiple projects where fluorescence signature may differ
+- resolve function conflicts
+- ensure cells gate works on other flow projects where the distribution may be slightly different
 
 # FCSimple
 
