@@ -7,18 +7,51 @@ fcs_gating_object <- function(fcs_obj) {
     list_obj[['run_date']] <- fcs_obj$run_date
   }
   list_obj <- FCSimple::fcs_update(fcs_join_obj = list_obj, instrument_type = 'flow')
+  class(list_obj) <- 'fcs_gating_object'
   return(list_obj)
 }
 
-fcs_gate_cells <- function(df,
+fcs_gate_cells <- function(object,
+                           tree_name = 'tree1', 
+                           parent_name = 'none', 
                            side_a = "SSC-A",
                            forward_a = "FSC-A",
+                           # downsample_and_infer_gate_members = FALSE, # implement method (and benchmark run time) that allows for RANN knn=1? to identify gate membership from downsampled data; there should be an existing package for this.
                            drop_nearest = 1,
                            drop_farthest = 1) {
   require(mclust)
   require(sp)
   
-  if (!all(c(side_a, forward_a) %in% names(df))) {
+  if(class(object)=='fcs_gating_object') {
+    print("General note: if this gating tree borrows from another, consider copying the common gate path to this new tree before continuing. Each tree is linear and is independent of all other trees.")
+    if(!'gate_trees' %in% names(object)) {
+      object[['gate_trees']] <- list()
+    }
+    if(!tree_name %in% names(object[['gate_trees']])) {
+      object[['gate_trees']][[tree_name]] <- list()
+    }
+    tmpdf <- as.data.frame(object[['data']]); row.names(tmpdf) <- 1:nrow(tmpdf)
+    if(parent_name!='none') {
+      warning("It's recommended that when using 'fcs_gate_cells' that you start from the root data--no preceeding gates (the 'parent_name' default). Proceed with caution.")
+      if(!parent_name %in% object[['gate_trees']][[tree_name]]) {
+        stop("Could not find 'parent_name' in specified 'tree_name'. If 'parent_name' is not 'none', the specified 'parent_name' must exist in the specified 'tree_name'.")
+      } else {
+        parent_index <- which(names(object[['gate_trees']][[tree_name]])==parent_name)
+        mask_list <- lapply(X = object[['gate_trees']][[tree_name]][1:parent_index], FUN = function(arg) return(arg[['mask']]))
+        cell_mask <- do.call(pmin, object[['gate_trees']][[tree_name]][1:parent_index])
+        df <- tmpdf[cell_mask==1,] # 1 = in parent gate; 0 = not in parent gate
+      }
+    } else {
+      df <- tmpdf; rm(tmpdf)
+    }
+  } else if(class(object)=='data.frame') {
+    df <- object
+  } else if('matrix' %in% class(object)){
+    df <- as.data.frame(object)
+  } else {
+    stop("object should be of class: data.frame, matrix, or fcs_gating_object")
+  }
+  if(!all(c(side_a, forward_a) %in% names(df))) {
     stop("df must contain columns '", side_a, "' and '", forward_a, "'")
   }
   
@@ -30,18 +63,18 @@ fcs_gate_cells <- function(df,
   
   G <- nrow(ctrs)
   
-  if (drop_nearest + drop_farthest >= G) {
+  if(drop_nearest + drop_farthest >= G) {
     stop("drop_nearest + drop_farthest must be less than the total number of components (", G, ")")
   }
-  if (drop_nearest < 0 || drop_farthest < 0) {
+  if(drop_nearest < 0 || drop_farthest < 0) {
     stop("drop_nearest and drop_farthest must be non-negative integers")
   }
   
   ord <- order(ctrs$dist)
   
   to_drop <- integer(0)
-  if (drop_nearest  > 0) to_drop <- c(to_drop, ord[seq_len(drop_nearest)])
-  if (drop_farthest > 0) to_drop <- c(to_drop, ord[(G - drop_farthest + 1L):G])
+  if(drop_nearest  > 0) to_drop <- c(to_drop, ord[seq_len(drop_nearest)])
+  if(drop_farthest > 0) to_drop <- c(to_drop, ord[(G - drop_farthest + 1L):G])
   
   keep_clusters <- setdiff(seq_len(G), to_drop)
   
@@ -59,11 +92,26 @@ fcs_gate_cells <- function(df,
   inside <- pip > 0
   gated  <- df[inside, , drop=FALSE]
   
-  outlist <- list(cells = gated,
-                  hull_vertices = hull_pts,
-                  kept_clusters = keep_clusters,
-                  dropped_clusters = to_drop)
-  return(outlist)
+  if(class(object)=='fcs_gating_object') {
+    new_branch <- list(list('mask' = as.numeric(inside), # T,F to 1,0
+                            'tree' = tree_name, 
+                            'parent' = parent_name, 
+                            'feature_side_a' = side_a, 
+                            'feature_forward_a' = forward_h, 
+                            'gate_fn' = 'fcs_gate_cells', 
+                            list('hull_Vertices' = hull_pts, 
+                                 'kept_clusters' = keep_clusters, 
+                                 'dropped_clusters' = to_drop)))
+    names(new_branch) <- gate_name
+    names(new_branch[[gate_name]]) <- 'chull_selection'
+    object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], new_branch)
+  } else {
+    outlist <- list(cells = gated,
+                    hull_vertices = hull_pts,
+                    kept_clusters = keep_clusters,
+                    dropped_clusters = to_drop)
+    return(outlist)
+  }
 }
 
 fcs_plot_cells <- function(df_all, 
@@ -96,15 +144,50 @@ fcs_plot_cells <- function(df_all,
   return(pl)
 }
 
-fcs_gate_singlets <- function(df,
-                          a = "SSC-A",
-                          h = "SSC-H",
-                          cut_method = c('gmm','flex','both'), 
-                          fit_method = c("lm","rlm"),
-                          trim_frac = 0.01,   # drop extreme 1% when fitting
-                          curvature_eps = 0.001
+fcs_gate_singlets <- function(object,
+                              tree_name = 'tree1', 
+                              parent_name = 'cells', 
+                              gate_name = 'singlets', 
+                              a = "SSC-A",
+                              h = "SSC-H",
+                              cut_method = c('gmm','flex','both'), 
+                              fit_method = c("lm","rlm"),
+                              trim_frac = 0.01,   # drop extreme 1% when fitting
+                              curvature_eps = 0.001
 ) {
   require(MASS)
+  
+  if(class(object)=='fcs_gating_object') {
+    print("General note: if this gating tree borrows from another, consider copying the common gate path to this new tree before continuing. Each tree is linear and is independent of all other trees.")
+    if(!'gate_trees' %in% names(object)) {
+      object[['gate_trees']] <- list()
+    }
+    if(!tree_name %in% names(object[['gate_trees']])) {
+      object[['gate_trees']][[tree_name]] <- list()
+    }
+    tmpdf <- as.data.frame(object[['data']]); row.names(tmpdf) <- 1:nrow(tmpdf)
+    if(parent_name!='none') {
+      if(!parent_name %in% object[['gate_trees']][[tree_name]]) {
+        stop("Could not find 'parent_name' in specified 'tree_name'. If 'parent_name' is not 'none', the specified 'parent_name' must exist in the specified 'tree_name'.")
+      } else {
+        parent_index <- which(names(object[['gate_trees']][[tree_name]])==parent_name)
+        mask_list <- lapply(X = object[['gate_trees']][[tree_name]][1:parent_index], FUN = function(arg) return(arg[['mask']]))
+        cell_mask <- do.call(pmin, mask_list)
+        df <- tmpdf[cell_mask==1,] # 1 = in parent gate; 0 = not in parent gate
+      }
+    } else {
+      df <- tmpdf; rm(tmpdf)
+    }
+  } else if(class(object)=='data.frame') {
+    df <- object
+  } else if('matrix' %in% class(object)){
+    df <- as.data.frame(object)
+  } else {
+    stop("object should be of class: data.frame, matrix, or fcs_gating_object")
+  }
+  if(!all(c(a, h) %in% names(df))) {
+    stop("df must contain columns '", a, "' and '", h, "'")
+  }
   
   method <- match.arg(method)
   x <- df[,a];  y <- df[,h]
@@ -140,14 +223,25 @@ fcs_gate_singlets <- function(df,
   cuts <- fcs_get_em_cutpoint(x = -res, general_method = 'flex', curvature_eps = curvature_eps)
   cutpoint <- -cuts$cut
   
-  keep <- res >= cutpoint
-  fraction_keep <- (sum(keep)/nrow(df))*100
+  gated <- res >= cutpoint
+  fraction_keep <- (sum(gated)/nrow(df))*100
   if(fraction_keep<85) {
     warning(print(paste0('percent of events in singlet gate: ',as.character(round(fraction_keep,1)),'%. Consider adjusting curvature_eps')))
   } else {
     print(paste0('percent of events in singlet gate: ',as.character(round(fraction_keep,1)),'%'))
   }
-  return(df[keep,])
+  if(class(object)=='fcs_gating_object') {
+    new_branch <- list(list('mask' = as.numeric(gated), 
+                            'tree' = tree_name, 
+                            'parent' = parent_name, 
+                            'feature_a' = a, 
+                            'feature_h' = h, 
+                            'gate_fn' = 'fcs_gate_singlets'))
+    names(new_branch) <- gate_name
+    object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], new_branch)
+  } else {
+    return(df[gated,])
+  }
 }
 
 fcs_plot_singlets <- function(df,
@@ -337,6 +431,219 @@ fcs_get_em_cutpoint <- function(x,
   return(res)
 }
 
+# feature should be: N+ or N- where N=feature and sign sets direction of final binary mask
+fcs_set_gate <- function(object,
+                         feature, 
+                         tree_name = 'tree1', 
+                         parent_name = 'cells', 
+                         gate_name = 'singlets1', 
+                         em_method = c('mclust','mix'),
+                         general_method = c('gmm','flex','mean'),
+                         post.thresh = 0.5,
+                         prom_tol = 0.05,
+                         flex_tail = 0.75,
+                         bw_adjust = 2,     
+                         n_grid = 512,   
+                         curvature_eps = 0.01) {
+  # fcs_get_em_cutpoint generalized wrapper for class fcs_gating_object
+  if(class(object)=='fcs_gating_object') {
+    print("General note: if this gating tree borrows from another, consider copying the common gate path to this new tree before continuing. Each tree is linear and is independent of all other trees.")
+    directionality <- stringr::str_extract(string = feature, pattern = '(\\+|\\-)$')
+    if(any(length(directionality)!=1), !directionality %in% c('+','-')) {
+      stop("Feature should be given as: feature+ or feature- where + is inferred to mean feature>=cut and - is inferred to mean feature<cut.")
+    }
+    feature <- gsub(pattern = '(\\+|\\-)$', replacement = '', x = feature)
+    print(paste0("Finding threshold for: ",feature," and subsetting in the direction: ",directionality))
+    if(!feature %in% colnames(object[['data']])) {
+      stop("Inferred feature must be in column names of 'object[['data']]'")
+    }
+    if(!'gate_trees' %in% names(object)) {
+      object[['gate_trees']] <- list()
+    }
+    if(!tree_name %in% names(object[['gate_trees']])) {
+      object[['gate_trees']][[tree_name]] <- list()
+    }
+    tmpdf <- as.data.frame(object[['data']][,feature]); names(tmpdf) <- 1:length(tmpdf)
+    if(parent_name!='none') {
+      if(!parent_name %in% object[['gate_trees']][[tree_name]]) {
+        stop("Could not find 'parent_name' in specified 'tree_name'. If 'parent_name' is not 'none', the specified 'parent_name' must exist in the specified 'tree_name'.")
+      } else {
+        parent_index <- which(names(object[['gate_trees']][[tree_name]])==parent_name)
+        mask_list <- lapply(X = object[['gate_trees']][[tree_name]][1:parent_index], FUN = function(arg) return(arg[['mask']]))
+        cell_mask <- do.call(pmin, mask_list)
+        df <- tmpdf[cell_mask==1] # 1 = in parent gate; 0 = not in parent gate
+      }
+    } else {
+      df <- tmpdf; rm(tmpdf)
+    }
+  } else if(class=='numeric'){
+    df <- object
+  } else {
+    stop("object should be of class: numeric (length N, where N>>1) or fcs_gating_object")
+  }
+  em_method <- match.arg(em_method)
+  
+  # validate general_method
+  if (!is.null(general_method) && ! general_method %in% c('gmm','flex','mean')) {
+    stop("'general_method' must be one of: 'gmm', 'flex', 'mean', or NULL")
+  }
+  
+  # GMM phase (either mclust::Mclust or mixtools::normalmixEM)
+  if (is.null(general_method) || general_method %in% c('gmm','mean')) {
+    if(is.null(general_method)) {
+      general_method <- 'gmm'
+    }
+    if (em_method=='mclust') {
+      # univariate GMM via mclust
+      fit <- tryCatch(
+        Mclust(df, G = 2, modelNames = 'V',
+               control = emControl(itmax = 2000, tol = 1e-8),
+               verbose = FALSE),
+        error = function(e) NULL
+      )
+      ok <- !is.null(fit) && all(fit$parameters$pro > prom_tol)
+      
+      if (ok) {
+        pi1 <- fit$parameters$pro[1]
+        pi2 <- fit$parameters$pro[2]
+        mu1 <- fit$parameters$mean[1]
+        mu2 <- fit$parameters$mean[2]
+        sd1 <- sqrt(fit$parameters$variance$sigmasq[1])
+        sd2 <- sqrt(fit$parameters$variance$sigmasq[2])
+      }
+      
+    } else if (em_method=='mix') {
+      # univariate GMM via mixtools
+      lower_guess <- quantile(df, 0.05)
+      upper_guess <- quantile(df, 0.95)
+      fit <- tryCatch(
+        normalmixEM(df,
+                    k = 2,
+                    mu = c(lower_guess, upper_guess),
+                    sigma = rep(sd(df),2),
+                    lambda = c(0.5,0.5)),
+        error = function(e) NULL
+      )
+      ok <- !is.null(fit) && all(fit$lambda > prom_tol)
+      
+      if (ok) {
+        pi1 <- fit$lambda[1]
+        pi2 <- fit$lambda[2]
+        mu1 <- fit$mu[1]
+        mu2 <- fit$mu[2]
+        sd1 <- fit$sigma[1]
+        sd2 <- fit$sigma[2]
+      }
+    }
+    
+    # if the GMM converged and proportions pass the threshold
+    if (ok) {
+      λ <- post.thresh/(1-post.thresh)
+      h <- function(z) pi1*dnorm(z,mu1,sd1) -
+        λ  *pi2*dnorm(z,mu2,sd2)
+      lo <- min(mu1, mu2)
+      hi <- max(mu1, mu2)
+      
+      cut_gmm <- tryCatch(
+        uniroot(h, lower=lo, upper=hi)$root,
+        error = function(e) NA
+      )
+      
+      if (!is.na(cut_gmm)) {
+        method_tag <- if (em_method=='mix') 
+          sprintf("mix-EM(τ=%.2g)", post.thresh)
+        else
+          sprintf("Mclust-GMM(τ=%.2g)", post.thresh)
+        res <- list(cut = cut_gmm, method = method_tag, model = fit)
+        if(general_method!='mean') {
+          if(class(object)=='fcs_gating_object') {
+            cutpt <- cut_gmm
+          } else {
+            return(res)
+          }
+        }
+      }
+    }
+  }
+  ok <- TRUE
+  
+  # flex‐point fallback
+  d <- density(df, adjust = bw_adjust, n = n_grid)
+  xg <- d$df;   yg <- d$y
+  dx <- mean(diff(xg))
+  d2 <- c(NA, diff(yg,2)/dx^2, NA)
+  absd2 <- abs(d2)
+  
+  peaks <- findpeaks(-absd2, nups=1, ndowns=1)[,2]
+  qt <- quantile(df, flex_tail)
+  cand <- peaks[xg[peaks] > qt & absd2[peaks] < curvature_eps]
+  
+  cut_flex <- if (length(cand)==0) {
+    median(df)
+  } else {
+    xg[cand[which.min(abs(xg[cand] - qt))]]
+  }
+  
+  if(all(ok, general_method=='both')) {
+    cutpt <- mean(c(cut_gmm, cut_flex))
+  } else {
+    cutpt <- cut_flex
+  }
+  if(class(object)=='fcs_gating_object') {
+    # infer directionality by feature listing
+    if(directionality=='+') {
+      gated <- df >= cutpt
+    } else if(directionality=='-'){
+      gated <- df < cutpt
+    } else {
+      stop("Directionality is something other than '+' or '-'.")
+    }
+    new_branch <- list(list('mask' = as.numeric(gated), 
+                            'tree' = tree_name, 
+                            'parent' = parent_name, 
+                            'feature' = feature, 
+                            'direction' = directionality, 
+                            'gate_fn' = 'fcs_set_gate'))
+    names(new_branch) <- gate_name
+    object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], new_branch)
+  } else {
+    if(all(ok, general_method=='both')) {
+      res <- list(cut = cutpt, method = 'gmm flex mean', model = fit)
+    } else {
+      res <- list(cut = cutpt, method = "flex-fallback")
+    }
+  }
+}
+
+# make branch node by combination of other upstream gates; do.call(pmin, mask_list); where mask_list obtained by specified gates
+fcs_create_gate_node <- function(object, 
+                                 tree_name = 'tree1', 
+                                 parent_name, 
+                                 phenotype) {
+  # phenotype may be given as A+B-C+D+E- etc where perceived features (A, B, C, D, E) are names of branches within 'tree_name'
+  get_direction <- strsplit(x = phenotype, split = '[A-Za-z\\.]+')[[1]]
+  get_direction <- get_direction[!get_direction=='']
+  get_gates <- strsplit(x = phenotype, split = '(\\+|\\-)')[[1]]
+  
+  if(mean(get_gates) %in% names(object[['gate_trees']][[tree_name]])!=1) {
+    print(paste0("Features not found: ",paste0(get_gates[!get_gates %in% names(object[['gate_trees']][[tree_name]])], collapse=",")))
+    stop("All features given in 'phenotype' must be present in names(object[['gate_trees']][[tree_name]]).")
+  }
+  mask_list <- as.list(object[['gate_trees']][[tree_name]][get_gates])
+  data_mask <- do.call(pmin, mask_list) # 1 = in node; 0 = not in node
+  list('mask' = data_mask)
+  
+  new_branch <- list(list('mask' = data_mask, 
+                          'tree' = tree_name, 
+                          'parent' = parent_name, 
+                          'phenotype' = phenotype, 
+                          'feature' = paste0(get_gates,collapse=','), 
+                          'direction' = paste0(get_direction,collapse=','), 
+                          'gate_fn' = 'fcs_create_gate_node'))
+  names(new_branch) <- phenotype
+  object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], new_branch)
+}
+
 fcs_plot_gmm <- function(x, m2, cut=NULL) {
   # raw data density
   d <- density(x, n=512)
@@ -424,12 +731,12 @@ fcs_plot_gmm_fit <- function(x, fit, cut = NULL, linewidth = 3) {
 }
 
 fcs_plot_quadrants <- function(df,
-                           xcut, 
-                           ycut,
-                           alpha = 0.25,
-                           psize = 0.6,
-                           n = 100,
-                           bins = 12) {
+                               xcut, 
+                               ycut,
+                               alpha = 0.25,
+                               psize = 0.6,
+                               n = 100,
+                               bins = 12) {
   require(ggplot2)
   require(scales)
   
