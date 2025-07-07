@@ -87,7 +87,8 @@ fcs_plot_cells <- function(df_all,
 fcs_gate_singlets <- function(df,
                           a = "SSC-A",
                           h = "SSC-H",
-                          method = c("lm","rlm"),
+                          cut_method = c('gmm','flex','both'), 
+                          fit_method = c("lm","rlm"),
                           trim_frac = 0.01,   # drop extreme 1% when fitting
                           curvature_eps = 0.001
 ) {
@@ -118,13 +119,18 @@ fcs_gate_singlets <- function(df,
   res <- resid(fit)  # y - ŷ
   rev_res_d <- density(-res)
   # cut the residuals
+  if(length(cut_method)>1) {
+    cut_method <- 'gmm'
+  }
+  if(!cut_method %in% c('gmm','flex','both')) {
+    stop("cut_method must be one of: 'gmm', 'flex', 'both'")
+  }
   cuts <- fcs_get_em_cutpoint(x = -res, general_method = 'flex', curvature_eps = curvature_eps)
-  
   cutpoint <- -cuts$cut
   
   keep <- res >= cutpoint
   fraction_keep <- (sum(keep)/nrow(df))*100
-  if(fraction_keep<90) {
+  if(fraction_keep<85) {
     warning(print(paste0('percent of events in singlet gate: ',as.character(round(fraction_keep,1)),'%. Consider adjusting curvature_eps')))
   } else {
     print(paste0('percent of events in singlet gate: ',as.character(round(fraction_keep,1)),'%'))
@@ -213,12 +219,12 @@ fcs_get_em_cutpoint <- function(x,
   em_method <- match.arg(em_method)
   
   # validate general_method
-  if (!is.null(general_method) && ! general_method %in% c('gmm','flex')) {
+  if (!is.null(general_method) && ! general_method %in% c('gmm','flex','both')) {
     stop("'general_method' must be one of: 'gmm', 'flex', or NULL")
   }
   
   # --- 1) GMM phase (either Mclust or mixtools) ---
-  if (is.null(general_method) || general_method=='gmm') {
+  if (is.null(general_method) || general_method %in% c('gmm','both')) {
     
     if (em_method=='mclust') {
       # univariate GMM via mclust
@@ -283,10 +289,13 @@ fcs_get_em_cutpoint <- function(x,
           sprintf("Mclust-GMM(τ=%.2g)", post.thresh)
         res <- list(cut = cut_gmm, method = method_tag)
         if (return.model) res$model <- fit
-        return(res)
+        if(general_method!='both') {
+          return(res)
+        }
       }
     }
   }
+  ok <- TRUE
   
   # --- 2) Flex‐point fallback ---
   d   <- density(x, adjust = bw_adjust, n = n_grid)
@@ -305,7 +314,13 @@ fcs_get_em_cutpoint <- function(x,
     xg[cand[which.min(abs(xg[cand] - qt))]]
   }
   
-  list(cut = cut_flex, method = "flex-fallback")
+  if(all(ok, general_method=='both')) {
+    mean_cut <- mean(c(cut_gmm, cut_flex))
+    res <- list(cut = mean_cut, method = 'gmm flex mean', model = fit)
+  } else {
+    res <- list(cut = cut_flex, method = "flex-fallback")
+  }
+  return(res)
 }
 
 fcs_plot_gmm <- function(x, m2, cut=NULL) {
