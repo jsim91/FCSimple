@@ -660,8 +660,12 @@ fcs_set_gate <- function(object,
                        'bw_adjust' = bw_adjust,     
                        'n_grid' = n_grid,   
                        'curvature_eps' = curvature_eps,
-                       'fit' = fit, 
                        'gate_fn' = 'fcs_set_gate')
+    if(ok) {
+      new_branch[['fit']] <- fit
+    } else {
+      new_branch[['fit']] <- 'none'
+    }
     object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], list(new_branch))
     names(object[['gate_trees']][[tree_name]])[length(object[['gate_trees']][[tree_name]])] <- gate_name
     return(object)
