@@ -14,6 +14,7 @@ fcs_gating_object <- function(fcs_obj) {
 fcs_gate_cells <- function(object,
                            tree_name = 'tree1', 
                            parent_name = 'none', 
+                           gate_name = 'cells', 
                            side_a = "SSC-A",
                            forward_a = "FSC-A",
                            # downsample_and_infer_gate_members = FALSE, # implement method (and benchmark run time) that allows for RANN knn=1? to identify gate membership from downsampled data; there should be an existing package for this.
@@ -93,18 +94,17 @@ fcs_gate_cells <- function(object,
   gated  <- df[inside, , drop=FALSE]
   
   if(class(object)=='fcs_gating_object') {
-    new_branch <- list(list('mask' = as.numeric(inside), # T,F to 1,0
-                            'tree' = tree_name, 
-                            'parent' = parent_name, 
-                            'feature_side_a' = side_a, 
-                            'feature_forward_a' = forward_a, 
-                            'gate_fn' = 'fcs_gate_cells', 
-                            list('hull_Vertices' = hull_pts, 
-                                 'kept_clusters' = keep_clusters, 
-                                 'dropped_clusters' = to_drop)))
-    names(new_branch) <- 'cells'
-    names(new_branch[['cells']]) <- 'chull_selection'
+    new_branch <- list('mask' = as.numeric(inside), # T,F to 1,0
+                       'tree' = tree_name, 
+                       'parent' = parent_name, 
+                       'feature_side_a' = side_a, 
+                       'feature_forward_a' = forward_a, 
+                       'gate_fn' = 'fcs_gate_cells', 
+                       'chull_selection' = list('hull_Vertices' = hull_pts, 
+                                                'kept_clusters' = keep_clusters, 
+                                                'dropped_clusters' = to_drop))
     object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], new_branch)
+    names(object[['gate_trees']][[tree_name]])[length(object[['gate_trees']][[tree_name]])] <- gate_name
     return(object)
   } else {
     outlist <- list(cells = gated,
@@ -232,14 +232,14 @@ fcs_gate_singlets <- function(object,
     print(paste0('percent of events in singlet gate: ',as.character(round(fraction_keep,1)),'%'))
   }
   if(class(object)=='fcs_gating_object') {
-    new_branch <- list(list('mask' = as.numeric(gated), 
-                            'tree' = tree_name, 
-                            'parent' = parent_name, 
-                            'feature_a' = a, 
-                            'feature_h' = h, 
-                            'gate_fn' = 'fcs_gate_singlets'))
-    names(new_branch) <- gate_name
+    new_branch <- list('mask' = as.numeric(gated), 
+                       'tree' = tree_name, 
+                       'parent' = parent_name, 
+                       'feature_a' = a, 
+                       'feature_h' = h, 
+                       'gate_fn' = 'fcs_gate_singlets')
     object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], new_branch)
+    names(object[['gate_trees']][[tree_name]])[length(object[['gate_trees']][[tree_name]])] <- gate_name
     return(object)
   } else {
     return(df[gated,])
@@ -606,8 +606,8 @@ fcs_set_gate <- function(object,
                             'feature' = feature, 
                             'direction' = directionality, 
                             'gate_fn' = 'fcs_set_gate'))
-    names(new_branch) <- gate_name
     object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], new_branch)
+    names(object[['gate_trees']][[tree_name]])[length(object[['gate_trees']][[tree_name]])] <- gate_name
     return(object)
   } else {
     if(all(ok, general_method=='both')) {
@@ -643,8 +643,8 @@ fcs_create_gate_node <- function(object,
                           'feature' = paste0(get_gates,collapse=','), 
                           'direction' = paste0(get_direction,collapse=','), 
                           'gate_fn' = 'fcs_create_gate_node'))
-  names(new_branch) <- phenotype
   object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], new_branch)
+  names(object[['gate_trees']][[tree_name]])[length(object[['gate_trees']][[tree_name]])] <- phenotype
   return(object)
 }
 
