@@ -660,7 +660,7 @@ fcs_set_gate <- function(object,
                        'bw_adjust' = bw_adjust,     
                        'n_grid' = n_grid,   
                        'curvature_eps' = curvature_eps,
-                       'fit' = ifelse(ok, fit, 'none'), 
+                       'fit' = fit, 
                        'gate_fn' = 'fcs_set_gate')
     object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], list(new_branch))
     names(object[['gate_trees']][[tree_name]])[length(object[['gate_trees']][[tree_name]])] <- gate_name
@@ -669,7 +669,11 @@ fcs_set_gate <- function(object,
     if(all(ok, general_method=='both')) {
       res <- list(cut = cutpt, method = 'gmm flex mean', model = fit)
     } else {
-      res <- list(cut = cutpt, method = "flex-fallback", model = ifelse(ok, fit, 'none'))
+      if(ok) {
+        res <- list(cut = cutpt, method = "flex-fallback", model = fit)
+      } else {
+        res <- list(cut = cutpt, method = "flex-fallback", model = 'none')
+      }
     }
   }
 }
