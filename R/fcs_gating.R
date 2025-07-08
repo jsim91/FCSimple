@@ -501,16 +501,15 @@ fcs_set_gate <- function(object,
     if(!tree_name %in% names(object[['gate_trees']])) {
       object[['gate_trees']][[tree_name]] <- list()
     }
-    tmpdf <- as.data.frame(object[['data']][,feature]); names(tmpdf) <- 1:length(tmpdf)
+    tmpdf <- object[['data']][,feature]; names(tmpdf) <- 1:length(tmpdf)
     if(parent_name!='none') {
       if(!parent_name %in% names(object[['gate_trees']][[tree_name]])) {
         stop("Could not find 'parent_name' in specified 'tree_name'. If 'parent_name' is not 'none', the specified 'parent_name' must exist in the specified 'tree_name'.")
       } else {
         parent_index <- which(names(object[['gate_trees']][[tree_name]])==parent_name)
         mask_list <- lapply(X = object[['gate_trees']][[tree_name]][1:parent_index], FUN = function(arg) return(arg[['mask']]))
-        cell_mask <- do.call(pmin, mask_list)
-        df <- tmpdf[cell_mask==1,] # 1 = in parent gate; 0 = not in parent gate
-        names(cell_mask) <- row.names(tmpdf)
+        cell_mask <- do.call(pmin, mask_list); names(cell_mask) <- names(tmpdf)
+        df <- tmpdf[cell_mask==1]
       }
     } else {
       df <- tmpdf; rm(tmpdf)
@@ -633,13 +632,13 @@ fcs_set_gate <- function(object,
     inside_negative <- df < cutpt
     if(parent_name!='none') {
       # positive
-      current_gate_pos <- as.numeric(inside_positive); names(current_gate_pos) <- row.names(df)
+      current_gate_pos <- as.numeric(inside_positive); names(current_gate_pos) <- names(df)
       pos <- match(names(current_gate_pos), names(cell_mask))
       positive_mask <- cell_mask
       positive_mask[pos] <- current_gate_pos
       names(positive_mask) <- NULL
       # negative
-      current_gate_negative <- as.numeric(inside_negative); names(current_gate_negative) <- row.names(df)
+      current_gate_negative <- as.numeric(inside_negative); names(current_gate_negative) <- names(df)
       pos <- match(names(current_gate_negative), names(cell_mask))
       negative_mask <- cell_mask
       negative_mask[pos] <- current_gate_negative
@@ -684,12 +683,12 @@ fcs_set_gate <- function(object,
   }
 }
 # make branch node by combination of other upstream gates; do.call(pmin, mask_list); where mask_list obtained by specified gates
-fcs_create_gate_node <- function(object, 
-                                 tree_name = 'tree1', 
-                                 parent_name, 
-                                 phenotype) {
+fcs_set_node <- function(object, 
+                         tree_name = 'tree1', 
+                         parent_name, 
+                         phenotype) {
   # phenotype may be given as A+B-C+D+E- etc where perceived features (A, B, C, D, E) are names of branches within 'tree_name'
-  get_direction <- strsplit(x = phenotype, split = '[A-Za-z\\.]+')[[1]]
+  get_direction <- strsplit(x = phenotype, split = '[A-Za-z0-9\\.]+')[[1]]
   get_direction <- get_direction[!get_direction=='']
   get_gates <- strsplit(x = phenotype, split = '(\\+|\\-)')[[1]]
   
