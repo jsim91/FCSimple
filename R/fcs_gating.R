@@ -102,8 +102,8 @@ fcs_gate_cells <- function(object,
                             list('hull_Vertices' = hull_pts, 
                                  'kept_clusters' = keep_clusters, 
                                  'dropped_clusters' = to_drop)))
-    names(new_branch) <- gate_name
-    names(new_branch[[gate_name]]) <- 'chull_selection'
+    names(new_branch) <- 'cells'
+    names(new_branch[['cells']]) <- 'chull_selection'
     object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], new_branch)
     return(object)
   } else {
