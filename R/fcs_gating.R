@@ -39,7 +39,7 @@ fcs_gate_cells <- function(object,
       } else {
         parent_index <- which(names(object[['gate_trees']][[tree_name]])==parent_name)
         mask_list <- lapply(X = object[['gate_trees']][[tree_name]][1:parent_index], FUN = function(arg) return(arg[['mask']]))
-        cell_mask <- do.call(pmin, object[['gate_trees']][[tree_name]][1:parent_index])
+        cell_mask <- do.call(pmin, mask_list)
         df <- tmpdf[cell_mask==1,] # 1 = in parent gate; 0 = not in parent gate
       }
     } else {
