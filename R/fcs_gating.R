@@ -37,10 +37,11 @@ fcs_gate_cells <- function(object,
       if(!parent_name %in% object[['gate_trees']][[tree_name]]) {
         stop("Could not find 'parent_name' in specified 'tree_name'. If 'parent_name' is not 'none', the specified 'parent_name' must exist in the specified 'tree_name'.")
       } else {
-        parent_index <- which(names(object[['gate_trees']][[tree_name]])==parent_name)
-        mask_list <- lapply(X = object[['gate_trees']][[tree_name]][1:parent_index], FUN = function(arg) return(arg[['mask']]))
-        cell_mask <- do.call(pmin, mask_list)
-        df <- tmpdf[cell_mask==1,] # 1 = in parent gate; 0 = not in parent gate
+        # parent_index <- which(names(object[['gate_trees']][[tree_name]])==parent_name)
+        # mask_list <- lapply(X = object[['gate_trees']][[tree_name]][1:parent_index], FUN = function(arg) return(arg[['mask']]))
+        # cell_mask <- do.call(pmin, mask_list)
+        cell_mask <- object[['gate_trees']][[tree_name]][[parent_name]][['mask']]
+        df <- tmpdf[cell_mask,] # 1 = in parent gate; 0 = not in parent gate
       }
     } else {
       df <- tmpdf; rm(tmpdf)
@@ -94,7 +95,7 @@ fcs_gate_cells <- function(object,
   gated  <- df[inside, , drop=FALSE]
   
   if(class(object)=='fcs_gating_object') {
-    new_branch <- list('mask' = as.numeric(inside), # T,F to 1,0
+    new_branch <- list('mask' = as.numeric(row.names(gated)), # T,F to 1,0
                        'tree' = tree_name, 
                        'parent' = parent_name, 
                        'feature_side_a' = side_a, 
@@ -188,10 +189,11 @@ fcs_gate_singlets <- function(object,
       if(!parent_name %in% names(object[['gate_trees']][[tree_name]])) {
         stop("Could not find 'parent_name' in specified 'tree_name'. If 'parent_name' is not 'none', the specified 'parent_name' must exist in the specified 'tree_name'.")
       } else {
-        parent_index <- which(names(object[['gate_trees']][[tree_name]])==parent_name)
-        mask_list <- lapply(X = object[['gate_trees']][[tree_name]][1:parent_index], FUN = function(arg) return(arg[['mask']]))
-        cell_mask <- do.call(pmin, mask_list)
-        df <- tmpdf[cell_mask==1,] # 1 = in parent gate; 0 = not in parent gate
+        # parent_index <- which(names(object[['gate_trees']][[tree_name]])==parent_name)
+        # mask_list <- lapply(X = object[['gate_trees']][[tree_name]][1:parent_index], FUN = function(arg) return(arg[['mask']]))
+        # cell_mask <- do.call(pmin, mask_list)
+        cell_mask <- object[['gate_trees']][[tree_name]][[parent_name]][['mask']]
+        df <- tmpdf[cell_mask,] # 1 = in parent gate; 0 = not in parent gate
       }
     } else {
       df <- tmpdf; rm(tmpdf)
@@ -242,16 +244,18 @@ fcs_gate_singlets <- function(object,
   }
   cuts <- fcs_get_em_cutpoint(x = -res, general_method = cut_method, curvature_eps = curvature_eps)
   cutpoint <- -cuts$cut
+
+  inside <- res >= cutpoint
+  gated  <- df[inside, , drop=FALSE]
   
-  gated <- res >= cutpoint
-  fraction_keep <- (sum(gated)/nrow(df))*100
+  fraction_keep <- (sum(inside)/nrow(df))*100
   if(fraction_keep<85) {
     warning(print(paste0('percent of events in singlet gate: ',as.character(round(fraction_keep,1)),'%. Consider adjusting curvature_eps')))
   } else {
     print(paste0('percent of events in singlet gate: ',as.character(round(fraction_keep,1)),'%'))
   }
   if(class(object)=='fcs_gating_object') {
-    new_branch <- list('mask' = as.numeric(gated), 
+    new_branch <- list('mask' = as.numeric(row.names(gated), 
                        'tree' = tree_name, 
                        'parent' = parent_name, 
                        'feature_a' = a, 
@@ -263,7 +267,7 @@ fcs_gate_singlets <- function(object,
     names(object[['gate_trees']][[tree_name]])[length(object[['gate_trees']][[tree_name]])] <- gate_name
     return(object)
   } else {
-    return(df[gated,])
+    return(gated)
   }
 }
 
@@ -491,10 +495,11 @@ fcs_set_gate <- function(object,
       if(!parent_name %in% object[['gate_trees']][[tree_name]]) {
         stop("Could not find 'parent_name' in specified 'tree_name'. If 'parent_name' is not 'none', the specified 'parent_name' must exist in the specified 'tree_name'.")
       } else {
-        parent_index <- which(names(object[['gate_trees']][[tree_name]])==parent_name)
-        mask_list <- lapply(X = object[['gate_trees']][[tree_name]][1:parent_index], FUN = function(arg) return(arg[['mask']]))
-        cell_mask <- do.call(pmin, mask_list)
-        df <- tmpdf[cell_mask==1] # 1 = in parent gate; 0 = not in parent gate
+        # parent_index <- which(names(object[['gate_trees']][[tree_name]])==parent_name)
+        # mask_list <- lapply(X = object[['gate_trees']][[tree_name]][1:parent_index], FUN = function(arg) return(arg[['mask']]))
+        # cell_mask <- do.call(pmin, mask_list)
+        cell_mask <- object[['gate_trees']][[tree_name]][[parent_name]][['mask']]
+        df <- tmpdf[cell_mask,] # 1 = in parent gate; 0 = not in parent gate
       }
     } else {
       df <- tmpdf; rm(tmpdf)
@@ -615,13 +620,14 @@ fcs_set_gate <- function(object,
   if(class(object)=='fcs_gating_object') {
     # infer directionality by feature listing
     if(directionality=='+') {
-      gated <- df >= cutpt
+      inside <- df >= cutpt
     } else if(directionality=='-'){
-      gated <- df < cutpt
+      inside <- df < cutpt
     } else {
       stop("Directionality is something other than '+' or '-'.")
     }
-    new_branch <- list(list('mask' = as.numeric(gated), 
+    gated <- df[inside,]
+    new_branch <- list(list('mask' = as.numeric(row.names(gated)), 
                             'tree' = tree_name, 
                             'parent' = parent_name, 
                             'feature' = feature, 
@@ -653,9 +659,14 @@ fcs_create_gate_node <- function(object,
     print(paste0("Features not found: ",paste0(get_gates[!get_gates %in% names(object[['gate_trees']][[tree_name]])], collapse=",")))
     stop("All features given in 'phenotype' must be present in names(object[['gate_trees']][[tree_name]]).")
   }
+  # mask_list <- as.list(object[['gate_trees']][[tree_name]][get_gates])
+  # data_mask <- do.call(pmin, mask_list) # 1 = in node; 0 = not in node
+  # list('mask' = data_mask)
   mask_list <- as.list(object[['gate_trees']][[tree_name]][get_gates])
-  data_mask <- do.call(pmin, mask_list) # 1 = in node; 0 = not in node
-  list('mask' = data_mask)
+  mask_gates <- lapply(X = mask_list, FUN = function(arg) return(arg[['mask']])
+  data_mask <- do.call(intersect, mask_gates)
+  cell_mask <- object[['gate_trees']][[tree_name]][[parent_name]][['mask']]
+  df <- tmpdf[cell_mask,] # 1 = in parent gate; 0 = not in parent gate
   
   new_branch <- list('mask' = data_mask, 
                      'tree' = tree_name, 
