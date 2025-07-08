@@ -270,7 +270,7 @@ fcs_gate_singlets <- function(object,
     final_mask <- cell_mask
     final_mask[pos] <- current_gate
     names(final_mask) <- NULL
-  } else() {
+  } else {
     final_mask <- as.numeric(inside)
   }
   if(class(object)=='fcs_gating_object') {
@@ -652,7 +652,7 @@ fcs_set_gate <- function(object,
       final_mask <- cell_mask
       final_mask[pos] <- current_gate
       names(final_mask) <- NULL
-    } else() {
+    } else {
       final_mask <- as.numeric(inside)
     }
     new_branch <- list(list('mask' = final_mask, 
