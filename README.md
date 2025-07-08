@@ -4,6 +4,9 @@ todo:
 - test general gating functionality on multiple projects where fluorescence signature may differ
 - resolve function conflicts
 - ensure cells gate works on other flow projects where the distribution may be slightly different
+note:
+- gating functions should cache parent mask, create new mask, then aggregate parent mask with new mask such that length(new_mask) == nrow(obj$data)
+- set gate function should store a mask for both directions for later phenotype masking
 
 # FCSimple
 
