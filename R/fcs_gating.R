@@ -492,12 +492,6 @@ fcs_set_gate <- function(object,
   # fcs_get_em_cutpoint generalized wrapper for class fcs_gating_object
   if(class(object)=='fcs_gating_object') {
     print("General note: if this gating tree borrows from another, consider copying the common gate path to this new tree before continuing. Each tree is linear and is independent of all other trees.")
-    # directionality <- stringr::str_extract(string = feature, pattern = '(\\+|\\-)$')
-    # if(any(length(directionality)!=1, !directionality %in% c('+','-'))) {
-    #   stop("Feature should be given as: feature+ or feature- where + is inferred to mean feature>=cut and - is inferred to mean feature<cut.")
-    # }
-    # feature <- gsub(pattern = '(\\+|\\-)$', replacement = '', x = feature)
-    # print(paste0("Finding threshold for: ",feature," and subsetting in the direction: ",directionality))
     if(!feature %in% colnames(object[['data']])) {
       stop("Inferred feature must be in column names of 'object[['data']]'")
     }
@@ -532,13 +526,10 @@ fcs_set_gate <- function(object,
   if(length(general_method)>1) {
     general_method <- 'gmm'
   }
-  em_method <- match.arg(em_method)
-  
   # validate general_method
   if (!is.null(general_method) && ! general_method %in% c('gmm','flex','mean')) {
     stop("'general_method' must be one of: 'gmm', 'flex', 'mean', or NULL")
   }
-  
   # GMM phase (either mclust::Mclust or mixtools::normalmixEM)
   if (is.null(general_method) || general_method %in% c('gmm','mean')) {
     if (em_method=='mclust') {
@@ -550,7 +541,6 @@ fcs_set_gate <- function(object,
         error = function(e) NULL
       )
       ok <- !is.null(fit) && all(fit$parameters$pro > prom_tol)
-      
       if (ok) {
         pi1 <- fit$parameters$pro[1]
         pi2 <- fit$parameters$pro[2]
@@ -573,7 +563,6 @@ fcs_set_gate <- function(object,
         error = function(e) NULL
       )
       ok <- !is.null(fit) && all(fit$lambda > prom_tol)
-      
       if (ok) {
         pi1 <- fit$lambda[1]
         pi2 <- fit$lambda[2]
@@ -583,7 +572,6 @@ fcs_set_gate <- function(object,
         sd2 <- fit$sigma[2]
       }
     }
-    
     # if the GMM converged and proportions pass the threshold
     if (ok) {
       λ <- post.thresh/(1-post.thresh)
@@ -598,10 +586,11 @@ fcs_set_gate <- function(object,
       )
       
       if (!is.na(cut_gmm)) {
-        method_tag <- if (em_method=='mix') 
+        method_tag <- if (em_method=='mix') {
           sprintf("mix-EM(τ=%.2g)", post.thresh)
-        else
+        } else {
           sprintf("Mclust-GMM(τ=%.2g)", post.thresh)
+        }
         res <- list(cut = cut_gmm, method = method_tag, model = fit)
         if(general_method!='mean') {
           if(class(object)=='fcs_gating_object') {
@@ -613,40 +602,31 @@ fcs_set_gate <- function(object,
       }
     }
   }
-  ok <- TRUE
-  
-  # flex‐point fallback
-  d <- density(df, adjust = bw_adjust, n = n_grid)
-  xg <- d$df;   yg <- d$y
-  dx <- mean(diff(xg))
-  d2 <- c(NA, diff(yg,2)/dx^2, NA)
-  absd2 <- abs(d2)
-  
-  peaks <- findpeaks(-absd2, nups=1, ndowns=1)[,2]
-  qt <- quantile(df, flex_tail)
-  cand <- peaks[xg[peaks] > qt & absd2[peaks] < curvature_eps]
-  
-  cut_flex <- if (length(cand)==0) {
-    median(df)
-  } else {
-    xg[cand[which.min(abs(xg[cand] - qt))]]
-  }
-  
-  if(all(ok, general_method=='both')) {
-    cutpt <- mean(c(cut_gmm, cut_flex))
-  } else {
-    cutpt <- cut_flex
+  if(all(ok, general_method!='mean')) {
+    # flex‐point fallback
+    d <- density(df, adjust = bw_adjust, n = n_grid)
+    xg <- d$x; yg <- d$y
+    dx <- mean(diff(xg))
+    d2 <- c(NA, diff(yg,2)/dx^2, NA)
+    absd2 <- abs(d2)
+    
+    peaks <- pracma::findpeaks(-absd2, nups=1, ndowns=1)[,2]
+    qt <- quantile(df, flex_tail)
+    cand <- peaks[xg[peaks] > qt & absd2[peaks] < curvature_eps]
+    
+    cut_flex <- if (length(cand)==0) {
+      median(df)
+    } else {
+      xg[cand[which.min(abs(xg[cand] - qt))]]
+    }
+    
+    if(all(ok, general_method=='mean')) {
+      cutpt <- mean(c(cut_gmm, cut_flex))
+    } else {
+      cutpt <- cut_flex
+    }
   }
   if(class(object)=='fcs_gating_object') {
-    # infer directionality by feature listing
-    # if(directionality=='+') {
-    #   inside <- df >= cutpt
-    # } else if(directionality=='-'){
-    #   inside <- df < cutpt
-    # } else {
-    #   stop("Directionality is something other than '+' or '-'.")
-    # }
-    # gated <- df[inside,]
     inside_positive <- df >= cutpt
     inside_negative <- df < cutpt
     if(parent_name!='none') {
@@ -666,21 +646,22 @@ fcs_set_gate <- function(object,
       positive_mask <- as.numeric(inside_positive)
       negative_mask <- as.numeric(inside_negative)
     }
-    new_branch <- list(list('positive_mask' = positive_mask, 
-                            'negative_mask' = negative_mask,
-                            'threshold' = cutpt, 
-                            'tree' = tree_name, 
-                            'parent' = parent_name, 
-                            'feature' = feature,  
-                            'em_method' = em_method,
-                            'general_method' = general_method,
-                            'post.thresh' = post.thresh,
-                            'prom_tol' = prom_tol,
-                            'flex_tail' = flex_tail,
-                            'bw_adjust' = bw_adjust,     
-                            'n_grid' = n_grid,   
-                            'curvature_eps' = curvature_eps,
-                            'gate_fn' = 'fcs_set_gate'))
+    new_branch <- list('positive_mask' = positive_mask, 
+                       'negative_mask' = negative_mask,
+                       'threshold' = cutpt, 
+                       'tree' = tree_name, 
+                       'parent' = parent_name, 
+                       'feature' = feature,  
+                       'em_method' = em_method,
+                       'general_method' = general_method,
+                       'post.thresh' = post.thresh,
+                       'prom_tol' = prom_tol,
+                       'flex_tail' = flex_tail,
+                       'bw_adjust' = bw_adjust,     
+                       'n_grid' = n_grid,   
+                       'curvature_eps' = curvature_eps,
+                       'fit' = ifelse(ok, fit, 'none'), 
+                       'gate_fn' = 'fcs_set_gate')
     object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], list(new_branch))
     names(object[['gate_trees']][[tree_name]])[length(object[['gate_trees']][[tree_name]])] <- gate_name
     return(object)
@@ -688,7 +669,7 @@ fcs_set_gate <- function(object,
     if(all(ok, general_method=='both')) {
       res <- list(cut = cutpt, method = 'gmm flex mean', model = fit)
     } else {
-      res <- list(cut = cutpt, method = "flex-fallback")
+      res <- list(cut = cutpt, method = "flex-fallback", model = ifelse(ok, fit, 'none'))
     }
   }
 }
