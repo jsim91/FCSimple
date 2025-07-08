@@ -449,7 +449,7 @@ fcs_set_gate <- function(object,
   if(class(object)=='fcs_gating_object') {
     print("General note: if this gating tree borrows from another, consider copying the common gate path to this new tree before continuing. Each tree is linear and is independent of all other trees.")
     directionality <- stringr::str_extract(string = feature, pattern = '(\\+|\\-)$')
-    if(any(length(directionality)!=1), !directionality %in% c('+','-')) {
+    if(any(length(directionality)!=1, !directionality %in% c('+','-'))) {
       stop("Feature should be given as: feature+ or feature- where + is inferred to mean feature>=cut and - is inferred to mean feature<cut.")
     }
     feature <- gsub(pattern = '(\\+|\\-)$', replacement = '', x = feature)
