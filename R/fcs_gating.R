@@ -601,6 +601,8 @@ fcs_set_gate <- function(object,
         }
       }
     }
+  } else {
+    ok <- FALSE
   }
   if(any(!ok, general_method=='mean')) {
     # flex‐point fallback
