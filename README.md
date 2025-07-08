@@ -1,4 +1,5 @@
 todo:
+- allow for downsampling to fit mclust then use in polygon test on full data to increase speed (cell gating)
 - function that plots all gates set with hierachy (tree, parent, and current gate name included in title?) and writes to single multi-panel figure
 - ensure tail gate works when tail < prominent peak
 - test general gating functionality on multiple projects where fluorescence signature may differ
