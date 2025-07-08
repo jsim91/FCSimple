@@ -185,7 +185,7 @@ fcs_gate_singlets <- function(object,
     }
     tmpdf <- as.data.frame(object[['data']]); row.names(tmpdf) <- 1:nrow(tmpdf)
     if(parent_name!='none') {
-      if(!parent_name %in% object[['gate_trees']][[tree_name]]) {
+      if(!parent_name %in% names(object[['gate_trees']][[tree_name]])) {
         stop("Could not find 'parent_name' in specified 'tree_name'. If 'parent_name' is not 'none', the specified 'parent_name' must exist in the specified 'tree_name'.")
       } else {
         parent_index <- which(names(object[['gate_trees']][[tree_name]])==parent_name)
@@ -207,7 +207,6 @@ fcs_gate_singlets <- function(object,
     stop("df must contain columns '", a, "' and '", h, "'")
   }
   
-  method <- match.arg(method)
   x <- df[,a];  y <- df[,h]
   
   # compute the quantile bounds once
@@ -223,7 +222,10 @@ fcs_gate_singlets <- function(object,
   )
   
   # fit the line
-  fit <- switch(method,
+  if(length(fit_method)>1) {
+    fit_method <- 'rlm'
+  }
+  fit <- switch(fit_method,
                 lm  = lm(y ~ x, data = df[idx,]),
                 rlm = rlm(y ~ x, data = df[idx,])
   )
@@ -238,7 +240,7 @@ fcs_gate_singlets <- function(object,
   if(!cut_method %in% c('gmm','flex','both')) {
     stop("cut_method must be one of: 'gmm', 'flex', 'both'")
   }
-  cuts <- fcs_get_em_cutpoint(x = -res, general_method = 'flex', curvature_eps = curvature_eps)
+  cuts <- fcs_get_em_cutpoint(x = -res, general_method = cut_method, curvature_eps = curvature_eps)
   cutpoint <- -cuts$cut
   
   gated <- res >= cutpoint
@@ -254,6 +256,8 @@ fcs_gate_singlets <- function(object,
                        'parent' = parent_name, 
                        'feature_a' = a, 
                        'feature_h' = h, 
+                       'fit_method' = fit_method, 
+                       'cut_method' = cut_method, 
                        'gate_fn' = 'fcs_gate_singlets')
     object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], list(new_branch))
     names(object[['gate_trees']][[tree_name]])[length(object[['gate_trees']][[tree_name]])] <- gate_name
@@ -264,17 +268,17 @@ fcs_gate_singlets <- function(object,
 }
 
 fcs_plot_singlets <- function(df,
-                          alpha = 0.25,
-                          psize = 0.6,
-                          n = 100,
-                          bins = 12) {
+                              alpha = 0.25,
+                              psize = 0.6,
+                              n = 100,
+                              bins = 12, 
+                              downsample_size = NA) {
   require(ggplot2)
   require(scales)
   
   if(ncol(df)!=2) {
     stop("'df' should have exactly two columns")
   }
-  downsample_size <- 100000
   if(nrow(df)>downsample_size) {
     set.seed(123); df <- df[sample(1:nrow(df),downsample_size,replace=F),]
   }
