@@ -290,41 +290,40 @@ fcs_gate_singlets <- function(object,
   }
 }
 
-fcs_plot_singlets <- function(df,
+fcs_plot_singlets <- function(object,
+                              tree_name = 'tree1', 
+                              gate_name = 'ssc_singlets', 
                               alpha = 0.25,
                               psize = 0.6,
-                              n = 100,
-                              bins = 12, 
-                              downsample_size = NA) {
+                              downsample_size = 100000) {
   require(ggplot2)
   require(scales)
   
-  if(ncol(df)!=2) {
-    stop("'df' should have exactly two columns")
-  }
-  if(nrow(df)>downsample_size) {
-    set.seed(123); df <- df[sample(1:nrow(df),downsample_size,replace=F),]
-  }
-  x <- df[,1];  y <- df[,2]
+  a <- object[['gate_trees']][[tree_name]][[gate_name]][['feature_a']]
+  h <- object[['gate_trees']][[tree_name]][[gate_name]][['feature_h']]
+  parent_name <- object[['gate_trees']][[tree_name]][[gate_name]][['parent']]
+  cells_all <- object$data[,c(a,h)]
+  cells <- cells_all[object[['gate_trees']][[tree_name]][[gate_name]][['mask']]==1,]
+  cells_all <- cells_all[object[['gate_trees']][[tree_name]][[parent_name]][['mask']]==1,]
   
-  capture_cnames <- colnames(df)
-  colnames(df) <- c('xcol','ycol')
-  
-  h <- c(diff(range(df[,1]))/30,
-         diff(range(df[,2]))/30)
-  
-  pl <- ggplot(df, aes(x = xcol, y = ycol)) + 
-    geom_point(color = "black", alpha = alpha, size = psize)
-  if(bins>0) {
-    pl <- pl + 
-      stat_density_2d(geom = "contour",
-                      color = "cyan",
-                      h = h,
-                      n = n,
-                      bins = bins,
-                      size = 0.75)
+  if(!is.na(downsample_size)) {
+    ds_scaled <- ceiling((downsample_size/nrow(cells_all))*nrow(cells))
+    if(nrow(cells_all)>downsample_size) {
+      cells_all <- cells_all[sample(1:nrow(cells_all),downsample_size,replace=F),]
+    }
+    if(nrow(cells)>downsample_size) {
+      cells <- cells[sample(1:nrow(cells),ds_scaled,replace=F),]
+    }
   }
-    pl <- pl + 
+  
+  capture_cnames <- colnames(cells_all)
+  colnames(cells_all) <- c('xcol','ycol'); colnames(cells) <- colnames(cells_all)
+  
+  pl <- ggplot() + 
+    geom_point(data = cells_all, aes(x = xcol, y = ycol), 
+               color = 'black', alpha = alpha, size = psize) + 
+    geom_point(data = cells, mapping = aes(x = xcol, y = ycol), 
+               color = 'blue', alpha = ifelse(alpha*2>1,1,alpha*2), size = psize*1.1) + 
     theme_bw() +
     labs(x = capture_cnames[1], y = capture_cnames[2]) + 
     theme(axis.title = element_text(size = 20, face = 'bold'), 
