@@ -665,6 +665,7 @@ fcs_set_gate <- function(object,
     }
     new_branch <- list(list('positive_mask' = positive_mask, 
                             'negative_mask' = negative_mask,
+                            'threshold' = cutpt, 
                             'tree' = tree_name, 
                             'parent' = parent_name, 
                             'feature' = feature,  
