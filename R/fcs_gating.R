@@ -476,7 +476,6 @@ fcs_get_em_cutpoint <- function(x,
   return(res)
 }
 
-# feature should be: N+ or N- where N=feature and sign sets direction of final binary mask
 fcs_set_gate <- function(object,
                          feature, 
                          tree_name = 'tree1', 
@@ -493,12 +492,12 @@ fcs_set_gate <- function(object,
   # fcs_get_em_cutpoint generalized wrapper for class fcs_gating_object
   if(class(object)=='fcs_gating_object') {
     print("General note: if this gating tree borrows from another, consider copying the common gate path to this new tree before continuing. Each tree is linear and is independent of all other trees.")
-    directionality <- stringr::str_extract(string = feature, pattern = '(\\+|\\-)$')
-    if(any(length(directionality)!=1, !directionality %in% c('+','-'))) {
-      stop("Feature should be given as: feature+ or feature- where + is inferred to mean feature>=cut and - is inferred to mean feature<cut.")
-    }
-    feature <- gsub(pattern = '(\\+|\\-)$', replacement = '', x = feature)
-    print(paste0("Finding threshold for: ",feature," and subsetting in the direction: ",directionality))
+    # directionality <- stringr::str_extract(string = feature, pattern = '(\\+|\\-)$')
+    # if(any(length(directionality)!=1, !directionality %in% c('+','-'))) {
+    #   stop("Feature should be given as: feature+ or feature- where + is inferred to mean feature>=cut and - is inferred to mean feature<cut.")
+    # }
+    # feature <- gsub(pattern = '(\\+|\\-)$', replacement = '', x = feature)
+    # print(paste0("Finding threshold for: ",feature," and subsetting in the direction: ",directionality))
     if(!feature %in% colnames(object[['data']])) {
       stop("Inferred feature must be in column names of 'object[['data']]'")
     }
@@ -637,28 +636,46 @@ fcs_set_gate <- function(object,
   }
   if(class(object)=='fcs_gating_object') {
     # infer directionality by feature listing
-    if(directionality=='+') {
-      inside <- df >= cutpt
-    } else if(directionality=='-'){
-      inside <- df < cutpt
-    } else {
-      stop("Directionality is something other than '+' or '-'.")
-    }
+    # if(directionality=='+') {
+    #   inside <- df >= cutpt
+    # } else if(directionality=='-'){
+    #   inside <- df < cutpt
+    # } else {
+    #   stop("Directionality is something other than '+' or '-'.")
+    # }
     # gated <- df[inside,]
+    inside_positive <- df >= cutpt
+    inside_negative <- df < cutpt
     if(parent_name!='none') {
-      current_gate <- as.numeric(inside); names(current_gate) <- row.names(df)
-      pos <- match(names(current_gate), names(cell_mask))
-      final_mask <- cell_mask
-      final_mask[pos] <- current_gate
-      names(final_mask) <- NULL
+      # positive
+      current_gate_pos <- as.numeric(inside_positive); names(current_gate_pos) <- row.names(df)
+      pos <- match(names(current_gate_pos), names(cell_mask))
+      positive_mask <- cell_mask
+      positive_mask[pos] <- current_gate_pos
+      names(positive_mask) <- NULL
+      # negative
+      current_gate_negative <- as.numeric(inside_negative); names(current_gate_negative) <- row.names(df)
+      pos <- match(names(current_gate_negative), names(cell_mask))
+      negative_mask <- cell_mask
+      negative_mask[pos] <- current_gate_negative
+      names(negative_mask) <- NULL
     } else {
-      final_mask <- as.numeric(inside)
+      positive_mask <- as.numeric(inside_positive)
+      negative_mask <- as.numeric(inside_negative)
     }
-    new_branch <- list(list('mask' = final_mask, 
+    new_branch <- list(list('positive_mask' = positive_mask, 
+                            'negative_mask' = negative_mask,
                             'tree' = tree_name, 
                             'parent' = parent_name, 
-                            'feature' = feature, 
-                            'direction' = directionality, 
+                            'feature' = feature,  
+                            'em_method' = em_method,
+                            'general_method' = general_method,
+                            'post.thresh' = post.thresh,
+                            'prom_tol' = prom_tol,
+                            'flex_tail' = flex_tail,
+                            'bw_adjust' = bw_adjust,     
+                            'n_grid' = n_grid,   
+                            'curvature_eps' = curvature_eps,
                             'gate_fn' = 'fcs_set_gate'))
     object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], list(new_branch))
     names(object[['gate_trees']][[tree_name]])[length(object[['gate_trees']][[tree_name]])] <- gate_name
