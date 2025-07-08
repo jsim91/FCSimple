@@ -105,6 +105,7 @@ fcs_gate_cells <- function(object,
     names(new_branch) <- gate_name
     names(new_branch[[gate_name]]) <- 'chull_selection'
     object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], new_branch)
+    return(object)
   } else {
     outlist <- list(cells = gated,
                     hull_vertices = hull_pts,
@@ -239,6 +240,7 @@ fcs_gate_singlets <- function(object,
                             'gate_fn' = 'fcs_gate_singlets'))
     names(new_branch) <- gate_name
     object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], new_branch)
+    return(object)
   } else {
     return(df[gated,])
   }
@@ -606,6 +608,7 @@ fcs_set_gate <- function(object,
                             'gate_fn' = 'fcs_set_gate'))
     names(new_branch) <- gate_name
     object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], new_branch)
+    return(object)
   } else {
     if(all(ok, general_method=='both')) {
       res <- list(cut = cutpt, method = 'gmm flex mean', model = fit)
@@ -642,47 +645,7 @@ fcs_create_gate_node <- function(object,
                           'gate_fn' = 'fcs_create_gate_node'))
   names(new_branch) <- phenotype
   object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], new_branch)
-}
-
-fcs_plot_gmm <- function(x, m2, cut=NULL) {
-  # raw data density
-  d <- density(x, n=512)
-  plot(d, main="Data + Fitted GMM", lwd=2, col="black")
-  
-  # extract params
-  p <- m2$parameters$pro
-  mu <- m2$parameters$mean
-  sd <- sqrt(m2$parameters$variance$sigmasq)
-  
-  # x-axis for curves
-  xs <- seq(min(x), max(x), length=500)
-  
-  # component densities
-  y1 <- p[1] * dnorm(xs, mu[1], sd[1])
-  y2 <- p[2] * dnorm(xs, mu[2], sd[2])
-  
-  # overlay
-  lines(xs, y1, col="firebrick", lwd=2, lty=2)
-  lines(xs, y2, col="steelblue", lwd=2, lty=2)
-  lines(xs, y1+y2, col="darkgreen", lwd=2, lty=3)
-  
-  # optionally draw cut‐point
-  if(!is.null(cut)) {
-    abline(v=cut, col="purple", lwd=2, lty=4)
-    legend("topright",
-           legend=c("KDE","Comp1","Comp2","Mixture","Cut"),
-           col   =c("black","firebrick","steelblue","darkgreen","purple"),
-           lty   =c(1,2,2,3,4),
-           lwd   =c(2,2,2,2,2),
-           bty   ="n")
-  } else {
-    legend("topright",
-           legend=c("KDE","Comp1","Comp2","Mixture"),
-           col   =c("black","firebrick","steelblue","darkgreen"),
-           lty   =c(1,2,2,3),
-           lwd   =c(2,2,2,2),
-           bty   ="n")
-  }
+  return(object)
 }
 
 fcs_plot_gmm_fit <- function(x, fit, cut = NULL, linewidth = 3) {
