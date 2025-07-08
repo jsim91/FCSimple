@@ -115,20 +115,37 @@ fcs_gate_cells <- function(object,
   }
 }
 
-fcs_plot_cells <- function(df_all, 
-                           gate_res,
-                           side_a = "SSC-A",
-                           forward_a = "FSC-A") {
+fcs_plot_cells <- function(object, 
+                           gate_tree, 
+                           gate_name = 'cells', 
+                           downsample_size = 100000) {
   require(ggplot2)
   require(rlang)
   
-  cells <- gate_res$cells
-  hull <- gate_res$hull
+  if(class(object)!='fcs_gating_object') {
+    stop("input object should be of class: fcs_gating_object")
+  }
+  gate_res = fcs_gate_obj$gate_trees[[gate_tree]][[gate_name]][['chull_selection']]
+  side_a <- fcs_gate_obj$gate_trees[[gate_tree]][[gate_name]]$feature_side_a
+  forward_a <- fcs_gate_obj$gate_trees[[gate_tree]][[gate_name]]$feature_forward_a
+  cells_all <- fcs_gate_obj$data[,c(side_a, forward_a)]
+  cells <- fcs_gate_obj$data[,c(side_a, forward_a)][fcs_gate_obj$gate_trees[[gate_tree]][[gate_name]]$mask==1,]
+  hull <- fcs_gate_obj$gate_trees[[gate_tree]][[gate_name]][['chull_selection']]$hull_Vertices
   
   x_sym <- sym(side_a)
   y_sym <- sym(forward_a)
   
-  pl <- ggplot(df_all, aes(x = !!x_sym, y = !!y_sym)) + 
+  if(!is.na(downsample_size)) {
+    ds_scaled <- ceiling((downsample_size/nrow(cells_all))*nrow(cells))
+    if(nrow(cells_all)>downsample_size) {
+      cells_all <- cells_all[sample(1:nrow(cells_all),downsample_size,replace=F),]
+    }
+    if(nrow(cells)>downsample_size) {
+      cells <- cells[sample(1:nrow(cells),ds_scaled,replace=F),]
+    }
+  }
+  
+  pl <- ggplot(cells_all, aes(x = !!x_sym, y = !!y_sym)) + 
     geom_point(color = "grey20", size = 0.8, alpha = 0.5) + 
     geom_point(data = cells,
                aes(x = !!x_sym, y = !!y_sym),
@@ -136,7 +153,7 @@ fcs_plot_cells <- function(df_all,
     geom_polygon(data = hull,
                  aes(x = !!x_sym, y = !!y_sym),
                  fill  = NA,
-                 color = "red", size = 1.5) + 
+                 color = "red", linewidth = 1.5) + 
     theme_bw() +
     labs(x = side_a, y = forward_a) + 
     theme(axis.title = element_text(size = 20, face = 'bold'), 
