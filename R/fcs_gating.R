@@ -103,7 +103,7 @@ fcs_gate_cells <- function(object,
                        'chull_selection' = list('hull_Vertices' = hull_pts, 
                                                 'kept_clusters' = keep_clusters, 
                                                 'dropped_clusters' = to_drop))
-    object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], new_branch)
+    object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], list(new_branch))
     names(object[['gate_trees']][[tree_name]])[length(object[['gate_trees']][[tree_name]])] <- gate_name
     return(object)
   } else {
@@ -238,7 +238,7 @@ fcs_gate_singlets <- function(object,
                        'feature_a' = a, 
                        'feature_h' = h, 
                        'gate_fn' = 'fcs_gate_singlets')
-    object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], new_branch)
+    object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], list(new_branch))
     names(object[['gate_trees']][[tree_name]])[length(object[['gate_trees']][[tree_name]])] <- gate_name
     return(object)
   } else {
@@ -606,7 +606,7 @@ fcs_set_gate <- function(object,
                             'feature' = feature, 
                             'direction' = directionality, 
                             'gate_fn' = 'fcs_set_gate'))
-    object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], new_branch)
+    object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], list(new_branch))
     names(object[['gate_trees']][[tree_name]])[length(object[['gate_trees']][[tree_name]])] <- gate_name
     return(object)
   } else {
@@ -636,14 +636,14 @@ fcs_create_gate_node <- function(object,
   data_mask <- do.call(pmin, mask_list) # 1 = in node; 0 = not in node
   list('mask' = data_mask)
   
-  new_branch <- list(list('mask' = data_mask, 
-                          'tree' = tree_name, 
-                          'parent' = parent_name, 
-                          'phenotype' = phenotype, 
-                          'feature' = paste0(get_gates,collapse=','), 
-                          'direction' = paste0(get_direction,collapse=','), 
-                          'gate_fn' = 'fcs_create_gate_node'))
-  object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], new_branch)
+  new_branch <- list('mask' = data_mask, 
+                     'tree' = tree_name, 
+                     'parent' = parent_name, 
+                     'phenotype' = phenotype, 
+                     'feature' = paste0(get_gates,collapse=','), 
+                     'direction' = paste0(get_direction,collapse=','), 
+                     'gate_fn' = 'fcs_create_gate_node')
+  object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], list(new_branch))
   names(object[['gate_trees']][[tree_name]])[length(object[['gate_trees']][[tree_name]])] <- phenotype
   return(object)
 }
