@@ -526,6 +526,12 @@ fcs_set_gate <- function(object,
   } else {
     stop("object should be of class: numeric (length N, where N>>1) or fcs_gating_object")
   }
+  if(length(em_method)>1) {
+    em_method <- 'mix'
+  }
+  if(length(general_method)>1) {
+    general_method <- 'gmm'
+  }
   em_method <- match.arg(em_method)
   
   # validate general_method
@@ -535,13 +541,10 @@ fcs_set_gate <- function(object,
   
   # GMM phase (either mclust::Mclust or mixtools::normalmixEM)
   if (is.null(general_method) || general_method %in% c('gmm','mean')) {
-    if(is.null(general_method)) {
-      general_method <- 'gmm'
-    }
     if (em_method=='mclust') {
       # univariate GMM via mclust
       fit <- tryCatch(
-        Mclust(df, G = 2, modelNames = 'V',
+        mclust::Mclust(df, G = 2, modelNames = 'V',
                control = emControl(itmax = 2000, tol = 1e-8),
                verbose = FALSE),
         error = function(e) NULL
@@ -559,12 +562,12 @@ fcs_set_gate <- function(object,
       
     } else if (em_method=='mix') {
       # univariate GMM via mixtools
-      lower_guess <- quantile(df, 0.05)
-      upper_guess <- quantile(df, 0.95)
+      # lower_guess <- quantile(df, 0.05)
+      # upper_guess <- quantile(df, 0.95)
       fit <- tryCatch(
-        normalmixEM(df,
+        mixtools::normalmixEM(df,
                     k = 2,
-                    mu = c(lower_guess, upper_guess),
+                    # mu = c(lower_guess, upper_guess),
                     sigma = rep(sd(df),2),
                     lambda = c(0.5,0.5)),
         error = function(e) NULL
@@ -689,7 +692,6 @@ fcs_set_gate <- function(object,
     }
   }
 }
-
 # make branch node by combination of other upstream gates; do.call(pmin, mask_list); where mask_list obtained by specified gates
 fcs_create_gate_node <- function(object, 
                                  tree_name = 'tree1', 
