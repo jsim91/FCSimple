@@ -509,7 +509,7 @@ fcs_set_gate <- function(object,
     }
     tmpdf <- as.data.frame(object[['data']][,feature]); names(tmpdf) <- 1:length(tmpdf)
     if(parent_name!='none') {
-      if(!parent_name %in% object[['gate_trees']][[tree_name]]) {
+      if(!parent_name %in% names(object[['gate_trees']][[tree_name]])) {
         stop("Could not find 'parent_name' in specified 'tree_name'. If 'parent_name' is not 'none', the specified 'parent_name' must exist in the specified 'tree_name'.")
       } else {
         parent_index <- which(names(object[['gate_trees']][[tree_name]])==parent_name)
