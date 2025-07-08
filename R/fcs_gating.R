@@ -602,7 +602,7 @@ fcs_set_gate <- function(object,
       }
     }
   }
-  if(all(ok, general_method!='mean')) {
+  if(any(!ok, general_method=='mean')) {
     # flex‐point fallback
     d <- density(df, adjust = bw_adjust, n = n_grid)
     xg <- d$x; yg <- d$y
@@ -658,7 +658,7 @@ fcs_set_gate <- function(object,
                        'prom_tol' = prom_tol,
                        'flex_tail' = flex_tail,
                        'bw_adjust' = bw_adjust,     
-                       'n_grid' = n_grid,   
+                       'n_grid' = n_grid, 
                        'curvature_eps' = curvature_eps,
                        'gate_fn' = 'fcs_set_gate')
     if(ok) {
