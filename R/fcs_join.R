@@ -83,16 +83,17 @@ fcs_join <- function(files,
   for(i in 1:length(fs)) {
     if(i==1) {
       raw_data <- exprs(fs[[i]])
+      message("[1] ncol(raw_data): ", ncol(raw_data))
     } else {
       raw_data <- rbind(raw_data, exprs(fs[[i]]))
-      message("ncol(raw_data): ", ncol(raw_data))
+      message("[2] ncol(raw_data): ", ncol(raw_data))
     }
   }
   if(use_descriptive_column_names) {
-    message("ncol(raw_data): ", ncol(raw_data))
-    message("length(desc): ", length(fs[[1]]@parameters@data$desc))
+    message("[3] ncol(raw_data): ", ncol(raw_data))
+    message("[4] length(desc): ", length(fs[[1]]@parameters@data$desc))
     colnames(raw_data) <- fs[[1]]@parameters@data$desc
-    print('renamed columns using fs[[1]]@parameters@data$desc')
+    print('[5] renamed columns using fs[[1]]@parameters@data$desc')
   }
   if(!apply_transform) {
     return(list(data = raw_data,
