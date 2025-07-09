@@ -691,10 +691,13 @@ fcs_set_gate <- function(object,
 }
                             
 fcs_set_node <- function(object, 
+                         phenotype, 
                          tree_name = 'tree1', 
-                         parent_name, 
-                         phenotype) {
+                         node_name = 'phenotype1') {
   # phenotype may be given as A+B-C+D+E- etc where perceived features (A, B, C, D, E) are names of branches within 'tree_name'
+  if(regexpr(pattern = '(\\+|\\-)', text = node_name)!=-1) {
+    stop("'node_name' should not include '+' or '-'... 'phenotype' is stored within the branch data.")
+  }
   get_direction <- strsplit(x = phenotype, split = '[A-Za-z0-9\\.]+')[[1]]
   get_direction <- get_direction[!get_direction=='']
   get_gates <- strsplit(x = phenotype, split = '(\\+|\\-)')[[1]]
@@ -715,14 +718,13 @@ fcs_set_node <- function(object,
   data_mask <- do.call(pmin, mask_list) # 1 = in node; 0 = not in node
   
   new_branch <- list('mask' = data_mask, 
-                     'tree' = tree_name, 
-                     'parent' = parent_name, 
+                     'tree' = tree_name,  
                      'phenotype' = phenotype, 
                      'feature' = paste0(get_gates,collapse=','), 
                      'direction' = paste0(get_direction,collapse=','), 
                      'gate_fn' = 'fcs_set_node')
   object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], list(new_branch))
-  names(object[['gate_trees']][[tree_name]])[length(object[['gate_trees']][[tree_name]])] <- phenotype
+  names(object[['gate_trees']][[tree_name]])[length(object[['gate_trees']][[tree_name]])] <- node_name
   return(object)
 }
 
