@@ -82,18 +82,13 @@ fcs_join <- function(files,
   }
   for(i in 1:length(fs)) {
     if(i==1) {
-      raw_data <- exprs(fs[[i]])
-      message("[1] ncol(raw_data): ", ncol(raw_data))
+      raw_data <- flowCore::exprs(fs[[i]])
     } else {
-      raw_data <- rbind(raw_data, exprs(fs[[i]]))
-      message("[2] ncol(raw_data): ", ncol(raw_data))
+      raw_data <- rbind(raw_data, flowCore::exprs(fs[[i]]))
     }
   }
   if(use_descriptive_column_names) {
-    message("[3] ncol(raw_data): ", ncol(raw_data))
-    message("[4] length(desc): ", length(fs[[1]]@parameters@data$desc))
     colnames(raw_data) <- fs[[1]]@parameters@data$desc
-    print('[5] renamed columns using fs[[1]]@parameters@data$desc')
   }
   if(!apply_transform) {
     return(list(data = raw_data,
