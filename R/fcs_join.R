@@ -85,6 +85,7 @@ fcs_join <- function(files,
       raw_data <- exprs(fs[[i]])
     } else {
       raw_data <- rbind(raw_data, exprs(fs[[i]]))
+      message("ncol(raw_data): ", ncol(raw_data))
     }
   }
   if(use_descriptive_column_names) {
