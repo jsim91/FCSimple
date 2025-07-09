@@ -59,6 +59,10 @@ fcs_join <- function(files,
       }
     }
   }
+  if(use_descriptive_column_names) {
+    message("ncol(raw_data): ", ncol(raw_data))
+    message("length(desc): ", length(fs[[1]]@parameters@data$desc))
+  }
   if(length(x = grep(pattern = "\\.fcs$", x = files, ignore.case = TRUE))!=length(files)) {
     files <- files[grep(pattern = "\\.fcs$", x = files, ignore.case = TRUE)]
     if(length(files)==0) {
