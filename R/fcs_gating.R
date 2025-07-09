@@ -22,7 +22,9 @@ fcs_gate_cells <- function(object,
                            drop_farthest = 1) {
   require(mclust)
   require(sp)
-  
+  if(regexpr(pattern = '(\\+|\\-)', text = gate_name)!=-1) {
+    stop("'gate_name' should not include '+' or '-'")
+  }
   if(class(object)=='fcs_gating_object') {
     print("General note: if this gating tree borrows from another, consider copying the common gate path to this new tree before continuing. Each tree is linear and is independent of all other trees.")
     if(!'gate_trees' %in% names(object)) {
@@ -184,7 +186,9 @@ fcs_gate_singlets <- function(object,
                               curvature_eps = 0.001
 ) {
   require(MASS)
-  
+  if(regexpr(pattern = '(\\+|\\-)', text = gate_name)!=-1) {
+    stop("'gate_name' should not include '+' or '-'")
+  }
   if(class(object)=='fcs_gating_object') {
     print("General note: if this gating tree borrows from another, consider copying the common gate path to this new tree before continuing. Each tree is linear and is independent of all other trees.")
     if(!'gate_trees' %in% names(object)) {
@@ -490,6 +494,9 @@ fcs_set_gate <- function(object,
                          n_grid = 512,   
                          curvature_eps = 0.01) {
   # fcs_get_em_cutpoint generalized wrapper for class fcs_gating_object
+  if(regexpr(pattern = '(\\+|\\-)', text = gate_name)!=-1) {
+    stop("'gate_name' should not include '+' or '-'")
+  }
   if(class(object)=='fcs_gating_object') {
     print("General note: if this gating tree borrows from another, consider copying the common gate path to this new tree before continuing. Each tree is linear and is independent of all other trees.")
     if(!feature %in% colnames(object[['data']])) {
@@ -682,7 +689,7 @@ fcs_set_gate <- function(object,
     }
   }
 }
-# make branch node by combination of other upstream gates; do.call(pmin, mask_list); where mask_list obtained by specified gates
+                            
 fcs_set_node <- function(object, 
                          tree_name = 'tree1', 
                          parent_name, 
@@ -691,19 +698,21 @@ fcs_set_node <- function(object,
   get_direction <- strsplit(x = phenotype, split = '[A-Za-z0-9\\.]+')[[1]]
   get_direction <- get_direction[!get_direction=='']
   get_gates <- strsplit(x = phenotype, split = '(\\+|\\-)')[[1]]
+  gate_dir_df <- data.frame(name = get_gates, direction = get_direction)
   
-  if(mean(get_gates) %in% names(object[['gate_trees']][[tree_name]])!=1) {
+  if(mean(get_gates %in% names(object[['gate_trees']][[tree_name]]))!=1) {
     print(paste0("Features not found: ",paste0(get_gates[!get_gates %in% names(object[['gate_trees']][[tree_name]])], collapse=",")))
     stop("All features given in 'phenotype' must be present in names(object[['gate_trees']][[tree_name]]).")
   }
-  mask_list <- as.list(object[['gate_trees']][[tree_name]][get_gates])
+  mask_list <- list()
+  for(i in 1:nrow(gate_dir_df)) {
+    if(gate_dir_df$direction[i]=='+') {
+      mask_list[[i]] <- object$gate_trees[[tree_name]][[gate_dir_df$name[i]]]$positive_mask
+    } else if(gate_dir_df$direction[i]=='-') {
+      mask_list[[i]] <- object$gate_trees[[tree_name]][[gate_dir_df$name[i]]]$negative_mask
+    }
+  }
   data_mask <- do.call(pmin, mask_list) # 1 = in node; 0 = not in node
-  # list('mask' = data_mask)
-  # mask_list <- as.list(object[['gate_trees']][[tree_name]][get_gates])
-  # mask_gates <- lapply(X = mask_list, FUN = function(arg) return(arg[['mask']])
-  # data_mask <- do.call(intersect, mask_gates)
-  # cell_mask <- object[['gate_trees']][[tree_name]][[parent_name]][['mask']]
-  # df <- tmpdf[cell_mask,] # 1 = in parent gate; 0 = not in parent gate
   
   new_branch <- list('mask' = data_mask, 
                      'tree' = tree_name, 
@@ -711,7 +720,7 @@ fcs_set_node <- function(object,
                      'phenotype' = phenotype, 
                      'feature' = paste0(get_gates,collapse=','), 
                      'direction' = paste0(get_direction,collapse=','), 
-                     'gate_fn' = 'fcs_create_gate_node')
+                     'gate_fn' = 'fcs_set_node')
   object[['gate_trees']][[tree_name]] <- append(object[['gate_trees']][[tree_name]], list(new_branch))
   names(object[['gate_trees']][[tree_name]])[length(object[['gate_trees']][[tree_name]])] <- phenotype
   return(object)
