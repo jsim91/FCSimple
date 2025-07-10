@@ -6,7 +6,9 @@ fcs_project_parameters <- function(fcs_join_obj,
                                    sample_size = 50000,
                                    point_size = 0.8,
                                    trim_outliers = TRUE,
-                                   trim_quantile = 0.01)
+                                   trim_quantile = 0.01, 
+                                   force_xlim = FALSE, 
+                                   force_ylim = FALSE)
 {
   require(ggplot2)
   require(viridis)
@@ -90,6 +92,12 @@ fcs_project_parameters <- function(fcs_join_obj,
               legend.title = element_blank(),
               plot.title = element_text(hjust = 0.5),
               legend.position = "bottom")
+    }
+    if(class(force_xlim)=='numeric') {
+      plt <- plt + xlim(force_xlim)
+    }
+    if(class(force_ylim)=='numeric') {
+      plt <- plt + ylim(force_ylim)
     }
     return(plt)
   }
