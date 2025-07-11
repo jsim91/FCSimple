@@ -4,7 +4,7 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
                               Rcolorbrewer_palette = "RdYlBu", # must be a colorbrewer palette that's 11 long such as Spectral or RdYlBu
                               dot_size = 1, overlay_heatmap_numbers = TRUE, paired_test = FALSE, 
                               p_text_size = 5, paired_line_stroke = 0.1, paired_line_color = "black", 
-                              heatmap_fontsize = 8, relative_heights = c(0.76,0.24))
+                              heatmap_fontsize = 8, relative_heights = c(0.76,0.24), heatmap_parameters = 'all')
 {
   require(ggplot2)
   require(ggpubr)
@@ -64,7 +64,15 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
   my_compare <- comparisons
 
   if(is.na(heatmap_matrix[1])) {
-    hm_tiles <- fcs_join_obj[[paste0(tolower(algorithm),"_heatmap")]][["heatmap_tile_data"]]
+    if(heatmap_parameters[1]=='all') {
+      hm_tiles <- fcs_join_obj[[paste0(tolower(algorithm),"_heatmap")]][["heatmap_tile_data"]]
+    } else {
+      fcs_join_obj <- FCSimple::fcs_cluster_heatmap(fcs_join_obj = fcs_join_obj, algorithm = algorithm, include_parameters = heatmap_parameters, 
+                                                    heatmap_color_palette = rev(RColorBrewer::brewer.pal(11, "RdYlBu")), transpose_heatmap = FALSE, 
+                                                    cluster_row = TRUE, cluster_col = TRUE, override_correction = TRUE, return_heatmap_data = FALSE, 
+                                                    heatmap_linewidth = 0.5)
+      hm_tiles <- fcs_join_obj[[paste0(tolower(algorithm),"_heatmap")]][["heatmap_tile_data"]]
+    }
   } else {
     hm_tiles <- heatmap_matrix
   }
