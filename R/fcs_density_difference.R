@@ -253,17 +253,17 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
   ggsave(filename = paste0(fname_bottom,".pdf"),
          plot = plt_dens_back, device = "pdf",
          width = figure_width, height = figure_height,
-         units = "in", dpi = 900, bg = "white")
+         units = "in", dpi = 300, bg = "white")
   ggsave(filename = paste0(fname_top,".pdf"),
          plot = plt_dens_diff + theme(legend.position = "none"), device = "pdf",
          width = figure_width, height = figure_height,
-         units = "in", dpi = 900, bg = "white")
+         units = "in", dpi = 300, bg = "white")
   ggsave(filename = paste0(fname_legend,".pdf"),
          plot = lg_arr, device = "pdf",
          width = figure_width, height = figure_height,
-         units = "in", dpi = 900, bg = "white")
+         units = "in", dpi = 300, bg = "white")
   ggsave(filename = paste0(fname,".pdf"),
          plot = umap_arr, device = "pdf",
          width = figure_width*2, height = figure_height,
-         units = "in", dpi = 900, bg = "white")
+         units = "in", dpi = 300, bg = "white")
 }
