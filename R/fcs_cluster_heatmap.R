@@ -1,4 +1,4 @@
-fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "all",
+fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "all", include_clusters = "all", 
                                 heatmap_color_palette = rev(RColorBrewer::brewer.pal(11, "RdYlBu")),
                                 transpose_heatmap = FALSE, cluster_row = TRUE, cluster_col = TRUE,
                                 override_correction = TRUE, return_heatmap_data = FALSE, 
@@ -56,9 +56,16 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
   }
   hm_pal = heatmap_color_palette
   z <- backend.matrix
-  color.map.fun = circlize::colorRamp2(seq(min(z),max(z), l = n <- 100), colorRampPalette(hm_pal)(n))
-  ncell <- rep(NA,times=length(unique(cluster_numbers)))
-  names(ncell) <- unique(cluster_numbers)[order(unique(cluster_numbers))]
+  col_seq <- seq(min(z),max(z), l = n <- 100)
+  if(include_clusters[1]!='all') {
+    z <- backend.matrix[which(row.names(backend.matrix) %in% include_clusters),]
+  }
+  #color.map.fun = circlize::colorRamp2(seq(min(z),max(z), l = n <- 100), colorRampPalette(hm_pal)(n))
+  color.map.fun = circlize::colorRamp2(col_seq, colorRampPalette(hm_pal)(n))
+  # ncell <- rep(NA,times=length(unique(cluster_numbers)))
+  ncell <- rep(NA,times=nrow(z))
+  # names(ncell) <- unique(cluster_numbers)[order(unique(cluster_numbers))]
+  names(ncell) <- row.names(backend.matrix)
   for(i in 1:length(ncell)) {
     ncell[i] <- sum(cluster_numbers==names(ncell)[i])
   }
