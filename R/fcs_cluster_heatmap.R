@@ -58,7 +58,7 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
   z <- backend.matrix
   col_seq <- seq(min(z),max(z), l = n <- 100)
   if(include_clusters[1]!='all') {
-    z <- backend.matrix[which(row.names(backend.matrix) %in% include_clusters),]
+    z <- backend.matrix[which(row.names(backend.matrix) %in% as.character(include_clusters)),]
   }
   #color.map.fun = circlize::colorRamp2(seq(min(z),max(z), l = n <- 100), colorRampPalette(hm_pal)(n))
   color.map.fun = circlize::colorRamp2(col_seq, colorRampPalette(hm_pal)(n))
