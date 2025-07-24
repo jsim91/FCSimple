@@ -1,3 +1,95 @@
+#’ @title Export Flow Cytometry Data to an FCS File
+#’
+#’ @description
+#’   Takes an FCSimple analysis object and writes its expression data (raw or
+#’   transformed), with optional dimensionality‐reduction coordinates and
+#’   clustering labels, into a new .fcs file. Useful for exporting combined
+#’   data back into flowCore‐compatible format for downstream tools.
+#’
+#’ @param fcs_join_obj
+#’   A list returned by FCSimple::fcs_join(), optionally augmented by
+#’   FCSimple::fcs_batch_correction(), FCSimple::fcs_reduce_dimensions(), and
+#’   FCSimple::fcs_cluster(). Must contain at least one of:
+#’   - `data`: transformed expression matrix (events × channels)
+#’   - `raw`: raw (reverse‐transformed) matrix, if `data_format = "raw"` is used
+#’
+#’ @param fcs_name
+#’   Character string (without “.fcs”) to use as the base filename for the output
+#’   FCS file (default `"fcs_out"`).
+#’
+#’ @param data_format
+#’   Character; which data slot to write. Options are:
+#’   - `"raw"`: write `fcs_join_obj$raw` if present, otherwise falls back to
+#’     `fcs_join_obj$data` (default)
+#’   - `"transformed"`: write `fcs_join_obj$data`
+#’
+#’ @param include_reductions
+#’   Character vector naming reduction embeddings to include as extra columns.
+#’   Each element (e.g. `"UMAP"` or `"tSNE"`) must match a named list element
+#’   in `fcs_join_obj` containing `$coordinates`. Defaults to `c("UMAP","tSNE")`.
+#’
+#’ @param include_clusterings
+#’   Character vector of clustering results to include. Each element (e.g.
+#’   `"leiden"`, `"flowsom"`, `"louvain"`, `"phenograph"`, `"git"`) must match
+#’   a list element in `fcs_join_obj` with `clusters`. Defaults to all five.
+#’   Cluster columns are named `<algorithm>_cluster`.
+#’
+#’ @param subset_rows
+#’   Either `"all"` (default) to write every event, or an integer vector of
+#’   row indices to subset before writing.
+#’
+#’ @param outdir
+#’   Directory path where the .fcs file will be saved (default `getwd()`).
+#’
+#’ @param include_timestamp
+#’   Logical; if `TRUE` (default), appends `_YYYY-MM-DD_HHMMSS` to the filename.
+#’
+#’ @details
+#’   The function proceeds as follows:
+#’   1. Selects the expression matrix according to `data_format`.  
+#’   2. Gathers any requested embeddings by extracting
+#’      `fcs_join_obj[[ tolower(reduction) ]][["coordinates"]]`.  
+#’   3. Gathers any requested cluster assignments by extracting
+#’      `fcs_join_obj[[ tolower(algorithm) ]][["clusters"]]`.  
+#’   4. Warns about any missing slots and omits them.  
+#’   5. Column‐binds the data, embeddings, and clustering vectors into a single
+#’      numeric matrix.  
+#’   6. Constructs a new `flowFrame` and, if `subset_rows != "all"`, subsets
+#’      to those rows.  
+#’   7. Writes the `flowFrame` to disk via `flowCore::write.FCS()`.
+#’
+#’ @return
+#’   Invisibly returns `NULL`. The main effect is the creation of an .fcs file
+#’   at `file.path(outdir, paste0(fcs_name, [optional _timestamp], ".fcs"))`.
+#’
+#’ @examples
+#’ \dontrun{
+#’   # Export transformed data only
+#’   joined <- FCSimple::fcs_join(file_paths)
+#’   FCSimple::fcs_write.FCS(
+#’     joined,
+#’     fcs_name = "my_analysis",
+#’     data_format = "transformed",
+#’     include_reductions = c("UMAP"),
+#’     include_clusterings = c("leiden"),
+#’     outdir = "~/results"
+#’   )
+#’
+#’   # Export raw values + all reductions and clusters, subset first 1000 cells
+#’   FCSimple::fcs_write.FCS(
+#’     joined,
+#’     data_format = "raw",
+#’     subset_rows = 1:1000,
+#’     include_timestamp = FALSE
+#’   )
+#’ }
+#’
+#’ @seealso
+#’   flowCore::write.FCS, FCSimple::fcs_join,
+#’   FCSimple::fcs_reduce_dimensions, FCSimple::fcs_cluster
+#’
+#’ @importFrom flowCore write.FCS
+#’ @export
 fcs_write.FCS <- function(fcs_join_obj,
                           fcs_name = "fcs_out",
                           data_format = c("raw","transformed"),
