@@ -1,139 +1,139 @@
-#’ @title Plot Difference in Cell Density on a 2D Reduction Embedding
-#’
-#’ @description
-#’   Computes and plots the difference between two sample‐group density estimates
-#’   on a 2D reduction (UMAP or tSNE). Generates filled‐contour difference maps,
-#’   underlying enrichment hulls, and a combined figure, then saves each as a PDF.
-#’
-#’ @param fcs_join_obj
-#’   A list returned by FCSimple::fcs_join() and
-#’   FCSimple::fcs_reduce_dimensions(), containing:
-#’   - a named element “umap” or “tsne” with component “coordinates” (cell × 2 matrix)
-#’   - clustering results under one of “leiden”, “louvain”, “flowsom”,
-#’     “phenograph”, or “git”
-#’   - a “source” vector of sample identifiers matching rows of “coordinates”
-#’
-#’ @param reduction
-#’   Character; which embedding to use. Either “UMAP” (default) or “tSNE”.
-#’
-#’ @param compare_list
-#’   Named list of length 2, each element a character vector of sample IDs
-#’   to compare. Names must be unique and identical between `compare_list` and `color_list`.
-#’
-#’ @param color_list
-#’   Named list of length 2, each element a single color (e.g. “red”). Names must
-#’   match those in `compare_list` and determine the low/high fill endpoints.
-#’
-#’ @param n_kde
-#’   Integer; number of grid points per axis for `MASS::kde2d()` (default 200).
-#’
-#’ @param outdir
-#’   Character; directory path where PDFs will be saved (default `getwd()`).
-#’
-#’ @param axis_title_text_size
-#’   Numeric; font size for axis titles (default 12).
-#’
-#’ @param dbscan_eps
-#’   Numeric or “auto”; epsilon parameter for `dbscan::dbscan()` on background
-#’   points. If “auto”, set to mean axis‐ranges/20 (default “auto”).
-#’
-#’ @param dbscan_minPts
-#’   Numeric or “auto”; minPts for `dbscan::dbscan()`. If “auto”, set to
-#’   floor(nrow(background)/100) (default “auto”).
-#’
-#’ @param legend_label_text_size
-#’   Numeric; font size for legend labels (default 12).
-#’
-#’ @param annotate_clusters
-#’   Logical; if `TRUE` (default), cluster IDs are annotated at each cluster’s
-#’   median coordinate.
-#’
-#’ @param cluster_algorithm
-#’   Character; which clustering result to annotate. One of
-#’   “leiden”, “louvain”, “flowsom”, “phenograph”, or “git” (default first).
-#’
-#’ @param cluster_number_annotation_size
-#’   Numeric; font size for cluster‐ID annotations (default 5).
-#’
-#’ @param contour_bin_width
-#’   Numeric; bin‐width for `stat_contour()` (default 0.001).
-#’
-#’ @param legend_orientation
-#’   Character; “horizontal” or “vertical” (default “horizontal”) orientation
-#’   for the difference–fill legend.
-#’
-#’ @param figure_width
-#’   Numeric; width (in inches) of individual PDF files (default 8).
-#’
-#’ @param figure_height
-#’   Numeric; height (in inches) of individual PDF files (default 8).
-#’
-#’ @param hull_radius
-#’   Numeric; radius (in mm) expansion around DBSCAN clusters for hull plotting
-#’   (default 1.5).
-#’
-#’ @param add_timestamp
-#’   Logical; if `TRUE` (default), appends timestamp to PDF filenames.
-#’
-#’ @param hull_concavity
-#’   Numeric; concavity parameter for hulls drawn by `ggforce::geom_mark_hull()`
-#’   (default 2).
-#’
-#’ @details
-#’   1. Splits cells into two groups via `compare_list` and downsamples equally.  
-#’   2. Computes 2D kernel density estimates (`MASS::kde2d`) on each group.  
-#’   3. Calculates difference (`group2 – group1`) and plots with `geom_tile()` +
-#’      `stat_contour()`.  
-#’   4. Computes background islands via `dbscan::dbscan()` and draws enrichment
-#’      hulls with `geom_mark_hull()`.  
-#’   5. Arranges difference plot, hull plot, and shared legend side‐by‐side.  
-#’   6. Saves four PDFs to `outdir`:  
-#’      - `<grp1>_vs_<grp2>_<reduction>_density_difference_under.pdf`  
-#’      - `<grp1>_vs_<grp2>_<reduction>_density_difference_over.pdf`  
-#’      - `<grp1>_vs_<grp2>_<reduction>_density_difference_legend.pdf`  
-#’      - `<grp1>_vs_<grp2>_<reduction>_density_difference_combined.pdf`  
-#’
-#’ @return
-#’   Invisibly returns `NULL` after saving the PDF files.
-#’
-#’ @examples
-#’ \dontrun{
-#’   # Compute reduction first
-#’   obj <- FCSimple::fcs_reduce_dimensions(joined, method = "UMAP")
-#’
-#’   # Define groups and colors
-#’   compare <- list(Healthy = c("S1","S2"), Diseased = c("S3","S4"))
-#’   colors  <- list(Healthy = "blue", Diseased = "red")
-#’
-#’   # Plot and save density‐difference maps
-#’   FCSimple::fcs_plot_reduction_difference(
-#’     obj,
-#’     reduction = "UMAP",
-#’     compare_list = compare,
-#’     color_list   = colors,
-#’     n_kde        = 150,
-#’     outdir       = "~/results",
-#’     annotate_clusters = FALSE
-#’   )
-#’ }
-#’
-#’ @seealso
-#’   FCSimple::fcs_plot_reduction_density,
-#’   FCSimple::fcs_reduce_dimensions,
-#’   MASS::kde2d,
-#’   dbscan::dbscan,
-#’   ggforce::geom_mark_hull
-#’
-#’ @importFrom MASS kde2d
-#’ @importFrom reshape2 melt
-#’ @importFrom ggplot2 ggplot aes geom_tile stat_contour scale_fill_gradient2 scale_colour_gradient2 coord_cartesian guides labs annotate theme_bw theme ggsave
-#’ @importFrom ggforce geom_mark_hull
-#’ @importFrom dbscan dbscan
-#’ @importFrom ggpubr ggarrange get_legend
-#’ @importFrom circlize colorRamp2
-#’ @importFrom scales muted
-#’ @importFrom grid unit grid.grabExpr
-#’ @export
+#' @title Plot Difference in Cell Density on a 2D Reduction Embedding
+#'
+#' @description
+#'   Computes and plots the difference between two sample‐group density estimates
+#'   on a 2D reduction (UMAP or tSNE). Generates filled‐contour difference maps,
+#'   underlying enrichment hulls, and a combined figure, then saves each as a PDF.
+#'
+#' @param fcs_join_obj
+#'   A list returned by FCSimple::fcs_join() and
+#'   FCSimple::fcs_reduce_dimensions(), containing:
+#'   - a named element “umap” or “tsne” with component “coordinates” (cell × 2 matrix)
+#'   - clustering results under one of “leiden”, “louvain”, “flowsom”,
+#'     “phenograph”, or “git”
+#'   - a “source” vector of sample identifiers matching rows of “coordinates”
+#'
+#' @param reduction
+#'   Character; which embedding to use. Either “UMAP” (default) or “tSNE”.
+#'
+#' @param compare_list
+#'   Named list of length 2, each element a character vector of sample IDs
+#'   to compare. Names must be unique and identical between `compare_list` and `color_list`.
+#'
+#' @param color_list
+#'   Named list of length 2, each element a single color (e.g. “red”). Names must
+#'   match those in `compare_list` and determine the low/high fill endpoints.
+#'
+#' @param n_kde
+#'   Integer; number of grid points per axis for `MASS::kde2d()` (default 200).
+#'
+#' @param outdir
+#'   Character; directory path where PDFs will be saved (default `getwd()`).
+#'
+#' @param axis_title_text_size
+#'   Numeric; font size for axis titles (default 12).
+#'
+#' @param dbscan_eps
+#'   Numeric or “auto”; epsilon parameter for `dbscan::dbscan()` on background
+#'   points. If “auto”, set to mean axis‐ranges/20 (default “auto”).
+#'
+#' @param dbscan_minPts
+#'   Numeric or “auto”; minPts for `dbscan::dbscan()`. If “auto”, set to
+#'   floor(nrow(background)/100) (default “auto”).
+#'
+#' @param legend_label_text_size
+#'   Numeric; font size for legend labels (default 12).
+#'
+#' @param annotate_clusters
+#'   Logical; if `TRUE` (default), cluster IDs are annotated at each cluster’s
+#'   median coordinate.
+#'
+#' @param cluster_algorithm
+#'   Character; which clustering result to annotate. One of
+#'   “leiden”, “louvain”, “flowsom”, “phenograph”, or “git” (default first).
+#'
+#' @param cluster_number_annotation_size
+#'   Numeric; font size for cluster‐ID annotations (default 5).
+#'
+#' @param contour_bin_width
+#'   Numeric; bin‐width for `stat_contour()` (default 0.001).
+#'
+#' @param legend_orientation
+#'   Character; “horizontal” or “vertical” (default “horizontal”) orientation
+#'   for the difference–fill legend.
+#'
+#' @param figure_width
+#'   Numeric; width (in inches) of individual PDF files (default 8).
+#'
+#' @param figure_height
+#'   Numeric; height (in inches) of individual PDF files (default 8).
+#'
+#' @param hull_radius
+#'   Numeric; radius (in mm) expansion around DBSCAN clusters for hull plotting
+#'   (default 1.5).
+#'
+#' @param add_timestamp
+#'   Logical; if `TRUE` (default), appends timestamp to PDF filenames.
+#'
+#' @param hull_concavity
+#'   Numeric; concavity parameter for hulls drawn by `ggforce::geom_mark_hull()`
+#'   (default 2).
+#'
+#' @details
+#'   1. Splits cells into two groups via `compare_list` and downsamples equally.  
+#'   2. Computes 2D kernel density estimates (`MASS::kde2d`) on each group.  
+#'   3. Calculates difference (`group2 – group1`) and plots with `geom_tile()` +
+#'      `stat_contour()`.  
+#'   4. Computes background islands via `dbscan::dbscan()` and draws enrichment
+#'      hulls with `geom_mark_hull()`.  
+#'   5. Arranges difference plot, hull plot, and shared legend side‐by‐side.  
+#'   6. Saves four PDFs to `outdir`:  
+#'      - `<grp1>_vs_<grp2>_<reduction>_density_difference_under.pdf`  
+#'      - `<grp1>_vs_<grp2>_<reduction>_density_difference_over.pdf`  
+#'      - `<grp1>_vs_<grp2>_<reduction>_density_difference_legend.pdf`  
+#'      - `<grp1>_vs_<grp2>_<reduction>_density_difference_combined.pdf`  
+#'
+#' @return
+#'   Invisibly returns `NULL` after saving the PDF files.
+#'
+#' @examples
+#' \dontrun{
+#'   # Compute reduction first
+#'   obj <- FCSimple::fcs_reduce_dimensions(joined, method = "UMAP")
+#'
+#'   # Define groups and colors
+#'   compare <- list(Healthy = c("S1","S2"), Diseased = c("S3","S4"))
+#'   colors  <- list(Healthy = "blue", Diseased = "red")
+#'
+#'   # Plot and save density‐difference maps
+#'   FCSimple::fcs_plot_reduction_difference(
+#'     obj,
+#'     reduction = "UMAP",
+#'     compare_list = compare,
+#'     color_list   = colors,
+#'     n_kde        = 150,
+#'     outdir       = "~/results",
+#'     annotate_clusters = FALSE
+#'   )
+#' }
+#'
+#' @seealso
+#'   FCSimple::fcs_plot_reduction_density,
+#'   FCSimple::fcs_reduce_dimensions,
+#'   MASS::kde2d,
+#'   dbscan::dbscan,
+#'   ggforce::geom_mark_hull
+#'
+#' @importFrom MASS kde2d
+#' @importFrom reshape2 melt
+#' @importFrom ggplot2 ggplot aes geom_tile stat_contour scale_fill_gradient2 scale_colour_gradient2 coord_cartesian guides labs annotate theme_bw theme ggsave
+#' @importFrom ggforce geom_mark_hull
+#' @importFrom dbscan dbscan
+#' @importFrom ggpubr ggarrange get_legend
+#' @importFrom circlize colorRamp2
+#' @importFrom scales muted
+#' @importFrom grid unit grid.grabExpr
+#' @export
 fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tSNE"),
                                           compare_list, color_list, n_kde = 200,
                                           outdir = getwd(), axis_title_text_size = 12,

@@ -1,84 +1,84 @@
-#’ @title Plot Cell Density on a 2D Reduction Embedding
-#’
-#’ @description
-#’   Computes a kernel density estimate over a 2D reduction (UMAP or tSNE)
-#’   and renders a filled contour plot of cell density. Returns both the
-#’   ggplot2 object and a separate legend grob for flexible layout.
-#’
-#’ @param fcs_join_obj
-#’   A list produced by FCSimple::fcs_join() and FCSimple::fcs_reduce_dimensions(),
-#’   containing a named element “umap” or “tsne” with component “coordinates”,
-#’   a numeric matrix of cell × 2 dimensions.
-#’
-#’ @param reduction
-#’   Character; which reduction to use. Either “UMAP” (default) or “tSNE”.
-#’
-#’ @param n_kde
-#’   Integer; number of grid points per axis for kde2d (default 200).
-#’
-#’ @param xlimits
-#’   Numeric vector length 2 or “auto” (default). If “auto”, uses the range
-#’   of the first reduction dimension.
-#’
-#’ @param ylimits
-#’   Numeric vector length 2 or “auto” (default). If “auto”, uses the range
-#’   of the second reduction dimension.
-#’
-#’ @param z_inflation
-#’   Numeric; multiplies raw density values before plotting (default 200)
-#’   to enhance contour separation.
-#’
-#’ @param text_size_factor
-#’   Numeric; global multiplier for text sizes and legend elements
-#’   (default 1).
-#’
-#’ @param title_string
-#’   Character; main plot title (default “my title”).
-#’
-#’ @param n_color_steps
-#’   Integer; number of discrete color levels for the fill scale
-#’   (default 15).
-#’
-#’ @param RColorBrewer_pal
-#’   Character; name of an RColorBrewer palette for the fill gradient
-#’   (default “Spectral”).
-#’
-#’ @param plot_border_thickness
-#’   Numeric or NA; width of panel border lines (default 1). Set to NA to
-#’   omit the border entirely.
-#’
-#’ @return
-#’   A list with components:
-#’   - `plot`: a ggplot2 object of the filled‐contour density map  
-#’   - `legend`: a grob of the color‐bar legend, suitable for manual placement
-#’
-#’ @examples
-#’ \dontrun{
-#’   # After computing UMAP on joined data
-#’   umap_obj <- FCSimple::fcs_reduce_dimensions(joined, method = "UMAP")
-#’
-#’   # Plot density on UMAP
-#’   res <- FCSimple::fcs_plot_reduction_density(
-#’     umap_obj,
-#’     reduction = "UMAP",
-#’     title_string = "My UMAP Density",
-#’     RColorBrewer_pal = "RdYlBu"
-#’   )
-#’   library(cowplot)
-#’   plot_grid(res$plot, res$legend, ncol = 1, rel_heights = c(1, 0.1))
-#’ }
-#’
-#’ @seealso
-#’   FCSimple::fcs_reduce_dimensions, MASS::kde2d, metR::geom_contour_fill,
-#’   ggpubr::get_legend
-#’
-#’ @importFrom MASS kde2d
-#’ @importFrom reshape2 melt
-#’ @importFrom metR geom_contour_fill
-#’ @importFrom ggplot2 ggplot aes geom_contour coord_cartesian labs theme theme_bw element_blank element_text element_rect scale_fill_gradientn guide_colorsteps ggplot_build
-#’ @importFrom RColorBrewer brewer.pal
-#’ @importFrom ggpubr get_legend
-#’ @export
+#' @title Plot Cell Density on a 2D Reduction Embedding
+#'
+#' @description
+#'   Computes a kernel density estimate over a 2D reduction (UMAP or tSNE)
+#'   and renders a filled contour plot of cell density. Returns both the
+#'   ggplot2 object and a separate legend grob for flexible layout.
+#'
+#' @param fcs_join_obj
+#'   A list produced by FCSimple::fcs_join() and FCSimple::fcs_reduce_dimensions(),
+#'   containing a named element “umap” or “tsne” with component “coordinates”,
+#'   a numeric matrix of cell × 2 dimensions.
+#'
+#' @param reduction
+#'   Character; which reduction to use. Either “UMAP” (default) or “tSNE”.
+#'
+#' @param n_kde
+#'   Integer; number of grid points per axis for kde2d (default 200).
+#'
+#' @param xlimits
+#'   Numeric vector length 2 or “auto” (default). If “auto”, uses the range
+#'   of the first reduction dimension.
+#'
+#' @param ylimits
+#'   Numeric vector length 2 or “auto” (default). If “auto”, uses the range
+#'   of the second reduction dimension.
+#'
+#' @param z_inflation
+#'   Numeric; multiplies raw density values before plotting (default 200)
+#'   to enhance contour separation.
+#'
+#' @param text_size_factor
+#'   Numeric; global multiplier for text sizes and legend elements
+#'   (default 1).
+#'
+#' @param title_string
+#'   Character; main plot title (default “my title”).
+#'
+#' @param n_color_steps
+#'   Integer; number of discrete color levels for the fill scale
+#'   (default 15).
+#'
+#' @param RColorBrewer_pal
+#'   Character; name of an RColorBrewer palette for the fill gradient
+#'   (default “Spectral”).
+#'
+#' @param plot_border_thickness
+#'   Numeric or NA; width of panel border lines (default 1). Set to NA to
+#'   omit the border entirely.
+#'
+#' @return
+#'   A list with components:
+#'   - `plot`: a ggplot2 object of the filled‐contour density map  
+#'   - `legend`: a grob of the color‐bar legend, suitable for manual placement
+#'
+#' @examples
+#' \dontrun{
+#'   # After computing UMAP on joined data
+#'   umap_obj <- FCSimple::fcs_reduce_dimensions(joined, method = "UMAP")
+#'
+#'   # Plot density on UMAP
+#'   res <- FCSimple::fcs_plot_reduction_density(
+#'     umap_obj,
+#'     reduction = "UMAP",
+#'     title_string = "My UMAP Density",
+#'     RColorBrewer_pal = "RdYlBu"
+#'   )
+#'   library(cowplot)
+#'   plot_grid(res$plot, res$legend, ncol = 1, rel_heights = c(1, 0.1))
+#' }
+#'
+#' @seealso
+#'   FCSimple::fcs_reduce_dimensions, MASS::kde2d, metR::geom_contour_fill,
+#'   ggpubr::get_legend
+#'
+#' @importFrom MASS kde2d
+#' @importFrom reshape2 melt
+#' @importFrom metR geom_contour_fill
+#' @importFrom ggplot2 ggplot aes geom_contour coord_cartesian labs theme theme_bw element_blank element_text element_rect scale_fill_gradientn guide_colorsteps ggplot_build
+#' @importFrom RColorBrewer brewer.pal
+#' @importFrom ggpubr get_legend
+#' @export
 fcs_plot_reduction_density <- function(fcs_join_obj, reduction = "UMAP", n_kde = 200,
                                        xlimits = "auto", ylimits = "auto",
                                        z_inflation = 200, text_size_factor = 1,

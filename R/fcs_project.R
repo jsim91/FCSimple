@@ -1,111 +1,111 @@
-#’ @title Project Marker Expression onto a 2D Embedding
-#’
-#’ @description
-#’   Creates a multi‐panel PDF of channel (parameter) expression projected onto
-#’   a 2D reduction embedding (UMAP or tSNE). For each specified parameter,
-#’   events are optionally trimmed of outliers, subsampled, and plotted as a
-#’   rasterized scatter colored by expression intensity. Panels are arranged
-#’   in 2×2 grids and written to disk.
-#’
-#’ @param fcs_join_obj
-#’   A list returned by FCSimple::fcs_join(), optionally augmented by
-#’   fcs_batch_correction() and fcs_reduce_dimensions(), containing:
-#’   - `data`: raw or transformed expression matrix (events × channels)
-#’   - `batch_correction$data` (if present)
-#’   - a `umap` or `tsne` element with `$coordinates` (events × 2)
-#’
-#’ @param override_correction
-#’   Logical; if `TRUE` (default), use `fcs_join_obj$data` even when
-#’   batch correction exists. If `FALSE`, uses
-#’   `fcs_join_obj$batch_correction$data`.
-#’
-#’ @param reduction
-#’   Character; embedding to use. Must be either `"UMAP"` (default) or `"tSNE"`.
-#’
-#’ @param parameters
-#’   Character vector of channel names to project. If `"all"` (default),
-#’   all columns in the selected data matrix are plotted.
-#’
-#’ @param outdir
-#’   Character; path to an existing directory where the PDF will be saved.
-#’   Defaults to `getwd()`.
-#’
-#’ @param sample_size
-#’   Integer; maximum number of events to sample per parameter before plotting
-#’   (default 50000).
-#’
-#’ @param point_size
-#’   Numeric; point size for the rasterized scatter (`geom_point_rast`)
-#’   (default 0.8).
-#’
-#’ @param trim_outliers
-#’   Logical; if `TRUE` (default), trims the lower and upper
-#’   `trim_quantile` fraction of observations before sampling.
-#’
-#’ @param trim_quantile
-#’   Numeric; quantile threshold for outlier trimming (default 0.01).
-#’
-#’ @param force_xlim
-#’   Numeric vector of length 2 to fix the x‐axis limits, or `FALSE`
-#’   (default) to use the data range.
-#’
-#’ @param force_ylim
-#’   Numeric vector of length 2 to fix the y‐axis limits, or `FALSE`
-#’   (default) to use the data range.
-#’
-#’ @details
-#’   1. Determines which expression matrix to use based on
-#’      `override_correction`.  
-#’   2. Extracts UMAP or tSNE coordinates from
-#’      `fcs_join_obj[[ tolower(reduction) ]][["coordinates"]]`.  
-#’   3. Selects the requested `parameters` (all by default).  
-#’   4. For each parameter:  
-#’      - Trims outliers at the specified quantiles.  
-#’      - Subsamples up to `sample_size` points.  
-#’      - Creates a rasterized scatter plot colored by expression  
-#’        (`scale_color_viridis(option="D")`).  
-#’      - Honors any fixed `force_xlim`/`force_ylim`.  
-#’   5. Arranges plots into pages of 2×2 panels via ggpubr::ggarrange().  
-#’   6. Saves a timestamped PDF named  
-#’      `<reduction>_parameter_projections_<YYYY-MM-DD_HHMMSS>.pdf`.  
-#’
-#’ @return
-#’   Invisibly returns `NULL`. The side effect is a multi‐page PDF written
-#’   to `outdir`.
-#’
-#’ @examples
-#’ \dontrun{
-#’   # Assume joined, reduced and batch‐corrected object
-#’   joined <- FCSimple::fcs_join(files)
-#’   reduced <- FCSimple::fcs_reduce_dimensions(joined, method = "UMAP")
-#’   corrected <- FCSimple::fcs_batch_correction(reduced)
-#’
-#’   # Project all channels onto UMAP
-#’   FCSimple::fcs_project_parameters(
-#’     corrected,
-#’     reduction = "UMAP",
-#’     outdir    = "~/results"
-#’   )
-#’
-#’   # Project only CD3 and CD19
-#’   FCSimple::fcs_project_parameters(
-#’     corrected,
-#’     parameters = c("CD3","CD19"),
-#’     sample_size = 30000
-#’   )
-#’ }
-#’
-#’ @seealso
-#’   FCSimple::fcs_reduce_dimensions, FCSimple::fcs_plot_reduction,
-#’   ggplot2::ggplot, viridis::scale_color_viridis,
-#’   ggrastr::geom_point_rast, ggpubr::ggarrange
-#’
-#’ @importFrom ggplot2 ggplot aes theme_minimal theme xlim ylim ggtitle
-#’ @importFrom viridis scale_color_viridis
-#’ @importFrom ggrastr geom_point_rast
-#’ @importFrom ggpubr ggarrange
-#’ @importFrom gridExtra marrangeGrob
-#’ @export
+#' @title Project Marker Expression onto a 2D Embedding
+#'
+#' @description
+#'   Creates a multi‐panel PDF of channel (parameter) expression projected onto
+#'   a 2D reduction embedding (UMAP or tSNE). For each specified parameter,
+#'   events are optionally trimmed of outliers, subsampled, and plotted as a
+#'   rasterized scatter colored by expression intensity. Panels are arranged
+#'   in 2×2 grids and written to disk.
+#'
+#' @param fcs_join_obj
+#'   A list returned by FCSimple::fcs_join(), optionally augmented by
+#'   fcs_batch_correction() and fcs_reduce_dimensions(), containing:
+#'   - `data`: raw or transformed expression matrix (events × channels)
+#'   - `batch_correction$data` (if present)
+#'   - a `umap` or `tsne` element with `$coordinates` (events × 2)
+#'
+#' @param override_correction
+#'   Logical; if `TRUE` (default), use `fcs_join_obj$data` even when
+#'   batch correction exists. If `FALSE`, uses
+#'   `fcs_join_obj$batch_correction$data`.
+#'
+#' @param reduction
+#'   Character; embedding to use. Must be either `"UMAP"` (default) or `"tSNE"`.
+#'
+#' @param parameters
+#'   Character vector of channel names to project. If `"all"` (default),
+#'   all columns in the selected data matrix are plotted.
+#'
+#' @param outdir
+#'   Character; path to an existing directory where the PDF will be saved.
+#'   Defaults to `getwd()`.
+#'
+#' @param sample_size
+#'   Integer; maximum number of events to sample per parameter before plotting
+#'   (default 50000).
+#'
+#' @param point_size
+#'   Numeric; point size for the rasterized scatter (`geom_point_rast`)
+#'   (default 0.8).
+#'
+#' @param trim_outliers
+#'   Logical; if `TRUE` (default), trims the lower and upper
+#'   `trim_quantile` fraction of observations before sampling.
+#'
+#' @param trim_quantile
+#'   Numeric; quantile threshold for outlier trimming (default 0.01).
+#'
+#' @param force_xlim
+#'   Numeric vector of length 2 to fix the x‐axis limits, or `FALSE`
+#'   (default) to use the data range.
+#'
+#' @param force_ylim
+#'   Numeric vector of length 2 to fix the y‐axis limits, or `FALSE`
+#'   (default) to use the data range.
+#'
+#' @details
+#'   1. Determines which expression matrix to use based on
+#'      `override_correction`.  
+#'   2. Extracts UMAP or tSNE coordinates from
+#'      `fcs_join_obj[[ tolower(reduction) ]][["coordinates"]]`.  
+#'   3. Selects the requested `parameters` (all by default).  
+#'   4. For each parameter:  
+#'      - Trims outliers at the specified quantiles.  
+#'      - Subsamples up to `sample_size` points.  
+#'      - Creates a rasterized scatter plot colored by expression  
+#'        (`scale_color_viridis(option="D")`).  
+#'      - Honors any fixed `force_xlim`/`force_ylim`.  
+#'   5. Arranges plots into pages of 2×2 panels via ggpubr::ggarrange().  
+#'   6. Saves a timestamped PDF named  
+#'      `<reduction>_parameter_projections_<YYYY-MM-DD_HHMMSS>.pdf`.  
+#'
+#' @return
+#'   Invisibly returns `NULL`. The side effect is a multi‐page PDF written
+#'   to `outdir`.
+#'
+#' @examples
+#' \dontrun{
+#'   # Assume joined, reduced and batch‐corrected object
+#'   joined <- FCSimple::fcs_join(files)
+#'   reduced <- FCSimple::fcs_reduce_dimensions(joined, method = "UMAP")
+#'   corrected <- FCSimple::fcs_batch_correction(reduced)
+#'
+#'   # Project all channels onto UMAP
+#'   FCSimple::fcs_project_parameters(
+#'     corrected,
+#'     reduction = "UMAP",
+#'     outdir    = "~/results"
+#'   )
+#'
+#'   # Project only CD3 and CD19
+#'   FCSimple::fcs_project_parameters(
+#'     corrected,
+#'     parameters = c("CD3","CD19"),
+#'     sample_size = 30000
+#'   )
+#' }
+#'
+#' @seealso
+#'   FCSimple::fcs_reduce_dimensions, FCSimple::fcs_plot_reduction,
+#'   ggplot2::ggplot, viridis::scale_color_viridis,
+#'   ggrastr::geom_point_rast, ggpubr::ggarrange
+#'
+#' @importFrom ggplot2 ggplot aes theme_minimal theme xlim ylim ggtitle
+#' @importFrom viridis scale_color_viridis
+#' @importFrom ggrastr geom_point_rast
+#' @importFrom ggpubr ggarrange
+#' @importFrom gridExtra marrangeGrob
+#' @export
 fcs_project_parameters <- function(fcs_join_obj,
                                    override_correction = TRUE, 
                                    reduction = c("UMAP","tSNE"),

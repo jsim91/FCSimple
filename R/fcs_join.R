@@ -1,128 +1,128 @@
-#’ @title Read and Join Multiple FCS Files into a Single Analysis Object
-#’
-#’ @description
-#’   Reads a set of FCS files, optionally downsamples and applies transformations
-#’   (FlowJo diagnostics, asinh, biexp, or hyperlog), and concatenates them into
-#’   a unified data matrix with accompanying metadata and history.
-#’
-#’ @param files
-#’   Character vector of file paths to .fcs files.
-#’
-#’ @param flowjo_diagnostics_file
-#’   Optional path to a FlowJo diagnostics TXT file (Configure → Diagnostics →
-#’   “Show XML for Workspace”). Provides per-channel transform parameters.
-#’   Default `NULL`.
-#’
-#’ @param apply_transform
-#’   Logical; if `TRUE` (default), applies channel transformations. If `FALSE`,
-#’   returns raw data only.
-#’
-#’ @param instrument_type
-#’   Character; one of `"cytof"` for mass cytometry or `"flow"` for fluorescence
-#’   cytometry. Default `c("cytof","flow")` (uses first).
-#’
-#’ @param use_descriptive_column_names
-#’   Logical; if `TRUE` (default), replaces channel names with descriptive labels
-#’   from FCS metadata.
-#’
-#’ @param transform_function
-#’   Optional user-supplied `transformList` (e.g., from
-#’   `flowCore::transformList`) for per-channel transforms. Overrides
-#’   `transform_type` when `transform_per_channel = TRUE`.
-#’
-#’ @param transform_type
-#’   Character; global transform to apply when `transform_per_channel = FALSE`.
-#’   One of `"asinh"`, `"biexp"`, or `"hyperlog"`. Default
-#’   `c("asinh","biexp","hyperlog")`.
-#’
-#’ @param asinh_transform_cofactor
-#’   Numeric cofactor for asinh transforms (default 5).
-#’
-#’ @param biexp_transform_pos
-#’   Numeric positive breakpoint for biexp (default 4.5).
-#’
-#’ @param biexp_transform_neg
-#’   Numeric negative breakpoint for biexp (default 0).
-#’
-#’ @param biexp_transform_width
-#’   Numeric width basis for biexp (default -10).
-#’
-#’ @param hyperlog_transform_T
-#’   Numeric “T” parameter for hyperlog transform (default 100000).
-#’
-#’ @param hyperlog_transform_M
-#’   Numeric “M” decades for hyperlog transform (default 5).
-#’
-#’ @param hyperlog_transform_W
-#’   Numeric “W” width around zero for hyperlog transform (default 0.001).
-#’
-#’ @param hyperlog_transform_A
-#’   Numeric “A” offset for hyperlog transform (default 2).
-#’
-#’ @param transform_per_channel
-#’   Logical; if `TRUE` (default), launches an interactive Shiny application  
-#’   (in `transform_app/`) to preview and tweak per-channel transforms. The  
-#’   function will block until you finish and close the app. If `FALSE`,  
-#’   applies the global `transform_type`.
-#’
-#’ @param downsample_size
-#’   Integer or `NA`; maximum events per file to sample before joining.
-#’   Default `c(NA, 25000)`: no sampling if `NA`, otherwise samples up to 25K.
-#’
-#’ @param batch_pattern
-#’   Regular expression to extract `run_date` from sample names in `source`.
-#’   Default `"[0-9]+\\-[A-Za-z]+\\-[0-9]+"`.
-#’
-#’ @details
-#’   Internally, the function:
-#’   1. Reads all files into a `flowSet` via `flowCore::read.flowSet()`.  
-#’   2. Optionally downsamples each file to `downsample_size`.  
-#’   3. Extracts expression matrices with `flowCore::exprs()`.  
-#’   4. If `transform_per_channel = TRUE`, launches the package’s  
-#’      `transform_app/` Shiny GUI so you can inspect per-channel  
-#’      diagnostics and build a custom `transformList`.  
-#’   5. Otherwise, applies the global transform as specified by  
-#’      `transform_type` or user’s `transform_function`.  
-#’   6. Concatenates raw and transformed data into `raw` and `data` matrices.  
-#’   7. Builds `source` and `run_date` via `flowCore::sampleNames()` and  
-#’      `stringr::str_extract()`.  
-#’   8. Records `collection_instrument` and appends a timestamp in  
-#’      `object_history`.
-#’
-#’ @return
-#’   A list with elements:
-#’   - `data`: numeric matrix of transformed events × channels.  
-#’   - `raw`: numeric matrix of untransformed events × channels.  
-#’   - `source`: character vector of sample identifiers for each event.  
-#’   - `run_date`: character vector parsed from `source` via `batch_pattern`.  
-#’   - `transform_list`: per-channel transform parameters (if FlowJo used).  
-#’   - `collection_instrument`: chosen `instrument_type`.  
-#’   - `object_history`: timestamped entry recording the join.
-#’
-#’ @examples
-#’ \dontrun{
-#’ # Basic join with default transforms
-#’ files <- list.files("data/fcs", pattern = "\\.fcs$", full.names = TRUE)
-#’ joined <- FCSimple::fcs_join(files)
-#’
-#’ # Interactive per-channel diagnostics via Shiny
-#’ joined2 <- FCSimple::fcs_join(
-#’   files,
-#’   transform_per_channel = TRUE
-#’ )
-#’
-#’ # Raw join without any transforms
-#’ joined_raw <- FCSimple::fcs_join(files, apply_transform = FALSE)
-#’ }
-#’
-#’ @seealso
-#’   flowCore::read.flowSet, flowCore::exprs, flowCore::transformList,
-#’   flowWorkspace::flowjo_biexp, stringr::str_extract
-#’
-#’ @importFrom flowCore read.flowSet exprs sampleNames fsApply transformList
-#’ @importFrom flowWorkspace flowjo_biexp
-#’ @importFrom stringr str_extract
-#’ @export
+#' @title Read and Join Multiple FCS Files into a Single Analysis Object
+#'
+#' @description
+#'   Reads a set of FCS files, optionally downsamples and applies transformations
+#'   (FlowJo diagnostics, asinh, biexp, or hyperlog), and concatenates them into
+#'   a unified data matrix with accompanying metadata and history.
+#'
+#' @param files
+#'   Character vector of file paths to .fcs files.
+#'
+#' @param flowjo_diagnostics_file
+#'   Optional path to a FlowJo diagnostics TXT file (Configure → Diagnostics →
+#'   “Show XML for Workspace”). Provides per-channel transform parameters.
+#'   Default `NULL`.
+#'
+#' @param apply_transform
+#'   Logical; if `TRUE` (default), applies channel transformations. If `FALSE`,
+#'   returns raw data only.
+#'
+#' @param instrument_type
+#'   Character; one of `"cytof"` for mass cytometry or `"flow"` for fluorescence
+#'   cytometry. Default `c("cytof","flow")` (uses first).
+#'
+#' @param use_descriptive_column_names
+#'   Logical; if `TRUE` (default), replaces channel names with descriptive labels
+#'   from FCS metadata.
+#'
+#' @param transform_function
+#'   Optional user-supplied `transformList` (e.g., from
+#'   `flowCore::transformList`) for per-channel transforms. Overrides
+#'   `transform_type` when `transform_per_channel = TRUE`.
+#'
+#' @param transform_type
+#'   Character; global transform to apply when `transform_per_channel = FALSE`.
+#'   One of `"asinh"`, `"biexp"`, or `"hyperlog"`. Default
+#'   `c("asinh","biexp","hyperlog")`.
+#'
+#' @param asinh_transform_cofactor
+#'   Numeric cofactor for asinh transforms (default 5).
+#'
+#' @param biexp_transform_pos
+#'   Numeric positive breakpoint for biexp (default 4.5).
+#'
+#' @param biexp_transform_neg
+#'   Numeric negative breakpoint for biexp (default 0).
+#'
+#' @param biexp_transform_width
+#'   Numeric width basis for biexp (default -10).
+#'
+#' @param hyperlog_transform_T
+#'   Numeric “T” parameter for hyperlog transform (default 100000).
+#'
+#' @param hyperlog_transform_M
+#'   Numeric “M” decades for hyperlog transform (default 5).
+#'
+#' @param hyperlog_transform_W
+#'   Numeric “W” width around zero for hyperlog transform (default 0.001).
+#'
+#' @param hyperlog_transform_A
+#'   Numeric “A” offset for hyperlog transform (default 2).
+#'
+#' @param transform_per_channel
+#'   Logical; if `TRUE` (default), launches an interactive Shiny application  
+#'   (in `transform_app/`) to preview and tweak per-channel transforms. The  
+#'   function will block until you finish and close the app. If `FALSE`,  
+#'   applies the global `transform_type`.
+#'
+#' @param downsample_size
+#'   Integer or `NA`; maximum events per file to sample before joining.
+#'   Default `c(NA, 25000)`: no sampling if `NA`, otherwise samples up to 25K.
+#'
+#' @param batch_pattern
+#'   Regular expression to extract `run_date` from sample names in `source`.
+#'   Default `"[0-9]+\\-[A-Za-z]+\\-[0-9]+"`.
+#'
+#' @details
+#'   Internally, the function:
+#'   1. Reads all files into a `flowSet` via `flowCore::read.flowSet()`.  
+#'   2. Optionally downsamples each file to `downsample_size`.  
+#'   3. Extracts expression matrices with `flowCore::exprs()`.  
+#'   4. If `transform_per_channel = TRUE`, launches the package’s  
+#'      `transform_app/` Shiny GUI so you can inspect per-channel  
+#'      diagnostics and build a custom `transformList`.  
+#'   5. Otherwise, applies the global transform as specified by  
+#'      `transform_type` or user’s `transform_function`.  
+#'   6. Concatenates raw and transformed data into `raw` and `data` matrices.  
+#'   7. Builds `source` and `run_date` via `flowCore::sampleNames()` and  
+#'      `stringr::str_extract()`.  
+#'   8. Records `collection_instrument` and appends a timestamp in  
+#'      `object_history`.
+#'
+#' @return
+#'   A list with elements:
+#'   - `data`: numeric matrix of transformed events × channels.  
+#'   - `raw`: numeric matrix of untransformed events × channels.  
+#'   - `source`: character vector of sample identifiers for each event.  
+#'   - `run_date`: character vector parsed from `source` via `batch_pattern`.  
+#'   - `transform_list`: per-channel transform parameters (if FlowJo used).  
+#'   - `collection_instrument`: chosen `instrument_type`.  
+#'   - `object_history`: timestamped entry recording the join.
+#'
+#' @examples
+#' \dontrun{
+#' # Basic join with default transforms
+#' files <- list.files("data/fcs", pattern = "\\.fcs$", full.names = TRUE)
+#' joined <- FCSimple::fcs_join(files)
+#'
+#' # Interactive per-channel diagnostics via Shiny
+#' joined2 <- FCSimple::fcs_join(
+#'   files,
+#'   transform_per_channel = TRUE
+#' )
+#'
+#' # Raw join without any transforms
+#' joined_raw <- FCSimple::fcs_join(files, apply_transform = FALSE)
+#' }
+#'
+#' @seealso
+#'   flowCore::read.flowSet, flowCore::exprs, flowCore::transformList,
+#'   flowWorkspace::flowjo_biexp, stringr::str_extract
+#'
+#' @importFrom flowCore read.flowSet exprs sampleNames fsApply transformList
+#' @importFrom flowWorkspace flowjo_biexp
+#' @importFrom stringr str_extract
+#' @export
 fcs_join <- function(files,
                      flowjo_diagnostics_file = NULL,
                      apply_transform = TRUE,

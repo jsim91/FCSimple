@@ -1,93 +1,93 @@
-#’ @title  
-#’   Tracking Responders EXpanding (T-REX) Hotspot Identification  
-#’  
-#’ @description  
-#’   Applies the Tracking Responders EXpanding (T-REX) algorithm to identify  
-#’   phenotypic “hotspots” of significant expansion or contraction between  
-#’   two paired cytometry samples. Cells are embedded in 2D (UMAP or tSNE), a  
-#’   k-nearest‐neighbor (KNN) search is performed around every cell, and local  
-#’   neighborhoods with a specified percent-change threshold are flagged as  
-#’   hotspots.  
-#’  
-#’ @details  
-#’   This implementation follows the original T-REX workflow of Barone et al. (2021), with the addition  
-#’   of Marker Enrichment Modeling (MEM) for hotspot phenotyping per Diggins et al. (2017). Steps:  
-#’   1. Extract 2D embedding and split cells into reference vs. comparison groups.  
-#’   2. For each cell, query its k nearest neighbors (k = `k`) via `FNN::get.knnx()`.  
-#’   3. Compute local fraction of neighbors in each group; flag cells below  
-#’      `change_thresholds[1]` (contraction) or above `change_thresholds[2]`  
-#’      (expansion).  
-#’   4. Optionally down-sample if Ncells > 500k for speed.  
-#’   5. Run MEM (via `MEM::MarkerEnrichment`) on `mem_features` to derive  
-#’      enrichment scores for each hotspot region.  
-#’   6. Save hotspot assignments, MEM score tables, and diagnostics to `outdir`.  
-#’  
-#’ @param fcs_join_obj  
-#’   A list returned by `FCSimple::fcs_join()`, then reduced via  
-#’   `FCSimple::fcs_reduce_dimensions()`, containing:  
-#’   - `<reduction>$coordinates`: numeric Ncells×2 embedding matrix  
-#’   - `source`: vector labeling each cell’s sample/timepoint  
-#’  
-#’ @param reduction  
-#’   Character; which embedding to use. `"UMAP"` (default) or `"tSNE"`.  
-#’  
-#’ @param k  
-#’   Integer; number of neighbors for KNN (default 60).  
-#’  
-#’ @param change_thresholds  
-#’   Numeric(2); lower and upper fractions (e.g. `c(0.05,0.95)`) for  
-#’   contraction/expansion cutoffs (default `c(0.05,0.95)`).  
-#’  
-#’ @param ref_label  
-#’   Character; name of the reference sample/timepoint in `source`.  
-#’  
-#’ @param mem_features  
-#’   Character vector of channels to pass to MEM for hotspot annotation  
-#’   (default `"all"`).  
-#’  
-#’ @param mem_scale  
-#’   Numeric(2); MEM score scale range (default `c(0,10)`).  
-#’  
-#’ @param outdir  
-#’   Character; directory where plots and tables are saved (default `getwd()`).  
-#’  
-#’ @return  
-#’   A list with:  
-#’   - `hotspot_labels`: integer vector (–1, 0, +1) per cell for contraction/no-change/expansion  
-#’   - `mem_scores`: data.frame of MEM enrichment per hotspot  
-#’   - `object_history`: the appended T-REX run record  
-#’  
-#’ @examples  
-#’ \dontrun{  
-#’ files   <- list(ff1, ff2)  
-#’ joined  <- FCSimple::fcs_join(files)  
-#’ reduced <- FCSimple::fcs_reduce_dimensions(joined, method = "UMAP")  
-#’  
-#’ res <- FCSimple::fcs_trex(  
-#’   reduced,  
-#’   reduction         = "UMAP",  
-#’   k                 = 60,  
-#’   change_thresholds = c(0.05, 0.95),  
-#’   ref_label         = "day0",  
-#’   mem_features      = c("CD3","CD4","CD8")  
-#’ )  
-#’ }  
-#’  
-#’ @seealso  
-#’   FCSimple::fcs_plot_reduction, FCSimple::fcs_cluster_heatmap,  
-#’   MASS::kde2d, dbscan::dbscan, flowCore::flowFrame, MEM::MarkerEnrichment  
-#’  
-#’ @references  
-#’ [1] Barone SM, Paul AG, Muehling LM, et al. Unsupervised machine learning  
-#’     reveals key immune cell subsets in COVID-19, rhinovirus infection, and cancer  
-#’     therapy. eLife. 2021;10:e64653. doi:10.7554/eLife.64653  
-#’ [2] Diggins KE, Greenplate AR, Leelatian N, Wogsland CE, Irish JM.  
-#’     Characterizing cell subsets using Marker Enrichment Modeling. Nat Methods.  
-#’     2017;14(3):275–278. doi:10.1038/nmeth.4149  
-#’  
-#’ @importFrom FNN get.knnx  
-#’ @importFrom MEM MarkerEnrichment
-#’ @export
+#' @title  
+#'   Tracking Responders EXpanding (T-REX) Hotspot Identification  
+#'  
+#' @description  
+#'   Applies the Tracking Responders EXpanding (T-REX) algorithm to identify  
+#'   phenotypic “hotspots” of significant expansion or contraction between  
+#'   two paired cytometry samples. Cells are embedded in 2D (UMAP or tSNE), a  
+#'   k-nearest‐neighbor (KNN) search is performed around every cell, and local  
+#'   neighborhoods with a specified percent-change threshold are flagged as  
+#'   hotspots.  
+#'  
+#' @details  
+#'   This implementation follows the original T-REX workflow of Barone et al. (2021), with the addition  
+#'   of Marker Enrichment Modeling (MEM) for hotspot phenotyping per Diggins et al. (2017). Steps:  
+#'   1. Extract 2D embedding and split cells into reference vs. comparison groups.  
+#'   2. For each cell, query its k nearest neighbors (k = `k`) via `FNN::get.knnx()`.  
+#'   3. Compute local fraction of neighbors in each group; flag cells below  
+#'      `change_thresholds[1]` (contraction) or above `change_thresholds[2]`  
+#'      (expansion).  
+#'   4. Optionally down-sample if Ncells > 500k for speed.  
+#'   5. Run MEM (via `MEM::MarkerEnrichment`) on `mem_features` to derive  
+#'      enrichment scores for each hotspot region.  
+#'   6. Save hotspot assignments, MEM score tables, and diagnostics to `outdir`.  
+#'  
+#' @param fcs_join_obj  
+#'   A list returned by `FCSimple::fcs_join()`, then reduced via  
+#'   `FCSimple::fcs_reduce_dimensions()`, containing:  
+#'   - `<reduction>$coordinates`: numeric Ncells×2 embedding matrix  
+#'   - `source`: vector labeling each cell’s sample/timepoint  
+#'  
+#' @param reduction  
+#'   Character; which embedding to use. `"UMAP"` (default) or `"tSNE"`.  
+#'  
+#' @param k  
+#'   Integer; number of neighbors for KNN (default 60).  
+#'  
+#' @param change_thresholds  
+#'   Numeric(2); lower and upper fractions (e.g. `c(0.05,0.95)`) for  
+#'   contraction/expansion cutoffs (default `c(0.05,0.95)`).  
+#'  
+#' @param ref_label  
+#'   Character; name of the reference sample/timepoint in `source`.  
+#'  
+#' @param mem_features  
+#'   Character vector of channels to pass to MEM for hotspot annotation  
+#'   (default `"all"`).  
+#'  
+#' @param mem_scale  
+#'   Numeric(2); MEM score scale range (default `c(0,10)`).  
+#'  
+#' @param outdir  
+#'   Character; directory where plots and tables are saved (default `getwd()`).  
+#'  
+#' @return  
+#'   A list with:  
+#'   - `hotspot_labels`: integer vector (–1, 0, +1) per cell for contraction/no-change/expansion  
+#'   - `mem_scores`: data.frame of MEM enrichment per hotspot  
+#'   - `object_history`: the appended T-REX run record  
+#'  
+#' @examples  
+#' \dontrun{  
+#' files   <- list(ff1, ff2)  
+#' joined  <- FCSimple::fcs_join(files)  
+#' reduced <- FCSimple::fcs_reduce_dimensions(joined, method = "UMAP")  
+#'  
+#' res <- FCSimple::fcs_trex(  
+#'   reduced,  
+#'   reduction         = "UMAP",  
+#'   k                 = 60,  
+#'   change_thresholds = c(0.05, 0.95),  
+#'   ref_label         = "day0",  
+#'   mem_features      = c("CD3","CD4","CD8")  
+#' )  
+#' }  
+#'  
+#' @seealso  
+#'   FCSimple::fcs_plot_reduction, FCSimple::fcs_cluster_heatmap,  
+#'   MASS::kde2d, dbscan::dbscan, flowCore::flowFrame, MEM::MarkerEnrichment  
+#'  
+#' @references  
+#' [1] Barone SM, Paul AG, Muehling LM, et al. Unsupervised machine learning  
+#'     reveals key immune cell subsets in COVID-19, rhinovirus infection, and cancer  
+#'     therapy. eLife. 2021;10:e64653. doi:10.7554/eLife.64653  
+#' [2] Diggins KE, Greenplate AR, Leelatian N, Wogsland CE, Irish JM.  
+#'     Characterizing cell subsets using Marker Enrichment Modeling. Nat Methods.  
+#'     2017;14(3):275–278. doi:10.1038/nmeth.4149  
+#'  
+#' @importFrom FNN get.knnx  
+#' @importFrom MEM MarkerEnrichment
+#' @export
 fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), outdir,
                      point_alpha = 0.05, neighborhood_size = 60,
                      percentile_breaks = c(0,5,10,15,85,90,95,100),

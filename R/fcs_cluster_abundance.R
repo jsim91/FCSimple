@@ -1,57 +1,57 @@
-#’ @title Calculate Cluster Abundance Across Samples
-#’
-#’ @description
-#’   Computes per‐sample cluster abundances for a previously clustered flow
-#’   cytometry object. Stores a matrix of frequencies (0–100) or fractions
-#’   (0–1) under the chosen algorithm’s `abundance` element, and appends an
-#’   entry to `object_history`.
-#’
-#’ @param fcs_join_obj
-#’   A list returned by FCSimple::fcs_join() and FCSimple::fcs_cluster(),
-#’   containing at minimum:
-#’   - `source`: a character vector of original sample identifiers
-#’   - `<algorithm>`: a list whose first element is a vector of cluster IDs
-#’   - `object_history`: an optional history log
-#’
-#’ @param report_algorithm
-#’   Character; name of the clustering result to summarize. One of
-#’   `"leiden"`, `"flowsom"`, `"louvain"`, `"phenograph"`, or `"git"`.
-#’
-#’ @param report_as
-#’   Character; type of abundance metric. `"frequency"` (0–100) or
-#’   `"fraction"` (0–1). Defaults to `"frequency"`.
-#’
-#’ @details
-#’   The function will:
-#’   1. Validate that the specified algorithm and `source` exist.
-#’   2. Tabulate the proportion of cells in each cluster, per sample.
-#’   3. Multiply by 100 if `report_as = "frequency"`.
-#’   4. Store the result in `fcs_join_obj[[report_algorithm]][["abundance"]]`.
-#’   5. Append a timestamped note to `object_history`.
-#’
-#’ @return
-#’   The input `fcs_join_obj`, augmented with:
-#’   - `<algorithm>$abundance`: a numeric matrix (samples × clusters)
-#’   - updated `object_history` entry
-#’
-#’ @examples
-#’ \dontrun{
-#’   joined <- FCSimple::fcs_join(list(ff1, ff2))
-#’   clustered <- FCSimple::fcs_cluster(joined, algorithm = "leiden")
-#’
-#’   # Get percentage abundance for Leiden clusters
-#’   out <- FCSimple::fcs_calculate_abundance(
-#’     clustered,
-#’     report_algorithm = "leiden",
-#’     report_as = "frequency"
-#’   )
-#’ }
-#’
-#’ @seealso
-#’   FCSimple::fcs_cluster, FCSimple::fcs_report_abundance
-#’
-#’ @importFrom utils write.csv
-#’ @export
+#' @title Calculate Cluster Abundance Across Samples
+#'
+#' @description
+#'   Computes per‐sample cluster abundances for a previously clustered flow
+#'   cytometry object. Stores a matrix of frequencies (0–100) or fractions
+#'   (0–1) under the chosen algorithm’s `abundance` element, and appends an
+#'   entry to `object_history`.
+#'
+#' @param fcs_join_obj
+#'   A list returned by FCSimple::fcs_join() and FCSimple::fcs_cluster(),
+#'   containing at minimum:
+#'   - `source`: a character vector of original sample identifiers
+#'   - `<algorithm>`: a list whose first element is a vector of cluster IDs
+#'   - `object_history`: an optional history log
+#'
+#' @param report_algorithm
+#'   Character; name of the clustering result to summarize. One of
+#'   `"leiden"`, `"flowsom"`, `"louvain"`, `"phenograph"`, or `"git"`.
+#'
+#' @param report_as
+#'   Character; type of abundance metric. `"frequency"` (0–100) or
+#'   `"fraction"` (0–1). Defaults to `"frequency"`.
+#'
+#' @details
+#'   The function will:
+#'   1. Validate that the specified algorithm and `source` exist.
+#'   2. Tabulate the proportion of cells in each cluster, per sample.
+#'   3. Multiply by 100 if `report_as = "frequency"`.
+#'   4. Store the result in `fcs_join_obj[[report_algorithm]][["abundance"]]`.
+#'   5. Append a timestamped note to `object_history`.
+#'
+#' @return
+#'   The input `fcs_join_obj`, augmented with:
+#'   - `<algorithm>$abundance`: a numeric matrix (samples × clusters)
+#'   - updated `object_history` entry
+#'
+#' @examples
+#' \dontrun{
+#'   joined <- FCSimple::fcs_join(list(ff1, ff2))
+#'   clustered <- FCSimple::fcs_cluster(joined, algorithm = "leiden")
+#'
+#'   # Get percentage abundance for Leiden clusters
+#'   out <- FCSimple::fcs_calculate_abundance(
+#'     clustered,
+#'     report_algorithm = "leiden",
+#'     report_as = "frequency"
+#'   )
+#' }
+#'
+#' @seealso
+#'   FCSimple::fcs_cluster, FCSimple::fcs_report_abundance
+#'
+#' @importFrom utils write.csv
+#' @export
 fcs_calculate_abundance <- function(fcs_join_obj,
                                     report_algorithm = c("leiden","flowsom","louvain","phenograph","git"),
                                     report_as = c("frequency", "fraction"))
@@ -96,45 +96,45 @@ fcs_calculate_abundance <- function(fcs_join_obj,
   return(fcs_join_obj)
 }
 
-#’ @title Report Cluster Abundance to CSV File
-#’
-#’ @description
-#’   Exports the cluster‐abundance matrix (samples × clusters) to a CSV in the
-#’   specified directory, and returns the matrix invisibly.
-#’
-#’ @param fcs_join_obj
-#’   A list with a `[[algorithm]][["abundance"]]` matrix, as produced by
-#’   FCSimple::fcs_calculate_abundance().
-#’
-#’ @param report_algorithm
-#’   Character; name of the abundance matrix to export. One of
-#’   `"leiden"`, `"flowsom"`, `"louvain"`, `"phenograph"`, or `"git"`.
-#’
-#’ @param outdir
-#’   Character; file path to an existing directory. Defaults to `getwd()`.
-#’
-#’ @return
-#’   Invisibly returns the abundance matrix (numeric matrix with sample rows
-#’   and cluster‐ID columns).
-#’
-#’ @examples
-#’ \dontrun{
-#’   # Assume 'clustered' has abundance computed
-#’   abundance_mat <- FCSimple::fcs_calculate_abundance(clustered)
-#’
-#’   # Write to your working directory
-#’   FCSimple::fcs_report_abundance(
-#’     clustered,
-#’     report_algorithm = "leiden",
-#’     outdir = "~/my_analysis/results"
-#’   )
-#’ }
-#’
-#’ @seealso
-#’   FCSimple::fcs_calculate_abundance
-#’
-#’ @importFrom utils write.csv
-#’ @export
+#' @title Report Cluster Abundance to CSV File
+#'
+#' @description
+#'   Exports the cluster‐abundance matrix (samples × clusters) to a CSV in the
+#'   specified directory, and returns the matrix invisibly.
+#'
+#' @param fcs_join_obj
+#'   A list with a `[[algorithm]][["abundance"]]` matrix, as produced by
+#'   FCSimple::fcs_calculate_abundance().
+#'
+#' @param report_algorithm
+#'   Character; name of the abundance matrix to export. One of
+#'   `"leiden"`, `"flowsom"`, `"louvain"`, `"phenograph"`, or `"git"`.
+#'
+#' @param outdir
+#'   Character; file path to an existing directory. Defaults to `getwd()`.
+#'
+#' @return
+#'   Invisibly returns the abundance matrix (numeric matrix with sample rows
+#'   and cluster‐ID columns).
+#'
+#' @examples
+#' \dontrun{
+#'   # Assume 'clustered' has abundance computed
+#'   abundance_mat <- FCSimple::fcs_calculate_abundance(clustered)
+#'
+#'   # Write to your working directory
+#'   FCSimple::fcs_report_abundance(
+#'     clustered,
+#'     report_algorithm = "leiden",
+#'     outdir = "~/my_analysis/results"
+#'   )
+#' }
+#'
+#' @seealso
+#'   FCSimple::fcs_calculate_abundance
+#'
+#' @importFrom utils write.csv
+#' @export
 fcs_report_abundance <- function(fcs_join_obj,
                                  report_algorithm = c("leiden","flowsom","louvain","phenograph","git"),
                                  outdir = getwd())

@@ -1,107 +1,107 @@
-#’ @title Generate Cluster Heatmap for Flow Cytometry Data
-#’
-#’ @description
-#’   Computes and visualizes median‐scaled expression of each cluster across
-#’   parameters using ComplexHeatmap. Selects raw or batch‐corrected data,
-#’   aggregates by cluster, and stores both the heatmap object and tile data.
-#’
-#’ @param fcs_join_obj
-#’   A list returned by FCSimple::fcs_join() and FCSimple::fcs_cluster(),
-#’   containing at least:
-#’   - `data`: numeric matrix of events × channels
-#’   - `<algorithm>$clusters`: vector of cluster IDs per event
-#’   - optionally `batch_correction$data` if correction was applied
-#’
-#’ @param algorithm
-#’   Character; name of clustering results in `fcs_join_obj` to use
-#’   (e.g. `"leiden"`, `"flowsom"`, etc.).
-#’
-#’ @param include_parameters
-#’   Character vector of channel names to include (default `"all"`).
-#’   If `"all"`, uses all columns of the expression matrix.
-#’
-#’ @param include_clusters
-#’   Character vector of cluster IDs to include (default `"all"`).
-#’   If `"all"`, includes every cluster.
-#’
-#’ @param heatmap_color_palette
-#’   Character vector of colors (length ≥ 2) for the heatmap palette.
-#’   Default uses a reversed “RdYlBu” from RColorBrewer.
-#’
-#’ @param transpose_heatmap
-#’   Logical; if `TRUE`, transpose the heatmap matrix before plotting.
-#’   Default `FALSE`.
-#’
-#’ @param cluster_row
-#’   Logical; if `TRUE`, apply hierarchical clustering to rows.
-#’   Default `TRUE`.
-#’
-#’ @param cluster_col
-#’   Logical; if `TRUE`, apply hierarchical clustering to columns.
-#’   Default `TRUE`.
-#’
-#’ @param override_correction
-#’   Logical; if `TRUE`, always use raw data even if batch correction
-#’   is present. Default `TRUE`.
-#’
-#’ @param return_heatmap_data
-#’   Logical; if `TRUE`, return the matrix of median‐scaled values
-#’   invisibly instead of adding the heatmap to `fcs_join_obj`.
-#’   Default `FALSE`.
-#’
-#’ @param heatmap_linewidth
-#’   Numeric; border line width for heatmap cells. Default `0.5`.
-#’
-#’ @details
-#’ - Chooses raw or batch‐corrected data based on `override_correction` and
-#’   presence of `fcs_join_obj$batch_correction$data`.  
-#’ - Scales expression values to [0,1] per channel using
-#’   CATALYST:::.scale_exprs.  
-#’ - Computes median expression for each cluster × parameter.  
-#’ - Builds a ComplexHeatmap object with cluster‐size annotations.  
-#’ - Stores the result under
-#’   `fcs_join_obj[[paste0(tolower(algorithm), "_heatmap")]]`:
-#’     - `heatmap`: the Heatmap object  
-#’     - `heatmap_tile_data`: the numeric matrix used  
-#’     - `population_size`: cluster event counts  
-#’     - `rep_used`: “with batch correction” or “without batch correction”  
-#’ - Appends a timestamped entry to `object_history`.
-#’
-#’ @return
-#’   Invisibly returns the updated `fcs_join_obj` with a new element
-#’   `<algorithm>_heatmap` as described above. If
-#’   `return_heatmap_data = TRUE`, returns only the heatmap matrix.
-#’
-#’ @examples
-#’ \dontrun{
-#’   joined <- FCSimple::fcs_join(list(ff1, ff2))
-#’   clustered <- FCSimple::fcs_cluster(joined, algorithm = "leiden")
-#’
-#’   # Generate and store heatmap object
-#’   out <- FCSimple::fcs_cluster_heatmap(
-#’     clustered,
-#’     algorithm = "leiden",
-#’     include_parameters = c("CD3","CD4","CD8"),
-#’     override_correction = FALSE
-#’   )
-#’
-#’   # Just get the tile matrix
-#’   mat <- FCSimple::fcs_cluster_heatmap(
-#’     clustered,
-#’     algorithm = "leiden",
-#’     return_heatmap_data = TRUE
-#’   )
-#’ }
-#’
-#’ @seealso
-#’   FCSimple::fcs_cluster, FCSimple::fcs_plot_heatmap
-#’
-#’ @importFrom CATALYST .scale_exprs
-#’ @importFrom ComplexHeatmap Heatmap rowAnnotation
-#’ @importFrom circlize colorRamp2
-#’ @importFrom RColorBrewer brewer.pal
-#’ @importFrom grid unit gpar
-#’ @export
+#' @title Generate Cluster Heatmap for Flow Cytometry Data
+#'
+#' @description
+#'   Computes and visualizes median‐scaled expression of each cluster across
+#'   parameters using ComplexHeatmap. Selects raw or batch‐corrected data,
+#'   aggregates by cluster, and stores both the heatmap object and tile data.
+#'
+#' @param fcs_join_obj
+#'   A list returned by FCSimple::fcs_join() and FCSimple::fcs_cluster(),
+#'   containing at least:
+#'   - `data`: numeric matrix of events × channels
+#'   - `<algorithm>$clusters`: vector of cluster IDs per event
+#'   - optionally `batch_correction$data` if correction was applied
+#'
+#' @param algorithm
+#'   Character; name of clustering results in `fcs_join_obj` to use
+#'   (e.g. `"leiden"`, `"flowsom"`, etc.).
+#'
+#' @param include_parameters
+#'   Character vector of channel names to include (default `"all"`).
+#'   If `"all"`, uses all columns of the expression matrix.
+#'
+#' @param include_clusters
+#'   Character vector of cluster IDs to include (default `"all"`).
+#'   If `"all"`, includes every cluster.
+#'
+#' @param heatmap_color_palette
+#'   Character vector of colors (length ≥ 2) for the heatmap palette.
+#'   Default uses a reversed “RdYlBu” from RColorBrewer.
+#'
+#' @param transpose_heatmap
+#'   Logical; if `TRUE`, transpose the heatmap matrix before plotting.
+#'   Default `FALSE`.
+#'
+#' @param cluster_row
+#'   Logical; if `TRUE`, apply hierarchical clustering to rows.
+#'   Default `TRUE`.
+#'
+#' @param cluster_col
+#'   Logical; if `TRUE`, apply hierarchical clustering to columns.
+#'   Default `TRUE`.
+#'
+#' @param override_correction
+#'   Logical; if `TRUE`, always use raw data even if batch correction
+#'   is present. Default `TRUE`.
+#'
+#' @param return_heatmap_data
+#'   Logical; if `TRUE`, return the matrix of median‐scaled values
+#'   invisibly instead of adding the heatmap to `fcs_join_obj`.
+#'   Default `FALSE`.
+#'
+#' @param heatmap_linewidth
+#'   Numeric; border line width for heatmap cells. Default `0.5`.
+#'
+#' @details
+#' - Chooses raw or batch‐corrected data based on `override_correction` and
+#'   presence of `fcs_join_obj$batch_correction$data`.  
+#' - Scales expression values to [0,1] per channel using
+#'   CATALYST:::.scale_exprs.  
+#' - Computes median expression for each cluster × parameter.  
+#' - Builds a ComplexHeatmap object with cluster‐size annotations.  
+#' - Stores the result under
+#'   `fcs_join_obj[[paste0(tolower(algorithm), "_heatmap")]]`:
+#'     - `heatmap`: the Heatmap object  
+#'     - `heatmap_tile_data`: the numeric matrix used  
+#'     - `population_size`: cluster event counts  
+#'     - `rep_used`: “with batch correction” or “without batch correction”  
+#' - Appends a timestamped entry to `object_history`.
+#'
+#' @return
+#'   Invisibly returns the updated `fcs_join_obj` with a new element
+#'   `<algorithm>_heatmap` as described above. If
+#'   `return_heatmap_data = TRUE`, returns only the heatmap matrix.
+#'
+#' @examples
+#' \dontrun{
+#'   joined <- FCSimple::fcs_join(list(ff1, ff2))
+#'   clustered <- FCSimple::fcs_cluster(joined, algorithm = "leiden")
+#'
+#'   # Generate and store heatmap object
+#'   out <- FCSimple::fcs_cluster_heatmap(
+#'     clustered,
+#'     algorithm = "leiden",
+#'     include_parameters = c("CD3","CD4","CD8"),
+#'     override_correction = FALSE
+#'   )
+#'
+#'   # Just get the tile matrix
+#'   mat <- FCSimple::fcs_cluster_heatmap(
+#'     clustered,
+#'     algorithm = "leiden",
+#'     return_heatmap_data = TRUE
+#'   )
+#' }
+#'
+#' @seealso
+#'   FCSimple::fcs_cluster, FCSimple::fcs_plot_heatmap
+#'
+#' @importFrom CATALYST .scale_exprs
+#' @importFrom ComplexHeatmap Heatmap rowAnnotation
+#' @importFrom circlize colorRamp2
+#' @importFrom RColorBrewer brewer.pal
+#' @importFrom grid unit gpar
+#' @export
 fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "all", include_clusters = "all", 
                                 heatmap_color_palette = rev(RColorBrewer::brewer.pal(11, "RdYlBu")),
                                 transpose_heatmap = FALSE, cluster_row = TRUE, cluster_col = TRUE,
@@ -213,53 +213,53 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
   return(fcs_join_obj)
 }
 
-#’ @title Save Cluster Heatmap to PDF
-#’
-#’ @description
-#’   Exports a ClusterHeatmap (generated by
-#’   fcs_cluster_heatmap) to a PDF file. Filenames encode algorithm,
-#’   correction status, and optional timestamp or suffix.
-#’
-#’ @param fcs_join_obj
-#’   A list with an element `<algorithm>_heatmap` as produced by
-#’   FCSimple::fcs_cluster_heatmap().
-#’
-#’ @param algorithm
-#’   Character; name of the heatmap element to save (e.g. `"leiden"`).
-#’
-#’ @param outdir
-#’   Character; path to an existing directory. Defaults to `getwd()`.
-#’
-#’ @param add_timestamp
-#’   Logical; if `TRUE`, append a timestamp to the filename.
-#’   Default `TRUE`.
-#’
-#’ @param append_file_string
-#’   Character or `NA`; if provided, a custom suffix to append to
-#’   the PDF filename (before “.pdf”).
-#’
-#’ @return
-#’   Invisibly returns `NULL` after saving the PDF.
-#’
-#’ @examples
-#’ \dontrun{
-#’   # Assume `clustered` has a “leiden_heatmap” element
-#’   FCSimple::fcs_plot_heatmap(
-#’     clustered,
-#’     algorithm = "leiden",
-#’     outdir = "~/results",
-#’     add_timestamp = FALSE,
-#’     append_file_string = "v1"
-#’   )
-#’ }
-#’
-#’ @seealso
-#’   FCSimple::fcs_cluster_heatmap
-#’
-#’ @importFrom ggplot2 ggsave
-#’ @importFrom grid grid.grabExpr
-#’ @importFrom ComplexHeatmap draw
-#’ @export
+#' @title Save Cluster Heatmap to PDF
+#'
+#' @description
+#'   Exports a ClusterHeatmap (generated by
+#'   fcs_cluster_heatmap) to a PDF file. Filenames encode algorithm,
+#'   correction status, and optional timestamp or suffix.
+#'
+#' @param fcs_join_obj
+#'   A list with an element `<algorithm>_heatmap` as produced by
+#'   FCSimple::fcs_cluster_heatmap().
+#'
+#' @param algorithm
+#'   Character; name of the heatmap element to save (e.g. `"leiden"`).
+#'
+#' @param outdir
+#'   Character; path to an existing directory. Defaults to `getwd()`.
+#'
+#' @param add_timestamp
+#'   Logical; if `TRUE`, append a timestamp to the filename.
+#'   Default `TRUE`.
+#'
+#' @param append_file_string
+#'   Character or `NA`; if provided, a custom suffix to append to
+#'   the PDF filename (before “.pdf”).
+#'
+#' @return
+#'   Invisibly returns `NULL` after saving the PDF.
+#'
+#' @examples
+#' \dontrun{
+#'   # Assume `clustered` has a “leiden_heatmap” element
+#'   FCSimple::fcs_plot_heatmap(
+#'     clustered,
+#'     algorithm = "leiden",
+#'     outdir = "~/results",
+#'     add_timestamp = FALSE,
+#'     append_file_string = "v1"
+#'   )
+#' }
+#'
+#' @seealso
+#'   FCSimple::fcs_cluster_heatmap
+#'
+#' @importFrom ggplot2 ggsave
+#' @importFrom grid grid.grabExpr
+#' @importFrom ComplexHeatmap draw
+#' @export
 fcs_plot_heatmap <- function(fcs_join_obj, algorithm, outdir = getwd(), add_timestamp = TRUE, append_file_string = NA)
 {
   require(ggplot2)

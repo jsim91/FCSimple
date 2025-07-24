@@ -1,57 +1,57 @@
-#’ @title Hyperlog Transform Raw Cytometry Data
-#’
-#’ @description
-#’   Applies a hyperlog transformation to the raw cytometry measurements in an
-#’   FCSimple joined object. Uses flowCore::hyperlogtGml2 internally to convert
-#’   linear raw data into a hyperlog scale that accommodates both low and high
-#’   intensity signals.
-#’
-#’ @param fcs_join_obj
-#’   A list returned by FCSimple::fcs_join(), containing at minimum:
-#’   - raw_data: numeric matrix or data.frame of events × channels  
-#’   - source: character vector indicating sample origin for each event
-#’
-#’ @param hyperlog_transform_T
-#’   Numeric; top‐of‐scale parameter T controlling the maximum display value
-#’   (default 100000).
-#’
-#’ @param hyperlog_transform_M
-#’   Numeric; number of decades to transform (default 5).
-#’
-#’ @param hyperlog_transform_W
-#’   Numeric; width of the linear region around zero (default 0.001).
-#’
-#’ @param hyperlog_transform_A
-#’   Numeric; additional constant to shift the transform (default 2).
-#’
-#’ @details
-#’   The function splits `raw_data` by `source`, applies the hyperlogtGml2
-#’   transformation to each channel within each sample, and then recombines
-#’   the transformed data in the original order. The hyperlog parameters
-#’   (T, M, W, A) control the shape of the scale, with larger T/M extending
-#’   the dynamic range and W/A tuning the linear-to-log transition.
-#’
-#’ @return
-#’   The input `fcs_join_obj`, with its `data` element replaced by the
-#’   hyperlog‐transformed matrix (dimensions identical to `raw_data`).
-#’
-#’ @examples
-#’ \dontrun{
-#’   joined <- FCSimple::fcs_join(list(ff1, ff2))
-#’   hyper_obj <- FCSimple::fcs_as.hyperlog(
-#’     joined,
-#’     hyperlog_transform_T = 1e5,
-#’     hyperlog_transform_M = 5,
-#’     hyperlog_transform_W = 0.001,
-#’     hyperlog_transform_A = 2
-#’   )
-#’ }
-#’
-#’ @seealso
-#’   flowCore::hyperlogtGml2, FCSimple::fcs_join
-#’
-#’ @importFrom flowCore hyperlogtGml2
-#’ @export
+#' @title Hyperlog Transform Raw Cytometry Data
+#'
+#' @description
+#'   Applies a hyperlog transformation to the raw cytometry measurements in an
+#'   FCSimple joined object. Uses flowCore::hyperlogtGml2 internally to convert
+#'   linear raw data into a hyperlog scale that accommodates both low and high
+#'   intensity signals.
+#'
+#' @param fcs_join_obj
+#'   A list returned by FCSimple::fcs_join(), containing at minimum:
+#'   - raw_data: numeric matrix or data.frame of events × channels  
+#'   - source: character vector indicating sample origin for each event
+#'
+#' @param hyperlog_transform_T
+#'   Numeric; top‐of‐scale parameter T controlling the maximum display value
+#'   (default 100000).
+#'
+#' @param hyperlog_transform_M
+#'   Numeric; number of decades to transform (default 5).
+#'
+#' @param hyperlog_transform_W
+#'   Numeric; width of the linear region around zero (default 0.001).
+#'
+#' @param hyperlog_transform_A
+#'   Numeric; additional constant to shift the transform (default 2).
+#'
+#' @details
+#'   The function splits `raw_data` by `source`, applies the hyperlogtGml2
+#'   transformation to each channel within each sample, and then recombines
+#'   the transformed data in the original order. The hyperlog parameters
+#'   (T, M, W, A) control the shape of the scale, with larger T/M extending
+#'   the dynamic range and W/A tuning the linear-to-log transition.
+#'
+#' @return
+#'   The input `fcs_join_obj`, with its `data` element replaced by the
+#'   hyperlog‐transformed matrix (dimensions identical to `raw_data`).
+#'
+#' @examples
+#' \dontrun{
+#'   joined <- FCSimple::fcs_join(list(ff1, ff2))
+#'   hyper_obj <- FCSimple::fcs_as.hyperlog(
+#'     joined,
+#'     hyperlog_transform_T = 1e5,
+#'     hyperlog_transform_M = 5,
+#'     hyperlog_transform_W = 0.001,
+#'     hyperlog_transform_A = 2
+#'   )
+#' }
+#'
+#' @seealso
+#'   flowCore::hyperlogtGml2, FCSimple::fcs_join
+#'
+#' @importFrom flowCore hyperlogtGml2
+#' @export
 fcs_as.hyperlog <- function(fcs_join_obj,
                             hyperlog_transform_T = 100000,
                             hyperlog_transform_M = 5,

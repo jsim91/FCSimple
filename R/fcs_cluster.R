@@ -1,113 +1,113 @@
-#’ @title  
-#’   Cluster Flow Cytometry Data with Multiple Algorithms
-#’
-#’ @description  
-#’   Applies clustering to a joined flow cytometry object using one of several  
-#’   algorithms: Leiden, Louvain, FlowSOM, PhenoGraph, or a Python‐based “git”  
-#’   method. Can operate on raw expression data or PCA coordinates. Automatically  
-#’   uses batch‐corrected data if available.
-#’
-#’ @param fcs_join_obj  
-#’   A list returned by FCSimple::fcs_join(), containing at least elements  
-#’   `data` (numeric matrix) and, if `use_rep = "pca"`, `pca$pca_data`. If you’ve  
-#’   already run FCSimple::fcs_batch_correction(), this function will detect  
-#’   and use `fcs_join_obj$batch_correction$data`.
-#’
-#’ @param use_rep  
-#’   Character; representation to cluster. `"data"` (default) uses raw expression  
-#’   values, `"pca"` uses principal‐component coordinates.
-#’
-#’ @param language  
-#’   Character; runtime environment for “git” clustering. `"R"` (default) runs  
-#’   algorithms via R packages, `"Python"` calls out to bundled Python scripts.
-#’
-#’ @param algorithm  
-#’   Character; clustering algorithm to apply. One of `"leiden"`, `"louvain"`,  
-#’   `"flowsom"`, `"phenograph"`, or `"git"`.
-#’
-#’ @param leiden_louvain_resolution  
-#’   Numeric; resolution parameter for Leiden and Louvain clustering (default 1).
-#’
-#’ @param flowsom_nClus  
-#’   Integer; number of metaclusters for FlowSOM (default 15).
-#’
-#’ @param phenograph_k  
-#’   Integer; number of nearest neighbors for PhenoGraph (default 30).
-#’
-#’ @param adjacency_knn  
-#’   Integer; k for nearest‐neighbor graph in Leiden/Louvain (default 30).
-#’
-#’ @param git_k  
-#’   Integer; cluster count for Python “git” method (default 30).
-#’
-#’ @param search_method  
-#’   Character; neighbor‐search backend: `"FNN"` (default) or `"RANN"`.
-#’
-#’ @param search_only  
-#’   Logical; if `TRUE`, stops after neighbor search and returns updated  
-#’   `fcs_join_obj` with either `adjacency_matrix` or `search` element  
-#’   (default `FALSE`).
-#’
-#’ @param num_cores  
-#’   Integer; number of CPU cores for parallel neighbor‐search (default  
-#’   `ceiling(parallel::detectCores()/2)`).
-#’
-#’ @param output_as  
-#’   Character; format of neighbor‐search output: `"adjacency"` (default) or  
-#’   `"search"`.
-#’
-#’ @details  
-#’   * If batch correction is found, clustering runs on `fcs_join_obj$batch_correction$data`.  
-#’   * “git” writes a CSV/MTX, invokes a Python script, then reads back cluster IDs.  
-#’   * Leiden/Louvain builds a sparse k‐NN graph and calls igraph::cluster_*().  
-#’   * FlowSOM transforms data into a flowFrame and calls FlowSOM::FlowSOM().  
-#’   * PhenoGraph invokes Rphenograph::Rphenograph() and extracts membership.  
-#’   * After clustering, labels and algorithm settings are stored under  
-#’     `fcs_join_obj[[algorithm]]`, and `object_history` is appended.
-#’
-#’ @return  
-#’   The original `fcs_join_obj` augmented with:  
-#’   - For `"search_only"`: an `adjacency_matrix` or `search` element.  
-#’   - For clustering algorithms: an element named by `algorithm` containing  
-#’     `clusters` (factor/integer vector) and `settings` (list).  
-#’   - Updated `object_history` with timestamped entry.
-#’
-#’ @examples
-#’ \dontrun{
-#’   ff_list <- list(flowFrame1, flowFrame2)
-#’   joined <- FCSimple::fcs_join(ff_list)
-#’
-#’   # Leiden clustering on raw data
-#’   out1 <- FCSimple::fcs_cluster(
-#’     joined,
-#’     use_rep = "data",
-#’     algorithm = "leiden",
-#’     adjacency_knn = 50,
-#’     leiden_louvain_resolution = 0.5
-#’   )
-#’
-#’   # FlowSOM clustering on PCA coordinates
-#’   pca_obj <- FCSimple::fcs_pca(joined)
-#’   out2 <- FCSimple::fcs_cluster(
-#’     pca_obj,
-#’     use_rep = "pca",
-#’     algorithm = "flowsom",
-#’     flowsom_nClus = 20
-#’   )
-#’ }
-#’
-#’ @seealso  
-#’   FCSimple::fcs_join, FCSimple::fcs_batch_correction, FCSimple::fcs_pca  
-#’
-#’ @importFrom FNN knn.index
-#’ @importFrom Matrix sparseMatrix
-#’ @importFrom RANN nn2
-#’ @importFrom future plan
-#’ @importFrom future.apply future_lapply
-#’ @importFrom igraph graph.adjacency cluster_leiden cluster_louvain
-#’ @importFrom FlowSOM FlowSOM GetMetaclusters
-#’ @importFrom flowCore flowFrame
-#’ @importFrom Rphenograph Rphenograph
+#' @title  
+#'   Cluster Flow Cytometry Data with Multiple Algorithms
+#'
+#' @description  
+#'   Applies clustering to a joined flow cytometry object using one of several  
+#'   algorithms: Leiden, Louvain, FlowSOM, PhenoGraph, or a Python‐based “git”  
+#'   method. Can operate on raw expression data or PCA coordinates. Automatically  
+#'   uses batch‐corrected data if available.
+#'
+#' @param fcs_join_obj  
+#'   A list returned by FCSimple::fcs_join(), containing at least elements  
+#'   `data` (numeric matrix) and, if `use_rep = "pca"`, `pca$pca_data`. If you’ve  
+#'   already run FCSimple::fcs_batch_correction(), this function will detect  
+#'   and use `fcs_join_obj$batch_correction$data`.
+#'
+#' @param use_rep  
+#'   Character; representation to cluster. `"data"` (default) uses raw expression  
+#'   values, `"pca"` uses principal‐component coordinates.
+#'
+#' @param language  
+#'   Character; runtime environment for “git” clustering. `"R"` (default) runs  
+#'   algorithms via R packages, `"Python"` calls out to bundled Python scripts.
+#'
+#' @param algorithm  
+#'   Character; clustering algorithm to apply. One of `"leiden"`, `"louvain"`,  
+#'   `"flowsom"`, `"phenograph"`, or `"git"`.
+#'
+#' @param leiden_louvain_resolution  
+#'   Numeric; resolution parameter for Leiden and Louvain clustering (default 1).
+#'
+#' @param flowsom_nClus  
+#'   Integer; number of metaclusters for FlowSOM (default 15).
+#'
+#' @param phenograph_k  
+#'   Integer; number of nearest neighbors for PhenoGraph (default 30).
+#'
+#' @param adjacency_knn  
+#'   Integer; k for nearest‐neighbor graph in Leiden/Louvain (default 30).
+#'
+#' @param git_k  
+#'   Integer; cluster count for Python “git” method (default 30).
+#'
+#' @param search_method  
+#'   Character; neighbor‐search backend: `"FNN"` (default) or `"RANN"`.
+#'
+#' @param search_only  
+#'   Logical; if `TRUE`, stops after neighbor search and returns updated  
+#'   `fcs_join_obj` with either `adjacency_matrix` or `search` element  
+#'   (default `FALSE`).
+#'
+#' @param num_cores  
+#'   Integer; number of CPU cores for parallel neighbor‐search (default  
+#'   `ceiling(parallel::detectCores()/2)`).
+#'
+#' @param output_as  
+#'   Character; format of neighbor‐search output: `"adjacency"` (default) or  
+#'   `"search"`.
+#'
+#' @details  
+#'   * If batch correction is found, clustering runs on `fcs_join_obj$batch_correction$data`.  
+#'   * “git” writes a CSV/MTX, invokes a Python script, then reads back cluster IDs.  
+#'   * Leiden/Louvain builds a sparse k‐NN graph and calls igraph::cluster_*().  
+#'   * FlowSOM transforms data into a flowFrame and calls FlowSOM::FlowSOM().  
+#'   * PhenoGraph invokes Rphenograph::Rphenograph() and extracts membership.  
+#'   * After clustering, labels and algorithm settings are stored under  
+#'     `fcs_join_obj[[algorithm]]`, and `object_history` is appended.
+#'
+#' @return  
+#'   The original `fcs_join_obj` augmented with:  
+#'   - For `"search_only"`: an `adjacency_matrix` or `search` element.  
+#'   - For clustering algorithms: an element named by `algorithm` containing  
+#'     `clusters` (factor/integer vector) and `settings` (list).  
+#'   - Updated `object_history` with timestamped entry.
+#'
+#' @examples
+#' \dontrun{
+#'   ff_list <- list(flowFrame1, flowFrame2)
+#'   joined <- FCSimple::fcs_join(ff_list)
+#'
+#'   # Leiden clustering on raw data
+#'   out1 <- FCSimple::fcs_cluster(
+#'     joined,
+#'     use_rep = "data",
+#'     algorithm = "leiden",
+#'     adjacency_knn = 50,
+#'     leiden_louvain_resolution = 0.5
+#'   )
+#'
+#'   # FlowSOM clustering on PCA coordinates
+#'   pca_obj <- FCSimple::fcs_pca(joined)
+#'   out2 <- FCSimple::fcs_cluster(
+#'     pca_obj,
+#'     use_rep = "pca",
+#'     algorithm = "flowsom",
+#'     flowsom_nClus = 20
+#'   )
+#' }
+#'
+#' @seealso  
+#'   FCSimple::fcs_join, FCSimple::fcs_batch_correction, FCSimple::fcs_pca  
+#'
+#' @importFrom FNN knn.index
+#' @importFrom Matrix sparseMatrix
+#' @importFrom RANN nn2
+#' @importFrom future plan
+#' @importFrom future.apply future_lapply
+#' @importFrom igraph graph.adjacency cluster_leiden cluster_louvain
+#' @importFrom FlowSOM FlowSOM GetMetaclusters
+#' @importFrom flowCore flowFrame
+#' @importFrom Rphenograph Rphenograph
 fcs_cluster <- function(fcs_join_obj,
                         use_rep = "data", # 'data' or 'pca'
                         language = c("R","Python"),

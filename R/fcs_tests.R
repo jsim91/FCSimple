@@ -1,141 +1,139 @@
-#’ @title
-#’   Statistical Testing of Cluster Abundances
-#’
-#’ @description
-#’   Compares cluster‐wise abundances between user‐defined sample groups and
-#’   visualizes results. For each cluster, the function generates a two‐panel
-#’   figure: a boxplot or dotplot with optional paired Wilcoxon tests, and a
-#’   companion heatmap of median marker expression. All cluster plots are
-#’   returned in a list within the input object for easy inspection or saving.
-#’
-#’ @param fcs_join_obj
-#’   A list returned by FCSimple::fcs_join() and FCSimple::fcs_cluster(),
-#’   containing at minimum:
-#’   - `fcs_join_obj[[ tolower(algorithm) ]][["abundance"]]`: sample × cluster matrix of abundances
-#’   - (optionally) `fcs_join_obj[[ paste0(tolower(algorithm), "_heatmap") ]][["heatmap_tile_data"]]`
-#’
-#’ @param compare_list
-#’   Named list of character vectors. Each element’s name defines a group
-#’   (e.g. “Control”, “Treatment”), and its value is the vector of sample
-#’   identifiers (matching row names of the abundance matrix) belonging to that group.
-#’
-#’ @param color_list
-#’   Named character vector or list of colors for each group in `compare_list`.
-#’   Names must match those of `compare_list`.
-#’
-#’ @param comparisons
-#’   List of length‐2 character vectors specifying which group pairs to test
-#’   (passed to ggpubr::stat_compare_means()). E.g. `list(c("Control","Case"))`.
-#’
-#’ @param denominator_cell_type
-#’   Character; label used in the y‐axis title. The plot will read
-#’   `"% of {denominator_cell_type}"`.
-#’
-#’ @param x_order
-#’   Optional character vector giving the desired factor levels for the x‐axis.
-#’   If `NULL` (default), groups are taken in the order of `compare_list`.
-#’
-#’ @param abundance
-#’   Optional numeric matrix of cluster abundances (samples × clusters). If
-#’   `NA` (default), pulled from
-#’   `fcs_join_obj[[ tolower(algorithm) ]][["abundance"]]`.
-#’
-#’ @param heatmap_matrix
-#’   Optional numeric matrix of median expression values (clusters × markers).
-#’   If `NA` (default), pulled from the object’s existing heatmap tile data.
-#’
-#’ @param force_max
-#’   Logical; if `TRUE`, and any frequency exceeds 95%, the y‐axis max is set
-#’   to 100 (default `FALSE`).
-#’
-#’ @param algorithm
-#’   Character; name of the clustering result to test (e.g. `"leiden"`,
-#’   `"flowsom"`). Matches one of the elements in `fcs_join_obj`.
-#’
-#’ @param Rcolorbrewer_palette
-#’   Character; name of an RColorBrewer palette of length ≥ 11 (default `"RdYlBu"`).
-#’
-#’ @param dot_size
-#’   Numeric; size of dots in the dotplot (default `1`).
-#’
-#’ @param overlay_heatmap_numbers
-#’   Logical; if `TRUE`, overlays numeric values on each heatmap cell (default `TRUE`).
-#’
-#’ @param paired_test
-#’   Logical; if `TRUE`, adds paired Wilcoxon tests and connectors (default `FALSE`).
-#’
-#’ @param p_text_size
-#’   Numeric; font size for p‐value labels in the distribution plot (default `5`).
-#’
-#’ @param paired_line_stroke
-#’   Numeric; line width for paired connectors (default `0.1`).
-#’
-#’ @param paired_line_color
-#’   Character; color for paired connectors (default `"black"`).
-#’
-#’ @param heatmap_fontsize
-#’   Numeric; font size for numbers in the heatmap overlay (default `8`).
-#’
-#’ @param relative_heights
-#’   Numeric vector of length 2 giving the vertical proportions of the
-#’   distribution plot vs. heatmap (default `c(0.76, 0.24)`).
-#’
-#’ @param heatmap_parameters
-#’   Character vector of marker names to include in the heatmap (default `"all"`).
-#’
-#’ @param heatmap_clusters
-#’   Character vector of cluster IDs to include in the heatmap (default `"all"`).
-#’
-#’ @details
-#’   1. Retrieves or uses the provided `abundance` matrix and subsets it to
-#’      the samples in `compare_list`.
-#’   2. Constructs, for each cluster, a data frame of frequencies with group labels.
-#’   3. Generates a distribution plot per cluster:
-#’      - Boxplot or dotplot, colored by group.
-#’      - Optional paired or unpaired Wilcoxon tests via `stat_compare_means()`.
-#’      - Y‐axis labeled with the specified cell‐type denominator.
-#’      - Optional y‐axis max at 100 when `force_max = TRUE`.
-#’   4. Retrieves or computes a median‐expression heatmap for the same clusters.
-#’   5. Assembles each cluster’s distribution plot and heatmap into a vertical
-#’      two‐panel figure using `ggpubr::ggarrange()`.
-#’   6. Stores the resulting list of ggarrange objects in
-#’      `fcs_join_obj[[ tolower(algorithm) ]][["cluster_test_results"]]`.
-#’
-#’ @return
-#’   The input `fcs_join_obj`, modified by adding:
-#’   - `fcs_join_obj[[ tolower(algorithm) ]][["cluster_test_results"]]`:
-#’     a named list of ggarrange objects, one per cluster.
-#’   The function also prints a message indicating where the results are stored.
-#’
-#’ @examples
-#’ \dontrun{
-#’   files   <- list(ff1, ff2)
-#’   joined  <- FCSimple::fcs_join(files)
-#’   clustered <- FCSimple::fcs_cluster(joined, algorithm = "leiden")
-#’
-#’   tests <- FCSimple::fcs_test_clusters(
-#’     clustered,
-#’     compare_list = list(Healthy = c("S1","S2"), Diseased = c("S3","S4")),
-#’     color_list   = c(Healthy = "steelblue", Diseased = "firebrick"),
-#’     comparisons  = list(c("Healthy","Diseased")),
-#’     denominator_cell_type = "T cells"
-#’   )
-#’   # View the figure for cluster "1":
-#’   print(tests[["leiden"]][["cluster_test_results"]][["1"]])
-#’ }
-#’
-#’ @seealso
-#’   FCSimple::fcs_cluster, FCSimple::fcs_calculate_abundance,
-#’   ggpubr::stat_compare_means, ComplexHeatmap::Heatmap
-#’
-#’ @importFrom ggplot2 ggplot aes geom_boxplot geom_dotplot geom_line
-#’   scale_fill_manual scale_color_manual scale_y_continuous ylim labs
-#’   theme_minimal theme element_text
-#’ @importFrom ggpubr stat_compare_means ggarrange
-#’ @importFrom ComplexHeatmap Heatmap
-#’ @importFrom circlize colorRamp2
-#’ @importFrom grid text gpar grabExpr
-#’ @export
+#' @title
+#'   Statistical Testing of Cluster Abundances
+#'
+#' @description
+#'   Compares cluster‐wise abundances between user‐defined sample groups and
+#'   visualizes results. For each cluster, the function generates a two‐panel
+#'   figure: a boxplot or dotplot with optional paired Wilcoxon tests, and a
+#'   companion heatmap of median marker expression. All cluster plots are
+#'   returned in a list within the input object for easy inspection or saving.
+#'
+#' @param fcs_join_obj
+#'   A list returned by FCSimple::fcs_join() and FCSimple::fcs_cluster(),
+#'   containing at minimum:
+#'   - `fcs_join_obj[[ tolower(algorithm) ]][["abundance"]]`: sample × cluster matrix of abundances
+#'   - (optionally) `fcs_join_obj[[ paste0(tolower(algorithm), "_heatmap") ]][["heatmap_tile_data"]]`
+#'
+#' @param compare_list
+#'   Named list of character vectors. Each element’s name defines a group
+#'   (e.g. “Control”, “Treatment”), and its value is the vector of sample
+#'   identifiers (matching row names of the abundance matrix) belonging to that group.
+#'
+#' @param color_list
+#'   Named character vector or list of colors for each group in `compare_list`.
+#'   Names must match those of `compare_list`.
+#'
+#' @param comparisons
+#'   List of length‐2 character vectors specifying which group pairs to test
+#'   (passed to ggpubr::stat_compare_means()). E.g. `list(c("Control","Case"))`.
+#'
+#' @param denominator_cell_type
+#'   Character; label used in the y‐axis title. The plot will read
+#'   `"% of {denominator_cell_type}"`.
+#'
+#' @param x_order
+#'   Optional character vector giving the desired factor levels for the x‐axis.
+#'   If `NULL` (default), groups are taken in the order of `compare_list`.
+#'
+#' @param abundance
+#'   Optional numeric matrix of cluster abundances (samples × clusters). If
+#'   `NA` (default), pulled from
+#'   `fcs_join_obj[[ tolower(algorithm) ]][["abundance"]]`.
+#'
+#' @param heatmap_matrix
+#'   Optional numeric matrix of median expression values (clusters × markers).
+#'   If `NA` (default), pulled from the object’s existing heatmap tile data.
+#'
+#' @param force_max
+#'   Logical; if `TRUE`, and any frequency exceeds 95%, the y‐axis max is set
+#'   to 100 (default `FALSE`).
+#'
+#' @param algorithm
+#'   Character; name of the clustering result to test (e.g. `"leiden"`,
+#'   `"flowsom"`). Matches one of the elements in `fcs_join_obj`.
+#'
+#' @param Rcolorbrewer_palette
+#'   Character; name of an RColorBrewer palette of length ≥ 11 (default `"RdYlBu"`).
+#'
+#' @param dot_size
+#'   Numeric; size of dots in the dotplot (default `1`).
+#'
+#' @param overlay_heatmap_numbers
+#'   Logical; if `TRUE`, overlays numeric values on each heatmap cell (default `TRUE`).
+#'
+#' @param paired_test
+#'   Logical; if `TRUE`, adds paired Wilcoxon tests and connectors (default `FALSE`).
+#'
+#' @param p_text_size
+#'   Numeric; font size for p‐value labels in the distribution plot (default `5`).
+#'
+#' @param paired_line_stroke
+#'   Numeric; line width for paired connectors (default `0.1`).
+#'
+#' @param paired_line_color
+#'   Character; color for paired connectors (default `"black"`).
+#'
+#' @param heatmap_fontsize
+#'   Numeric; font size for numbers in the heatmap overlay (default `8`).
+#'
+#' @param relative_heights
+#'   Numeric vector of length 2 giving the vertical proportions of the
+#'   distribution plot vs. heatmap (default `c(0.76, 0.24)`).
+#'
+#' @param heatmap_parameters
+#'   Character vector of marker names to include in the heatmap (default `"all"`).
+#'
+#' @param heatmap_clusters
+#'   Character vector of cluster IDs to include in the heatmap (default `"all"`).
+#'
+#' @details
+#' 1. Retrieve or use the provided `abundance` matrix and subset to the samples in `compare_list`.
+#' 2. For each cluster, construct a data.frame of frequencies with group labels.
+#' 3. Generate a distribution plot per cluster:
+#'    - Boxplot or dotplot, colored by group
+#'    - Optional paired or unpaired Wilcoxon tests via `ggpubr::stat_compare_means()`
+#'    - Y-axis labeled `"% of {denominator_cell_type}"`
+#'    - If `force_max = TRUE`, force y-axis maximum at 100
+#' 4. Retrieve or compute a median-expression heatmap for the same clusters.
+#' 5. Assemble each cluster’s distribution plot + heatmap into a vertical two-panel figure using `ggpubr::ggarrange()`.
+#' 6. Store the resulting ggarrange list under
+#'    `fcs_join_obj[[ tolower(algorithm) ]][["cluster_test_results"]]`.
+#'
+#' @return
+#'   The input `fcs_join_obj`, modified by adding:
+#'   - `fcs_join_obj[[ tolower(algorithm) ]][["cluster_test_results"]]`:
+#'     a named list of ggarrange objects, one per cluster.
+#'   The function also prints a message indicating where the results are stored.
+#'
+#' @examples
+#' \dontrun{
+#'   files   <- list(ff1, ff2)
+#'   joined  <- FCSimple::fcs_join(files)
+#'   clustered <- FCSimple::fcs_cluster(joined, algorithm = "leiden")
+#'
+#'   tests <- FCSimple::fcs_test_clusters(
+#'     clustered,
+#'     compare_list = list(Healthy = c("S1","S2"), Diseased = c("S3","S4")),
+#'     color_list   = c(Healthy = "steelblue", Diseased = "firebrick"),
+#'     comparisons  = list(c("Healthy","Diseased")),
+#'     denominator_cell_type = "T cells"
+#'   )
+#'   # View the figure for cluster "1":
+#'   print(tests[["leiden"]][["cluster_test_results"]][["1"]])
+#' }
+#'
+#' @seealso
+#'   FCSimple::fcs_cluster, FCSimple::fcs_calculate_abundance,
+#'   ggpubr::stat_compare_means, ComplexHeatmap::Heatmap
+#'
+#' @importFrom ggplot2 ggplot aes geom_boxplot geom_dotplot geom_line
+#'   scale_fill_manual scale_color_manual scale_y_continuous ylim labs
+#'   theme_minimal theme element_text
+#' @importFrom ggpubr stat_compare_means ggarrange
+#' @importFrom ComplexHeatmap Heatmap
+#' @importFrom circlize colorRamp2
+#' @importFrom grid text gpar grabExpr
+#' @export
 fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparisons, denominator_cell_type,
                               x_order = NULL, abundance = NA, heatmap_matrix = NA, force_max = FALSE,
                               algorithm = c("leiden","flowsom","louvain","phenograph","git"),

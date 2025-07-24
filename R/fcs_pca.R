@@ -1,68 +1,68 @@
-#’ @title Principal Component Analysis of Flow Cytometry Data
-#’
-#’ @description
-#’   Performs PCA on expression data (using batch‐corrected data if available)  
-#’   and stores the selected principal components, variance explained, and an  
-#’   elbow plot. If `num_pc` is `NULL`, shows an interactive plot of  
-#’   (1 – cumulative variance) vs. PC and prompts the user to enter the number  
-#’   of PCs to retain.
-#’
-#’ @param fcs_join_obj
-#’   A list returned by FCSimple::fcs_join(), optionally augmented by
-#’   fcs_batch_correction, containing at minimum:
-#’   - `data`: numeric matrix of events × channels  
-#’   - if batch correction was applied, `batch_correction$data`
-#’
-#’ @param pca_method
-#’   Character; PCA method to use. Currently only `"prcomp"` (default).
-#’
-#’ @param num_pc
-#’   Integer or `NULL` (default); number of principal components to extract.  
-#’   If `NULL`, the function displays a plot of 1 – cumulative variance vs. PC,  
-#’   prompts for input (e.g. a number or `"drawN"` to draw a vertical line at  
-#’   PC N), and repeats until a valid integer is provided.
-#’
-#’ @details
-#’   The function:
-#’   1. Detects and uses `batch_correction$data` if present.  
-#’   2. Runs `stats::prcomp` on the selected data with a fixed seed.  
-#’   3. Computes cumulative variance explained (`cumVar`) and its complement.  
-#’   4. If `num_pc` is `NULL`, displays the inverse‐variance plot, captures  
-#’      user input, and highlights the chosen PC on the plot.  
-#’   5. Extracts the first `num_pc` principal components into `pca_data`.  
-#’   6. Builds an elbow plot (`ggplot2`) marking the selected PCs.  
-#’   7. Appends a message to `object_history` noting whether PCA was run on  
-#’      corrected or uncorrected data and the timestamp.
-#’
-#’ @return
-#’   The original `fcs_join_obj` augmented with a new element `pca`, a list with:
-#’   - `pca_data`: numeric matrix (events × selected PCs)  
-#’   - `PCs`: integer number of PCs retained  
-#’   - `cumulative_variance`: numeric vector of cumulative variance explained  
-#’   - `pca_method`: character string of the method used  
-#’   - `elbow_plot`: a ggplot2 object illustrating cumulative variance and  
-#’                   highlighting the chosen PC count
-#’
-#’ @examples
-#’ \dontrun{
-#’   files   <- list(ff1, ff2)
-#’   joined  <- FCSimple::fcs_join(files)
-#’
-#’   # Interactive PCA: choose number of PCs via prompt
-#’   pca_obj <- FCSimple::fcs_pca(joined)
-#’
-#’   # Run PCA and keep first 5 PCs directly
-#’   pca5 <- FCSimple::fcs_pca(joined, num_pc = 5)
-#’ }
-#’
-#’ @seealso
-#’   stats::prcomp, ggplot2::ggplot, FCSimple::fcs_join,
-#’   FCSimple::fcs_batch_correction
-#’
-#’ @importFrom stats prcomp
-#’ @importFrom stringr str_extract
-#’ @importFrom ggplot2 ggplot aes geom_point ggtitle xlab ylab theme_bw theme element_text
-#’ @export
+#' @title Principal Component Analysis of Flow Cytometry Data
+#'
+#' @description
+#'   Performs PCA on expression data (using batch‐corrected data if available)  
+#'   and stores the selected principal components, variance explained, and an  
+#'   elbow plot. If `num_pc` is `NULL`, shows an interactive plot of  
+#'   (1 – cumulative variance) vs. PC and prompts the user to enter the number  
+#'   of PCs to retain.
+#'
+#' @param fcs_join_obj
+#'   A list returned by FCSimple::fcs_join(), optionally augmented by
+#'   fcs_batch_correction, containing at minimum:
+#'   - `data`: numeric matrix of events × channels  
+#'   - if batch correction was applied, `batch_correction$data`
+#'
+#' @param pca_method
+#'   Character; PCA method to use. Currently only `"prcomp"` (default).
+#'
+#' @param num_pc
+#'   Integer or `NULL` (default); number of principal components to extract.  
+#'   If `NULL`, the function displays a plot of 1 – cumulative variance vs. PC,  
+#'   prompts for input (e.g. a number or `"drawN"` to draw a vertical line at  
+#'   PC N), and repeats until a valid integer is provided.
+#'
+#' @details
+#'   The function:
+#'   1. Detects and uses `batch_correction$data` if present.  
+#'   2. Runs `stats::prcomp` on the selected data with a fixed seed.  
+#'   3. Computes cumulative variance explained (`cumVar`) and its complement.  
+#'   4. If `num_pc` is `NULL`, displays the inverse‐variance plot, captures  
+#'      user input, and highlights the chosen PC on the plot.  
+#'   5. Extracts the first `num_pc` principal components into `pca_data`.  
+#'   6. Builds an elbow plot (`ggplot2`) marking the selected PCs.  
+#'   7. Appends a message to `object_history` noting whether PCA was run on  
+#'      corrected or uncorrected data and the timestamp.
+#'
+#' @return
+#'   The original `fcs_join_obj` augmented with a new element `pca`, a list with:
+#'   - `pca_data`: numeric matrix (events × selected PCs)  
+#'   - `PCs`: integer number of PCs retained  
+#'   - `cumulative_variance`: numeric vector of cumulative variance explained  
+#'   - `pca_method`: character string of the method used  
+#'   - `elbow_plot`: a ggplot2 object illustrating cumulative variance and  
+#'                   highlighting the chosen PC count
+#'
+#' @examples
+#' \dontrun{
+#'   files   <- list(ff1, ff2)
+#'   joined  <- FCSimple::fcs_join(files)
+#'
+#'   # Interactive PCA: choose number of PCs via prompt
+#'   pca_obj <- FCSimple::fcs_pca(joined)
+#'
+#'   # Run PCA and keep first 5 PCs directly
+#'   pca5 <- FCSimple::fcs_pca(joined, num_pc = 5)
+#' }
+#'
+#' @seealso
+#'   stats::prcomp, ggplot2::ggplot, FCSimple::fcs_join,
+#'   FCSimple::fcs_batch_correction
+#'
+#' @importFrom stats prcomp
+#' @importFrom stringr str_extract
+#' @importFrom ggplot2 ggplot aes geom_point ggtitle xlab ylab theme_bw theme element_text
+#' @export
 fcs_pca <- function(fcs_join_obj, pca_method = c("prcomp"), num_pc = NULL)
 {
   require(stringr)
