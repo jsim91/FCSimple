@@ -1,3 +1,101 @@
+#’ @title  
+#’   Panel Distribution Plots of Marker Expression  
+#’  
+#’ @description  
+#’   Generates density distributions of expression values for each channel in  
+#’   a joined flow cytometry object, optionally grouping by acquisition date,  
+#’   cluster membership, or experimental condition. Arranges all channel plots  
+#’   into a multi‐panel PDF.  
+#’  
+#’ @param fcs_join_obj  
+#’   List returned by FCSimple::fcs_join(), optionally augmented by  
+#’   fcs_batch_correction (with `$batch_correction$data`), clustering results  
+#’   (e.g. `$leiden$clusters`), a `run_date` vector, and/or a `condition` vector.  
+#’  
+#’ @param override_correction  
+#’   Logical; if TRUE (default), use the uncorrected data slot  
+#’   (`fcs_join_obj$data`). If FALSE and a batch‐corrected matrix exists, uses  
+#’   `fcs_join_obj$batch_correction$data`.  
+#’  
+#’ @param separate_by  
+#’   Character; how to group distributions. One of:  
+#’   - “none”: all events in one density curve.  
+#’   - “date”: separate by `fcs_join_obj$run_date` (requires `run_date`).  
+#’   - “cluster”: ridgeline densities by cluster (requires `$<algorithm>$clusters`;  
+#’     pick algorithm via `plot_algorithm`).  
+#’   - “condition”: separate by `fcs_join_obj$condition` (requires `condition`).  
+#’   Default `"none"`.  
+#’  
+#’ @param plot_algorithm  
+#’   Character; clustering result to use when `separate_by = "cluster"`.  
+#’   One of `"leiden"`, `"flowsom"`, `"louvain"`, `"phenograph"`, or `"git"`.  
+#’   Default `"leiden"`.  
+#’  
+#’ @param outdir  
+#’   Character; path to an existing directory for saving the PDF. Default `getwd()`.  
+#’  
+#’ @param plot_palette  
+#’   Character vector of colors for multi‐group plots. Currently not used;  
+#’   reserved for future customization. Default `NULL`.  
+#’  
+#’ @param rm_zero  
+#’   Logical; if TRUE, remove zero‐value events for `cytof` data before plotting  
+#’   (default FALSE). Has no effect for `flow` data.  
+#’  
+#’ @param trim_quantile  
+#’   Numeric; quantile(s) for trimming outliers. For `flow` data supply length‐2  
+#’   vector (low, high); for `cytof` data supply single upper quantile. Default NULL.  
+#’  
+#’ @param add_timestamp  
+#’   Logical; if TRUE (default), append a timestamp (_YYYY-MM-DD_HHMMSS) to the  
+#’   PDF filename.  
+#’  
+#’ @details  
+#’   1. Selects either raw or batch‐corrected expression matrix based on  
+#’      `override_correction`.  
+#’   2. Verifies presence of `collection_instrument`; errors otherwise.  
+#’   3. Splits the data frame by channel into a list of single‐column data frames.  
+#’   4. Depending on `separate_by`, adds a grouping column:  
+#’      - date: uses `run_date`.  
+#’      - cluster: uses `fcs_join_obj[[plot_algorithm]]$clusters`.  
+#’      - condition: uses `condition`.  
+#’   5. Calls an internal helper (`plot_none`, `plot_date`, `plot_cluster`, or  
+#’      `plot_condition`) for each channel to create a ggplot object.  
+#’   6. Uses `ggpubr::ggarrange()` to assemble a panel grid and saves it via  
+#’      `ggplot2::ggsave()` as a PDF named `panel_distributions[_by_<mode>][_timestamp].pdf`.  
+#’  
+#’ @return  
+#’   Invisibly returns `NULL`. Side effect: writes a PDF to `outdir`.  
+#’  
+#’ @examples  
+#’ \dontrun{  
+#’ # Basic combined densities  
+#’ joined <- FCSimple::fcs_join(files)  
+#’ FCSimple::fcs_plot_distribution(joined)  
+#’  
+#’ # By acquisition date  
+#’ FCSimple::fcs_plot_distribution(joined, separate_by = "date")  
+#’  
+#’ # By cluster (after running fcs_cluster)  
+#’ clustered <- FCSimple::fcs_cluster(joined, algorithm = "flowsom")  
+#’ FCSimple::fcs_plot_distribution(clustered,  
+#’   separate_by = "cluster", plot_algorithm = "flowsom"  
+#’ )  
+#’  
+#’ # By experimental condition with trimming  
+#’ joined$condition <- rep(c("A","B"), length.out = nrow(joined$data))  
+#’ FCSimple::fcs_plot_distribution(joined,  
+#’   separate_by = "condition", rm_zero = TRUE, trim_quantile = 0.99  
+#’ )  
+#’ }  
+#’  
+#’ @seealso  
+#’   FCSimple::fcs_join, FCSimple::fcs_batch_correction,  
+#’   FCSimple::fcs_cluster, ggridges::geom_density_ridges  
+#’  
+#’ @importFrom ggpubr ggarrange  
+#’ @importFrom ggplot2 ggsave  
+#’ @export
 fcs_plot_distribution <- function(fcs_join_obj,
                                   override_correction = TRUE, 
                                   separate_by = c("none", "date", "cluster", "condition"),
