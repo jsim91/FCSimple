@@ -1,3 +1,98 @@
+#’ @title 2D Dimensionality Reduction for Flow Cytometry Data
+#’
+#’ @description
+#’   Performs UMAP or t‐SNE on a flow cytometry analysis object. By default,
+#’   reduces the (batch‐corrected) expression matrix to two dimensions
+#’   using either the R implementation (uwot or Rtsne) or an external
+#’   Python script. The result is stored in your object under “umap” or “tsne”.
+#’
+#’ @param fcs_join_obj
+#’   A list returned by FCSimple::fcs_join() (and optionally
+#’   augmented by FCSimple::fcs_batch_correction or FCSimple::fcs_pca). Must
+#’   contain at least one of:
+#’   - `fcs_join_obj$data` (raw or transformed expression matrix), or  
+#’   - `fcs_join_obj$pca$pca_data` (when `use_rep = "pca"`), or  
+#’   - `fcs_join_obj$batch_correction$data` (automatically used if present).
+#’
+#’ @param use_rep
+#’   Character; which representation to reduce.  
+#’   - `"data"` (default): use `fcs_join_obj$data` or batch‐corrected data if present.  
+#’   - `"pca"`: use `fcs_join_obj$pca$pca_data` (requires prior call to FCSimple::fcs_pca).
+#’
+#’ @param algorithm
+#’   Character; which algorithm to run.  
+#’   - `"tsne"`: t‐distributed stochastic neighbor embedding.  
+#’   - `"umap"`: uniform manifold approximation and projection.  
+#’   Default is `c("tsne","umap")` (selects first).
+#’
+#’ @param language
+#’   Character; runtime environment for the chosen algorithm.  
+#’   - `"R"` (default): calls uwot::umap or Rtsne::Rtsne.  
+#’   - `"Python"`: writes a CSV, invokes the package’s Python script, and reads back results.
+#’
+#’ @param umap_nn
+#’   Numeric; number of neighbors for UMAP (default 30).
+#’
+#’ @param umap_min_dist
+#’   Numeric; minimum distance parameter for UMAP (default 0.1).
+#’
+#’ @param tsne_perplexity
+#’   Numeric; perplexity parameter for t‐SNE (default 30).
+#’
+#’ @param nthread
+#’   Integer; number of CPU threads for Rtsne (default `ceiling(parallel::detectCores()/2)`).
+#’
+#’ @details
+#’   1. If `fcs_join_obj$batch_correction$data` exists, that matrix is used
+#’      regardless of `use_rep`. Otherwise, `use_rep` selects raw data or PCA.
+#’   2. For UMAP:
+#’      - R: calls `uwot::umap()` with a fixed seed, `umap_nn`, and `umap_min_dist`.  
+#’      - Python: writes data to `inst/python`, runs `run_umap.py`, cleans temp files.  
+#’   3. For t‐SNE:
+#’      - R: calls `Rtsne::Rtsne()` with `tsne_perplexity`, `nthread`, and fixed settings.  
+#’      - Python: similar CSV → script → import workflow via `run_tsne.py`.  
+#’   4. The resulting 2‐column matrix is stored as
+#’      `fcs_join_obj$umap$coordinates` or `$tsne$coordinates`, and the
+#’      parameters used are recorded under
+#’      `fcs_join_obj$<algorithm>$settings`.
+#’   5. An entry is appended to `fcs_join_obj$object_history`:
+#’      `<algorithm> on <use_rep>: <timestamp>`.
+#’
+#’ @return
+#’   The input `fcs_join_obj`, with a new element named by the
+#’   lower‐case `algorithm`:
+#’   - `$<algorithm>$coordinates`: numeric matrix (cells × 2).  
+#’   - `$<algorithm>$settings`: list of parameters passed.  
+#’   - `object_history` updated with the reduction event.
+#’
+#’ @examples
+#’ \dontrun{
+#’   # Basic UMAP on raw data
+#’   joined <- FCSimple::fcs_join(files)
+#’   out_umap <- FCSimple::fcs_reduce_dimensions(
+#’     joined,
+#’     algorithm = "umap",
+#’     language  = "R"
+#’   )
+#’
+#’   # t-SNE using PCA coordinates and Python backend
+#’   pca_obj <- FCSimple::fcs_pca(joined)
+#’   out_tsne <- FCSimple::fcs_reduce_dimensions(
+#’     pca_obj,
+#’     use_rep    = "pca",
+#’     algorithm  = "tsne",
+#’     language   = "Python",
+#’     tsne_perplexity = 50
+#’   )
+#’ }
+#’
+#’ @seealso
+#’   uwot::umap, Rtsne::Rtsne, FCSimple::fcs_pca, FCSimple::fcs_batch_correction
+#’
+#’ @importFrom uwot umap
+#’ @importFrom Rtsne Rtsne
+#’ @importFrom parallel detectCores
+#’ @export
 fcs_reduce_dimensions <- function(fcs_join_obj,
                                   use_rep = "data",
                                   algorithm = c("tsne","umap"),
