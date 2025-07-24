@@ -1,3 +1,29 @@
+#’ @title Initialize Gating Object
+#’
+#’ @description
+#’   Wraps a joined FCSimple object into a gating‐friendly structure.  
+#’   Records the raw data matrix, sample sources, optional run dates,  
+#’   and initializes an empty gating history.  
+#’
+#’ @param fcs_obj  
+#’   A list‐like FCSimple object (e.g. from FCSimple::fcs_join) containing at  
+#’   least:  
+#’   - data: numeric matrix or data.frame of events × channels  
+#’   - source: character vector of sample identifiers  
+#’   - run_date: (optional) acquisition dates  
+#’
+#’ @return  
+#’   An object of class “fcs_gating_object” with elements:  
+#’   - data  
+#’   - source  
+#’   - run_date (if present)  
+#’   - object_history: character vector recording the gating steps  
+#’
+#’ @seealso  
+#’   FCSimple::fcs_join, FCSimple::fcs_update  
+#’
+#’ @importFrom FCSimple fcs_update  
+#’ @export
 fcs_gating_object <- function(fcs_obj) {
   print(paste0("Initiating an object for gating with the assumption that data to be gated was collected using fluorescence cytometry. Cytof is not supported (currently)."))
   print("Data for gating is assumed to be in slot fcs_obj[['data']].")
@@ -11,6 +37,61 @@ fcs_gating_object <- function(fcs_obj) {
   return(list_obj)
 }
 
+#’ @title Gate Cells by SSC-A vs FSC-A
+#’
+#’ @description
+#’   Identifies the main cell population by fitting a bivariate Gaussian mixture  
+#’   model (Mclust) on side‐scatter (SSC‐A) vs forward‐scatter (FSC‐A), drops the  
+#’   nearest/farthest mixture components, computes a convex hull of retained events,  
+#’   and returns the gating mask (and adds it to the gating object if provided).  
+#’
+#’ @param object  
+#’   An “fcs_gating_object”, or a data.frame/matrix with columns `side_a` and  
+#’   `forward_a`.  
+#’ @param tree_name  
+#’   Character; name of the gating tree (default “tree1”).  
+#’ @param parent_name  
+#’   Character; name of the parent gate in the tree (default “none”).  
+#’ @param gate_name  
+#’   Character; new gate label (no “+”/“–” allowed).  
+#’ @param side_a  
+#’   Character; name of side‐scatter channel (default “SSC-A”).  
+#’ @param forward_a  
+#’   Character; name of forward‐scatter channel (default “FSC-A”).  
+#’ @param drop_nearest  
+#’   Integer; number of nearest‐to‐origin components to drop (default 1).  
+#’ @param drop_farthest  
+#’   Integer; number of farthest‐from‐origin components to drop (default 1).  
+#’
+#’ @details
+#’ - Fits `mclust::Mclust(df[,c(side_a, forward_a)], modelNames="VVV")`.  
+#’ - Computes center distances to origin, orders components, drops extremes.  
+#’ - Builds convex hull of retained points with `chull()`.  
+#’ - Binary mask: event inside hull = 1, else 0.  
+#’
+#’ @return  
+#’ If `object` is an “fcs_gating_object”, returns it with:  
+#’ - `object$gate_trees[[tree_name]][[gate_name]]`: list with  
+#’   - mask, tree, parent, feature_side_a, feature_forward_a, gate_fn,  
+#’     chull_selection (hull vertices + cluster indices).  
+#’ Otherwise returns a list with:  
+#’ - cells: data.frame of gated events  
+#’ - hull_vertices: data.frame of hull points  
+#’ - kept_clusters: integer indices  
+#’ - dropped_clusters: integer indices  
+#’
+#’ @examples
+#’ \dontrun{
+#’   go <- fcs_gating_object(joined)
+#’   gated <- fcs_gate_cells(go, gate_name = "cells")
+#’ }
+#’
+#’ @seealso  
+#’   fcs_gating_object, mclust::Mclust, sp::point.in.polygon  
+#’
+#’ @importFrom mclust Mclust  
+#’ @importFrom sp point.in.polygon  
+#’ @export
 fcs_gate_cells <- function(object,
                            tree_name = 'tree1', 
                            parent_name = 'none', 
@@ -127,6 +208,37 @@ fcs_gate_cells <- function(object,
   }
 }
 
+#’ @title Plot Gated Cells on SSC vs FSC
+#’
+#’ @description
+#’   Scatter‐plots all events in gray and gated events in blue, overlaying  
+#’   the convex hull in red.  
+#’
+#’ @param object  
+#’   An “fcs_gating_object” containing `gate_trees[[gate_tree]][[gate_name]]`.  
+#’ @param gate_tree  
+#’   Character; name of the gating tree (default “tree1”).  
+#’ @param gate_name  
+#’   Character; name of the gate branch to plot (default “cells”).  
+#’ @param downsample_size  
+#’   Integer; maximum points to plot (default 100000).  
+#’
+#’ @return  
+#’   A ggplot2 object.  
+#’
+#’ @examples
+#’ \dontrun{
+#’   go <- fcs_gate_cells(gating_obj, gate_name = "cells")
+#’   p <- fcs_plot_cells(go, gate_name = "cells")
+#’   print(p)
+#’ }
+#’
+#’ @seealso  
+#’   fcs_gate_cells, ggplot2::ggplot  
+#’
+#’ @importFrom ggplot2 ggplot aes geom_point geom_polygon theme_bw labs theme element_text  
+#’ @importFrom rlang sym  
+#’ @export
 fcs_plot_cells <- function(object, 
                            gate_tree, 
                            gate_name = 'cells', 
@@ -174,6 +286,57 @@ fcs_plot_cells <- function(object,
   return(pl)
 }
 
+#’ @title Gate Singlets by Height vs Area
+#’
+#’ @description
+#’   Identifies singlet events by fitting a robust or least‐squares line  
+#’   to A vs H channels, computing residuals, then applying an EM-based or  
+#’   curvature-based cutpoint to select events above the threshold.  
+#’
+#’ @param object  
+#’   An “fcs_gating_object”, or a data.frame/matrix with columns `a` and `h`.  
+#’ @param tree_name  
+#’   Character; gating tree name (default “tree1”).  
+#’ @param parent_name  
+#’   Character; parent gate (default “cells”).  
+#’ @param gate_name  
+#’   Character; new gate label (no “+”/“–” allowed).  
+#’ @param a  
+#’   Character; area channel name (default “SSC-A”).  
+#’ @param h  
+#’   Character; height channel name (default “SSC-H”).  
+#’ @param cut_method  
+#’   Character; “gmm”, “flex”, or “both” (default).  
+#’ @param fit_method  
+#’   Character; “lm” or “rlm” (default “lm”).  
+#’ @param trim_frac  
+#’   Numeric; fraction to trim when fitting (default 0.01).  
+#’ @param curvature_eps  
+#’   Numeric; curvature tolerance for flex-cut (default 0.001).  
+#’
+#’ @details
+#’ - Subsets central data by trim_frac.  
+#’ - Fits `lm()` or `MASS::rlm()` of h ~ a.  
+#’ - Computes residuals and calls fcs_get_em_cutpoint() for threshold.  
+#’ - Masks events above cutpoint as singlets.  
+#’
+#’ @return  
+#’ If `object` is an “fcs_gating_object”, adds branch under  
+#’ `gate_trees[[tree_name]][[gate_name]]` with positive/negative masks,  
+#’ threshold, fit parameters, and returns the updated object.  
+#’ Otherwise returns a data.frame of gated events.  
+#’
+#’ @examples
+#’ \dontrun{
+#’   go <- fcs_gating_object(joined)
+#’   go2 <- fcs_gate_singlets(go, gate_name = "singlets")
+#’ }
+#’
+#’ @seealso  
+#’   fcs_gate_cells, fcs_get_em_cutpoint, MASS::rlm  
+#’
+#’ @importFrom MASS lm rlm  
+#’ @export
 fcs_gate_singlets <- function(object,
                               tree_name = 'tree1', 
                               parent_name = 'cells', 
@@ -294,6 +457,40 @@ fcs_gate_singlets <- function(object,
   }
 }
 
+#’ @title Plot Singlet Gate on A vs H
+#’
+#’ @description
+#’   Visualizes area vs height, highlighting singlets in blue and background  
+#’   events in black.  
+#’
+#’ @param object  
+#’   An “fcs_gating_object” containing the singlet gate branch.  
+#’ @param tree_name  
+#’   Character; gating tree name (default “tree1”).  
+#’ @param gate_name  
+#’   Character; gate branch to plot (default “ssc_singlets”).  
+#’ @param alpha  
+#’   Numeric; transparency for background points (default 0.25).  
+#’ @param psize  
+#’   Numeric; point size (default 0.6).  
+#’ @param downsample_size  
+#’   Integer; maximum points to plot (default 100000).  
+#’
+#’ @return  
+#’   A ggplot2 object.  
+#’
+#’ @examples
+#’ \dontrun{
+#’   go <- fcs_gate_singlets(joined, gate_name = "singlets")
+#’   p <- fcs_plot_singlets(go, gate_name = "singlets")
+#’   print(p)
+#’ }
+#’
+#’ @seealso  
+#’   fcs_gate_singlets, ggplot2::ggplot  
+#’
+#’ @importFrom ggplot2 ggplot aes geom_point theme_bw labs theme element_text  
+#’ @export
 fcs_plot_singlets <- function(object,
                               tree_name = 'tree1', 
                               gate_name = 'ssc_singlets', 
@@ -336,30 +533,51 @@ fcs_plot_singlets <- function(object,
   return(pl)
 }
 
-#’ @title    EM Cut‐point Estimation
+#’ @title EM‐Based Cutpoint Estimation
+#’
 #’ @description
-#’ Fit a two‐component GMM via either mclust or mixtools and find the posterior cutpoint.
+#’   Fits a two-component Gaussian mixture model (via mclust or mixtools) or  
+#’   applies a curvature (“flex”) fallback to estimate a data‐driven cutpoint.  
 #’
-#’ @param x              Numeric vector of observations.
-#’ @param em_method      Which EM backend: 'mclust' or 'mix'.
-#’ @param general_method GMM‐based ('gmm') or flex‐point fallback ('flex').
-#’ @param post.thresh    Posterior threshold for cut‐point (default 0.5).
-#’ @param prom_tol       Minimum component proportion to accept (default 0.05).
-#’ @param flex_tail      Quantile for flex‐point fallback (default 0.75).
-#’ @param bw_adjust      Bandwidth adjustment for density() (default 2).
-#’ @param n_grid         Grid length for density() (default 512).
-#’ @param curvature_eps  Curvature tolerance for flex‐point (default 0.01).
-#’ @param return.model   If TRUE, return the fitted EM model in the output.
+#’ @param x  
+#’   Numeric vector of observations.  
+#’ @param em_method  
+#’   Character; “mclust” (default) or “mix” for mixtools.  
+#’ @param general_method  
+#’   Character; “gmm”, “flex”, “mean”, or “both” (default).  
+#’ @param post.thresh  
+#’   Numeric; posterior probability threshold (default 0.5).  
+#’ @param prom_tol  
+#’   Numeric; minimum component proportion (default 0.05).  
+#’ @param flex_tail  
+#’   Numeric; quantile for flex fallback (default 0.75).  
+#’ @param bw_adjust  
+#’   Numeric; bandwidth adjustment for density (default 2).  
+#’ @param n_grid  
+#’   Integer; grid length for density (default 512).  
+#’ @param curvature_eps  
+#’   Numeric; curvature tolerance for flex‐fallback (default 0.01).  
+#’ @param return.model  
+#’   Logical; if TRUE, include fitted model in output (default TRUE).  
 #’
-#’ @return A list with components  
-#’   * cut: the numeric cut‐point  
-#’   * method: character tag  
-#’   * model: (optional) the EM fit object  
+#’ @return  
+#’   A list with:  
+#’   - cut: numeric cutpoint  
+#’   - method: character tag of method used  
+#’   - model: the fitted EM object (if return.model = TRUE)  
 #’
-#’ @importFrom mclust Mclust emControl
-#’ @importFrom mixtools normalmixEM
-#’ @importFrom stats quantile dnorm density uniroot sd
-#’ @importFrom pracma findpeaks
+#’ @examples
+#’ \dontrun{
+#’   res <- fcs_get_em_cutpoint(x = df$FL1, em_method = "mclust")
+#’ }
+#’
+#’ @seealso  
+#’   mclust::Mclust, mixtools::normalmixEM  
+#’
+#’ @importFrom mclust Mclust emControl  
+#’ @importFrom mixtools normalmixEM  
+#’ @importFrom stats quantile dnorm density uniroot sd  
+#’ @importFrom pracma findpeaks  
 #’ @export
 fcs_get_em_cutpoint <- function(x, 
                                 em_method = c('mclust','mix'),
@@ -480,6 +698,48 @@ fcs_get_em_cutpoint <- function(x,
   return(res)
 }
 
+#’ @title Set a Gate Based on EM Cutpoint
+#’
+#’ @description
+#’   Wrapper around fcs_get_em_cutpoint() to apply a univariate gate on  
+#’   a single feature, storing positive/negative masks in the gating object.  
+#’
+#’ @param object  
+#’   An “fcs_gating_object” or numeric vector.  
+#’ @param feature  
+#’   Character; column name of the feature in object$data.  
+#’ @param tree_name  
+#’   Character; gating tree name (default “tree1”).  
+#’ @param parent_name  
+#’   Character; parent gate (default “none”).  
+#’ @param gate_name  
+#’   Character; new gate label (no “+”/“–” allowed).  
+#’ @param em_method  
+#’   Character; “mclust” or “mix” (default).  
+#’ @param general_method  
+#’   Character; “gmm”, “flex”, “mean”, or “both” (default).  
+#’ @param post.thresh  
+#’   Numeric; posterior threshold (default 0.5).  
+#’ @param prom_tol  
+#’   Numeric; component proportion threshold (default 0.05).  
+#’ @param flex_tail  
+#’   Numeric; quantile for flex fallback (default 0.75).  
+#’ @param bw_adjust  
+#’   Numeric; density bandwidth adjust (default 2).  
+#’ @param n_grid  
+#’   Integer; grid length for density (default 512).  
+#’ @param curvature_eps  
+#’   Numeric; curvature tolerance (default 0.01).  
+#’
+#’ @return  
+#’   If input is an “fcs_gating_object”, returns it with a new branch under  
+#’   `gate_trees[[tree_name]][[gate_name]]` containing positive/negative masks and cutpoint.  
+#’   Otherwise returns a list with cutpoint data.  
+#’
+#’ @seealso  
+#’   fcs_get_em_cutpoint  
+#’
+#’ @export
 fcs_set_gate <- function(object,
                          feature, 
                          tree_name = 'tree1', 
@@ -689,7 +949,30 @@ fcs_set_gate <- function(object,
     }
   }
 }
-                            
+
+#’ @title Define a Phenotypic Node by Boolean Gates
+#’
+#’ @description
+#’   Combines existing “+”/“–” gates in a tree into a composite phenotype node,  
+#’   storing the logical AND of positive/negative masks.  
+#’
+#’ @param object  
+#’   An “fcs_gating_object” with completed gate_trees.  
+#’ @param phenotype  
+#’   Character; expression like “A+B–C+…” where A,B,C are gate names.  
+#’ @param tree_name  
+#’   Character; gating tree name (default “tree1”).  
+#’ @param node_name  
+#’   Character; new node label (no “+”/“–” allowed).  
+#’
+#’ @return  
+#’   The updated “fcs_gating_object” with `gate_trees[[tree_name]][[node_name]]`  
+#’   containing the composite mask and phenotype metadata.  
+#’
+#’ @seealso  
+#’   fcs_set_gate  
+#’
+#’ @export
 fcs_set_node <- function(object, 
                          phenotype, 
                          tree_name = 'tree1', 
@@ -728,6 +1011,35 @@ fcs_set_node <- function(object,
   return(object)
 }
 
+#’ @title Plot GMM Fit and Cutpoint
+#’
+#’ @description
+#’   Displays the kernel density of x, overlays the two GMM components and mixture  
+#’   density, and marks the chosen cutpoint.  
+#’
+#’ @param x  
+#’   Numeric vector used to fit the GMM.  
+#’ @param fit  
+#’   Fitted Mclust or normalmixEM model.  
+#’ @param cut  
+#’   Numeric; cutpoint to highlight (optional).  
+#’ @param linewidth  
+#’   Numeric; line width for plotting (default 3).  
+#’
+#’ @return  
+#’   Invisibly `NULL`; produces a base‐graphics plot.  
+#’
+#’ @examples
+#’ \dontrun{
+#’   fit <- mclust::Mclust(x, G=2)
+#’   fcs_plot_gmm_fit(x, fit, cut=1.2)
+#’ }
+#’
+#’ @seealso  
+#’   fcs_get_em_cutpoint, stats::density  
+#’
+#’ @importFrom stats density dnorm  
+#’ @export
 fcs_plot_gmm_fit <- function(x, fit, cut = NULL, linewidth = 3) {
   d <- density(x, n = 512)
   plot(d, main = "Data + Fitted GMM", lwd = linewidth, col = "black")
@@ -773,6 +1085,42 @@ fcs_plot_gmm_fit <- function(x, fit, cut = NULL, linewidth = 3) {
   }
 }
 
+#’ @title Plot Quadrant Percentages on Two‐Dimensional Data
+#’
+#’ @description
+#’   Splits data.frame `df` into four quadrants by `xcut`/`ycut`, computes  
+#’   percentages in UL/UR/LR/LL, and overlays density contours and labels.  
+#’
+#’ @param df  
+#’   data.frame with two numeric columns to be split.  
+#’ @param xcut  
+#’   Numeric; vertical cut‐point on first column.  
+#’ @param ycut  
+#’   Numeric; horizontal cut‐point on second column.  
+#’ @param alpha  
+#’   Numeric; transparency for points (default 0.25).  
+#’ @param psize  
+#’   Numeric; point size (default 0.6).  
+#’ @param n  
+#’   Integer; grid size for density (default 100).  
+#’ @param bins  
+#’   Integer; contour bin count (default 12).  
+#’
+#’ @return  
+#’   A ggplot2 object with points, contours, quadrant lines, and percentage labels.  
+#’
+#’ @examples
+#’ \dontrun{
+#’   df <- data.frame(x=rnorm(1e4), y=rnorm(1e4))
+#’   p <- fcs_plot_quadrants(df, xcut=0, ycut=0)
+#’   print(p)
+#’ }
+#’
+#’ @seealso  
+#’   ggplot2::stat_density_2d  
+#’
+#’ @importFrom ggplot2 ggplot aes geom_point stat_density_2d geom_vline geom_hline geom_text theme_bw labs theme element_text  
+#’ @export
 fcs_plot_quadrants <- function(df,
                                xcut, 
                                ycut,
