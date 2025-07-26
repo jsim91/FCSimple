@@ -149,7 +149,7 @@ fcs_plot_distribution <- function(fcs_join_obj,
            plot = ggpubr::ggarrange(plotlist = plot_set, nrow = ceiling(sqrt(length(plot_set))),
                                     ncol = ceiling(sqrt(length(plot_set))), legend = "bottom", common.legend = TRUE),
            device = "pdf", width = ceiling(sqrt(length(plot_set)))*2.5, height = ceiling(sqrt(length(plot_set)))*2.5,
-           units = "in", dpi = 900, limitsize = FALSE)
+           units = "in", dpi = 300, limitsize = FALSE)
   } else if(tolower(separate_by) == "cluster") {
     data_split <- vector("list", length = ncol(obj_data))
     names(data_split) <- colnames(obj_data)
@@ -163,6 +163,17 @@ fcs_plot_distribution <- function(fcs_join_obj,
     for(i in 1:length(data_split)) {
       data_split[[i]]$cluster <- factor(fcs_join_obj[[tolower(plot_algorithm)]]$clusters)
     }
+    plot_set <- lapply(X = data_split, FUN = plot_cluster, rm0 = rm_zero, trq = trim_quantile, instr_type = fcs_join_obj[['collection_instrument']])
+    if(add_timestamp) {
+      fname <- paste0(outdir,"/panel_distributions_by_cluster_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf")
+    } else {
+      fname <- paste0(outdir,"/panel_distributions_by_cluster.pdf")
+    }
+    ggsave(filename = fname,
+           plot = ggpubr::ggarrange(plotlist = plot_set, nrow = ceiling(sqrt(length(plot_set))),
+                                    ncol = ceiling(sqrt(length(plot_set))), legend = "bottom", common.legend = TRUE),
+           device = "pdf", width = ceiling(sqrt(length(plot_set)))*3, height = ceiling(sqrt(length(plot_set)))*9,
+           units = "in", dpi = 300, limitsize = FALSE)
   } else if(tolower(separate_by) == "none") {
     data_split <- vector("list", length = ncol(obj_data))
     names(data_split) <- colnames(obj_data)
@@ -180,19 +191,7 @@ fcs_plot_distribution <- function(fcs_join_obj,
            plot = ggpubr::ggarrange(plotlist = plot_set, nrow = ceiling(sqrt(length(plot_set))),
                                     ncol = ceiling(sqrt(length(plot_set)))), device = "pdf",
            width = ceiling(sqrt(length(plot_set)))*2.5, height = ceiling(sqrt(length(plot_set)))*2.5, units = "in",
-           dpi = 900, limitsize = FALSE)
-  } else if(tolower(separate_by) == "cluster") {
-    plot_set <- lapply(X = data_split, FUN = plot_cluster, rm0 = rm_zero, trq = trim_quantile, instr_type = fcs_join_obj[['collection_instrument']])
-    if(add_timestamp) {
-      fname <- paste0(outdir,"/panel_distributions_by_cluster_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".pdf")
-    } else {
-      fname <- paste0(outdir,"/panel_distributions_by_cluster.pdf")
-    }
-    ggsave(filename = fname,
-           plot = ggpubr::ggarrange(plotlist = plot_set, nrow = ceiling(sqrt(length(plot_set))),
-                                    ncol = ceiling(sqrt(length(plot_set))), legend = "bottom", common.legend = TRUE),
-           device = "pdf", width = ceiling(sqrt(length(plot_set)))*3, height = ceiling(sqrt(length(plot_set)))*9,
-           units = "in", dpi = 900, limitsize = FALSE)
+           dpi = 300, limitsize = FALSE)
   } else if(tolower(separate_by) == "condition") {
     if(!"condition" %in% names(fcs_join_obj)){
       print("Unable to find condition. Using separate_by = 'none' instead.")
@@ -217,7 +216,7 @@ fcs_plot_distribution <- function(fcs_join_obj,
            plot = ggpubr::ggarrange(plotlist = plot_set, nrow = ceiling(sqrt(length(plot_set))),
                                     ncol = ceiling(sqrt(length(plot_set))), legend = "bottom", common.legend = TRUE),
            device = "pdf", width = ceiling(sqrt(length(plot_set)))*2.5, height = ceiling(sqrt(length(plot_set)))*2.5,
-           units = "in", dpi = 900, limitsize = FALSE)
+           units = "in", dpi = 300, limitsize = FALSE)
     }
 }
 
