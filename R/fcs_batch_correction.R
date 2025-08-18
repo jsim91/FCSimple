@@ -177,6 +177,8 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
                                                method = cmeth,
                                                other = list(number_of_batches = length(unique(harm_meta$batch)),
                                                             batches = unique(harm_meta$batch),
+                                                            lambda = harmony_lambda, 
+                                                            n_iterations = harmony_iterations, 
                                                             datetime = Sys.time(),
                                                             session_info = sessionInfo()))
   }
