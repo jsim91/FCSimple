@@ -1,9 +1,9 @@
 Package: FCSimple
 Type: Package
-Title: What the Package Does (Title Case)
+Title: Streamlined High-Dimensional Flow Cytometry Processing in R
 Version: 1.0.0
-Author: Who wrote it
-Maintainer: The package maintainer <yourself@somewhere.net>
+Author: jsim91
+Maintainer: https://github.com/jsim91
 Description: More about what it does (maybe more than one line)
     Use four spaces when indenting paragraphs within the Description.
 License: What license is it under?
