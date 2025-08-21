@@ -173,7 +173,7 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
   reduction_coords <- fcs_join_obj[[tolower(reduction)]][["coordinates"]]
   cluster_numbers <- as.character(fcs_join_obj[[tolower(algorithm)]][["clusters"]])
   if(!is.na(cluster_substitute_names[1])) {
-    if(mean(names(cluster_substitute_names) %in% unique(cluster_numbers)!=1) {
+    if(mean(names(cluster_substitute_names) %in% unique(cluster_numbers))!=1) {
       stop("error in argument 'cluster_substitute_names': length of 'cluster_substitute_names' does not match number of clusters.")
     } else {
       print("Substituted cluster names will replace cluster numbers. You may use '\n' character to create multi-line annotations. 'My\nCluster' will put 'My' on first line and 'Cluster' on second line.")
