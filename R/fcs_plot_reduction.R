@@ -87,8 +87,13 @@
 #'   Logical; if `TRUE`, downsamples each split‐group to equal size before plotting (default `TRUE`).  
 #'
 #' @param cluster_substitute_names  
-#'   Character vector; optional replacement labels for clusters (length must  
-#'   match number of clusters, default `NA`).  
+#'   Named character vector; optional mapping from original cluster IDs to  
+#'   replacement labels. The names of this vector must exactly match the unique  
+#'   cluster IDs in `fcs_join_obj[[ tolower(algorithm) ]][["clusters"]]`;  
+#'   a mismatch will trigger an error. If supplied (i.e. not `NA`), cluster  
+#'   numbers in the plot are replaced by their mapped labels. Labels may  
+#'   include the `\n` character for multi‐line annotations (e.g. `"My\nCluster"`).  
+#'   Default is `NA` (no substitution).  
 #'
 #' @param add_timestamp  
 #'   Logical; if `TRUE` (default), appends a timestamp (`_YYYY-MM-DD_HHMMSS`)  
@@ -167,6 +172,14 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
 
   reduction_coords <- fcs_join_obj[[tolower(reduction)]][["coordinates"]]
   cluster_numbers <- as.character(fcs_join_obj[[tolower(algorithm)]][["clusters"]])
+  if(!is.na(cluster_substitute_names[1])) {
+    if(mean(names(cluster_substitute_names) %in% unique(cluster_numbers))!=1) {
+      stop("error in argument 'cluster_substitute_names': length of 'cluster_substitute_names' does not match number of clusters.")
+    } else {
+      print("Substituted cluster names will replace cluster numbers. You may use '\n' character to create multi-line annotations. 'My\nCluster' will put 'My' on first line and 'Cluster' on second line.")
+      cluster_numbers <- as.character(cluster_substitute_names[cluster_numbers])
+    }
+  }
   uclus <- unique(cluster_numbers)[order(unique(cluster_numbers))]
 
   # https://stackoverflow.com/questions/8197559/emulate-ggplot2-default-color-palette
@@ -186,15 +199,6 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
   for(i in 1:length(xval)) {
     xval[i] <- median(reduction_coords[,1][which(cluster_numbers==names(xval)[i])])
     yval[i] <- median(reduction_coords[,2][which(cluster_numbers==names(yval)[i])])
-  }
-
-  if(!is.na(cluster_substitute_names[1])) {
-    if(length(cluster_substitute_names)!=length(xval)) {
-      stop("error in argument 'cluster_substitute_names': length of 'cluster_substitute_names' does not match number of clusters.")
-    } else {
-      print("Substituted cluster names will replace cluster number annotations 1:1. Order matters! You may use '\n' character to create multi-line annotations. 'My\nCluster' will put 'My' on first line and 'Cluster' on second line.")
-      names(xval) <- cluster_substitute_names; names(yval) <- cluster_substitute_names
-    }
   }
 
   plt_input <- cbind(reduction_coords,data.frame(cluster = cluster_numbers))

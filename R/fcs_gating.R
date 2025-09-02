@@ -270,8 +270,8 @@ fcs_plot_cells <- function(object,
   }
   
   pl <- ggplot(cells_all, aes(x = !!x_sym, y = !!y_sym)) + 
-    geom_point(color = "grey20", size = 0.8, alpha = 0.5) + 
-    geom_point(data = cells,
+    ggrastr::geom_point_rast(color = "grey20", size = 0.8, alpha = 0.5) + 
+    ggrastr::geom_point_rast(data = cells,
                aes(x = !!x_sym, y = !!y_sym),
                color = "blue", size = 1, alpha = 0.5) +
     geom_polygon(data = hull,
@@ -521,9 +521,9 @@ fcs_plot_singlets <- function(object,
   colnames(cells_all) <- c('xcol','ycol'); colnames(cells) <- colnames(cells_all)
   
   pl <- ggplot() + 
-    geom_point(data = cells_all, aes(x = xcol, y = ycol), 
+    ggrastr::geom_point_rast(data = cells_all, aes(x = xcol, y = ycol), 
                color = 'black', alpha = alpha, size = psize) + 
-    geom_point(data = cells, mapping = aes(x = xcol, y = ycol), 
+    ggrastr::geom_point_rast(data = cells, mapping = aes(x = xcol, y = ycol), 
                color = 'blue', alpha = ifelse(alpha*2>1,1,alpha*2), size = psize*1.1) + 
     theme_bw() +
     labs(x = capture_cnames[1], y = capture_cnames[2]) + 
@@ -1155,7 +1155,7 @@ fcs_plot_quadrants <- function(df,
          diff(range(df[,2]))/30)
   
   pl <- ggplot(df, aes(x = xcol, y = ycol)) + 
-    geom_point(color = "black", alpha = alpha, size = psize) + 
+    ggrastr::geom_point_rast(color = "black", alpha = alpha, size = psize) + 
     stat_density_2d(geom = "contour",
                     color = "cyan",
                     h = h,
