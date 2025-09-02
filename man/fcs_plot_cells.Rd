@@ -7,7 +7,7 @@
 fcs_plot_cells(object, gate_tree, gate_name = "cells", downsample_size = 1e+05)
 }
 \arguments{
-\item{object}{An “fcs_gating_object” containing \code{gate_trees[[gate_tree]][[gate_name]]}.}
+\item{object}{An “fcs_gating_object” containing `gate_trees[[gate_tree]][[gate_name]]`.}
 
 \item{gate_tree}{Character; name of the gating tree (default “tree1”).}
 
@@ -19,8 +19,8 @@ fcs_plot_cells(object, gate_tree, gate_name = "cells", downsample_size = 1e+05)
 A ggplot2 object.
 }
 \description{
-Scatter‐plots all events in gray and gated events in blue, overlaying
-the convex hull in red.
+Scatter‐plots all events in gray and gated events in blue, overlaying  
+  the convex hull in red.
 }
 \examples{
 \dontrun{

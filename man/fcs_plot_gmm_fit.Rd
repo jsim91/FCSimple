@@ -16,11 +16,11 @@ fcs_plot_gmm_fit(x, fit, cut = NULL, linewidth = 3)
 \item{linewidth}{Numeric; line width for plotting (default 3).}
 }
 \value{
-Invisibly \code{NULL}; produces a base‐graphics plot.
+Invisibly `NULL`; produces a base‐graphics plot.
 }
 \description{
-Displays the kernel density of x, overlays the two GMM components and mixture
-density, and marks the chosen cutpoint.
+Displays the kernel density of x, overlays the two GMM components and mixture  
+  density, and marks the chosen cutpoint.
 }
 \examples{
 \dontrun{

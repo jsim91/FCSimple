@@ -11,21 +11,21 @@ fcs_report_abundance(
 )
 }
 \arguments{
-\item{fcs_join_obj}{A list with a \verb{[[algorithm]][["abundance"]]} matrix, as produced by
+\item{fcs_join_obj}{A list with a `[[algorithm]][["abundance"]]` matrix, as produced by
 FCSimple::fcs_calculate_abundance().}
 
 \item{report_algorithm}{Character; name of the abundance matrix to export. One of
-\code{"leiden"}, \code{"flowsom"}, \code{"louvain"}, \code{"phenograph"}, or \code{"git"}.}
+`"leiden"`, `"flowsom"`, `"louvain"`, `"phenograph"`, or `"git"`.}
 
-\item{outdir}{Character; file path to an existing directory. Defaults to \code{getwd()}.}
+\item{outdir}{Character; file path to an existing directory. Defaults to `getwd()`.}
 }
 \value{
 Invisibly returns the abundance matrix (numeric matrix with sample rows
-and cluster‐ID columns).
+  and cluster‐ID columns).
 }
 \description{
 Exports the cluster‐abundance matrix (samples × clusters) to a CSV in the
-specified directory, and returns the matrix invisibly.
+  specified directory, and returns the matrix invisibly.
 }
 \examples{
 \dontrun{

@@ -32,14 +32,12 @@ fcs_plot_reduction(
 }
 \arguments{
 \item{fcs_join_obj}{A list containing reduction coordinates and clustering results, as
-produced by FCSimple::fcs_reduce_dimensions() and
-FCSimple::fcs_cluster(). Must include:
-\itemize{
-\item \code{fcs_join_obj[[ tolower(reduction) ]][["coordinates"]]}: a numeric
-matrix of cell × 2 embedding coordinates
-\item \code{fcs_join_obj[[ tolower(algorithm) ]][["clusters"]]}: a vector of
-cluster IDs for each cell
-}}
+produced by FCSimple::fcs_reduce_dimensions() and  
+FCSimple::fcs_cluster(). Must include:  
+- `fcs_join_obj[[ tolower(reduction) ]][["coordinates"]]`: a numeric  
+  matrix of cell × 2 embedding coordinates  
+- `fcs_join_obj[[ tolower(algorithm) ]][["clusters"]]`: a vector of  
+  cluster IDs for each cell}
 
 \item{algorithm}{Character; clustering result to visualize (e.g. “leiden”, “flowsom”).}
 
@@ -49,21 +47,21 @@ cluster IDs for each cell
 
 \item{point_size}{Numeric; point size for scatter (default 1).}
 
-\item{outdir}{Character; directory path to save the plot when \code{return_plot = FALSE}
-(default: \code{getwd()}).}
+\item{outdir}{Character; directory path to save the plot when `return_plot = FALSE`
+(default: `getwd()`).}
 
 \item{split_factor}{Optional vector or factor the same length as rows of the reduction
-coordinates. If not \code{NA}, splits data by its levels and arranges panels
-using ggpubr::ggarrange() (default: \code{NA}).}
+coordinates. If not `NA`, splits data by its levels and arranges panels  
+using ggpubr::ggarrange() (default: `NA`).}
 
-\item{internal_call}{Logical; if \code{TRUE}, uses internal logic to highlight and annotate a subset
-of events (\code{keep_indices}) and clusters (\code{anno_indices}) rather than full scatter (default \code{FALSE}).}
+\item{internal_call}{Logical; if `TRUE`, uses internal logic to highlight and annotate a subset
+of events (`keep_indices`) and clusters (`anno_indices`) rather than full scatter (default `FALSE`).}
 
-\item{anno_indices}{Integer vector; cluster indices to annotate when \code{internal_call = TRUE}
-(default \code{NULL}).}
+\item{anno_indices}{Integer vector; cluster indices to annotate when `internal_call = TRUE`
+(default `NULL`).}
 
 \item{keep_indices}{Integer vector; cell indices to highlight (in red) when
-\code{internal_call = TRUE} (default \code{NA}).}
+`internal_call = TRUE` (default `NA`).}
 
 \item{figure_width}{Numeric; width in inches for saving plot (default 10).}
 
@@ -72,58 +70,56 @@ of events (\code{keep_indices}) and clusters (\code{anno_indices}) rather than f
 \item{plotting_device}{Character; “pdf” or “png” to select output device when writing file
 (default “pdf”).}
 
-\item{annotate_text_size}{Numeric; font size for cluster labels (use \code{NA} to disable, default 5).}
+\item{annotate_text_size}{Numeric; font size for cluster labels (use `NA` to disable, default 5).}
 
 \item{title_size}{Numeric; font size for plot title (default 14).}
 
-\item{return_plot}{Logical; if \code{TRUE} (default), returns the ggplot2 object; if \code{FALSE},
-writes the plot to file and invisibly returns \code{NULL}.}
+\item{return_plot}{Logical; if `TRUE` (default), returns the ggplot2 object; if `FALSE`,
+writes the plot to file and invisibly returns `NULL`.}
 
-\item{randomize_colors}{Logical; if \code{TRUE}, shuffles cluster‐color assignment (default \code{FALSE}).}
+\item{randomize_colors}{Logical; if `TRUE`, shuffles cluster‐color assignment (default `FALSE`).}
 
-\item{color_random_seed}{Integer; seed for random color assignment when \code{randomize_colors = TRUE}
+\item{color_random_seed}{Integer; seed for random color assignment when `randomize_colors = TRUE`
 (default 123).}
 
-\item{color_clusters}{Logical; if \code{TRUE} (default), color points by cluster; if \code{FALSE}, all
+\item{color_clusters}{Logical; if `TRUE` (default), color points by cluster; if `FALSE`, all
 points are drawn in a single color.}
 
-\item{force_title}{Logical; if \code{TRUE}, forces display of the reduction name as a title even
-in split panels (default \code{FALSE}).}
+\item{force_title}{Logical; if `TRUE`, forces display of the reduction name as a title even
+in split panels (default `FALSE`).}
 
-\item{sample_equally}{Logical; if \code{TRUE}, downsamples each split‐group to equal size before plotting (default \code{TRUE}).}
+\item{sample_equally}{Logical; if `TRUE`, downsamples each split‐group to equal size before plotting (default `TRUE`).}
 
 \item{cluster_substitute_names}{Character vector; optional replacement labels for clusters (length must
-match number of clusters, default \code{NA}).}
+match number of clusters, default `NA`).}
 
-\item{add_timestamp}{Logical; if \code{TRUE} (default), appends a timestamp (\verb{_YYYY-MM-DD_HHMMSS})
+\item{add_timestamp}{Logical; if `TRUE` (default), appends a timestamp (`_YYYY-MM-DD_HHMMSS`)
 to filenames when saving.}
 }
 \value{
-If \code{return_plot = TRUE}, a ggplot2 object (or ggarrange object) is returned.
-If \code{return_plot = FALSE}, the plot is written to file and the function
-invisibly returns \code{NULL}.
+If `return_plot = TRUE`, a ggplot2 object (or ggarrange object) is returned.  
+  If `return_plot = FALSE`, the plot is written to file and the function  
+  invisibly returns `NULL`.
 }
 \description{
-Visualizes cell clusters on a 2D reduction embedding (UMAP or tSNE) as a
-scatter plot with optional cluster labels, split panels, and flexible
-output options. Supports coloring by cluster, randomizing palettes, and
-saving to file or returning the ggplot object.
+Visualizes cell clusters on a 2D reduction embedding (UMAP or tSNE) as a  
+  scatter plot with optional cluster labels, split panels, and flexible  
+  output options. Supports coloring by cluster, randomizing palettes, and  
+  saving to file or returning the ggplot object.
 }
 \details{
 The function:
-\enumerate{
-\item Extracts embedding coordinates and cluster IDs.
-\item Builds a data.frame for ggplot, mapping clusters to colors via a
-default HCL palette (or randomized if requested).
-\item Computes median centroids for each cluster for annotation.
-\item If \code{split_factor} is \code{NA}, draws a single scatter plot. Otherwise splits
-cells by factor levels, optionally downsamples equally, and arranges
-subplots with ggpubr::ggarrange().
-\item If \code{internal_call = TRUE}, highlights cells in \code{keep_indices} and
-annotates clusters in \code{anno_indices}.
-\item When \code{return_plot = FALSE}, saves to \code{outdir} as
-\verb{<algorithm>_<reduction>_labeled[(_timestamp)].pdf} or \code{.png}.
-}
+  1. Extracts embedding coordinates and cluster IDs.  
+  2. Builds a data.frame for ggplot, mapping clusters to colors via a  
+     default HCL palette (or randomized if requested).  
+  3. Computes median centroids for each cluster for annotation.  
+  4. If `split_factor` is `NA`, draws a single scatter plot. Otherwise splits  
+     cells by factor levels, optionally downsamples equally, and arranges  
+     subplots with ggpubr::ggarrange().  
+  5. If `internal_call = TRUE`, highlights cells in `keep_indices` and  
+     annotates clusters in `anno_indices`.  
+  6. When `return_plot = FALSE`, saves to `outdir` as  
+     `<algorithm>_<reduction>_labeled[(_timestamp)].pdf` or `.png`.
 }
 \examples{
 \dontrun{
@@ -157,5 +153,5 @@ annotates clusters in \code{anno_indices}.
 }
 \seealso{
 FCSimple::fcs_reduce_dimensions, FCSimple::fcs_cluster,
-ggplot2::ggplot, ggrastr::geom_point_rast, ggpubr::ggarrange
+  ggplot2::ggplot, ggrastr::geom_point_rast, ggpubr::ggarrange
 }

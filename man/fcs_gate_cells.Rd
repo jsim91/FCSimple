@@ -16,8 +16,8 @@ fcs_gate_cells(
 )
 }
 \arguments{
-\item{object}{An “fcs_gating_object”, or a data.frame/matrix with columns \code{side_a} and
-\code{forward_a}.}
+\item{object}{An “fcs_gating_object”, or a data.frame/matrix with columns `side_a` and
+`forward_a`.}
 
 \item{tree_name}{Character; name of the gating tree (default “tree1”).}
 
@@ -34,33 +34,27 @@ fcs_gate_cells(
 \item{drop_farthest}{Integer; number of farthest‐from‐origin components to drop (default 1).}
 }
 \value{
-If \code{object} is an “fcs_gating_object”, returns it with:
-\itemize{
-\item \code{object$gate_trees[[tree_name]][[gate_name]]}: list with
-\itemize{
-\item mask, tree, parent, feature_side_a, feature_forward_a, gate_fn,
-chull_selection (hull vertices + cluster indices).
-Otherwise returns a list with:
-}
-\item cells: data.frame of gated events
-\item hull_vertices: data.frame of hull points
-\item kept_clusters: integer indices
-\item dropped_clusters: integer indices
-}
+If `object` is an “fcs_gating_object”, returns it with:  
+- `object$gate_trees[[tree_name]][[gate_name]]`: list with  
+  - mask, tree, parent, feature_side_a, feature_forward_a, gate_fn,  
+    chull_selection (hull vertices + cluster indices).  
+Otherwise returns a list with:  
+- cells: data.frame of gated events  
+- hull_vertices: data.frame of hull points  
+- kept_clusters: integer indices  
+- dropped_clusters: integer indices
 }
 \description{
-Identifies the main cell population by fitting a bivariate Gaussian mixture
-model (Mclust) on side‐scatter (SSC‐A) vs forward‐scatter (FSC‐A), drops the
-nearest/farthest mixture components, computes a convex hull of retained events,
-and returns the gating mask (and adds it to the gating object if provided).
+Identifies the main cell population by fitting a bivariate Gaussian mixture  
+  model (Mclust) on side‐scatter (SSC‐A) vs forward‐scatter (FSC‐A), drops the  
+  nearest/farthest mixture components, computes a convex hull of retained events,  
+  and returns the gating mask (and adds it to the gating object if provided).
 }
 \details{
-\itemize{
-\item Fits \code{mclust::Mclust(df[,c(side_a, forward_a)], modelNames="VVV")}.
-\item Computes center distances to origin, orders components, drops extremes.
-\item Builds convex hull of retained points with \code{chull()}.
-\item Binary mask: event inside hull = 1, else 0.
-}
+- Fits `mclust::Mclust(df[,c(side_a, forward_a)], modelNames="VVV")`.  
+- Computes center distances to origin, orders components, drops extremes.  
+- Builds convex hull of retained points with `chull()`.  
+- Binary mask: event inside hull = 1, else 0.
 }
 \examples{
 \dontrun{

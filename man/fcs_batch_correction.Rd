@@ -22,8 +22,8 @@ fcs_batch_correction(
 }
 \arguments{
 \item{fcs_join_obj}{A list returned by FCSimple::fcs_join(), containing at
-minimum elements "data", "run_date", and "source". If \code{use_rep = "pca"},
-it must also contain \code{fcs_join_obj$pca$pca_data}.}
+minimum elements "data", "run_date", and "source". If `use_rep = "pca"`,
+it must also contain `fcs_join_obj$pca$pca_data`.}
 
 \item{use_rep}{Character; either "data" (default) to correct raw expression
 values, or "pca" to correct principal‐component coordinates.}
@@ -32,10 +32,10 @@ values, or "pca" to correct principal‐component coordinates.}
 "harmony", selecting the algorithm for batch correction.}
 
 \item{correction_markers}{Character vector of channel names to correct
-(default "all"). Only used with \code{correction_method = "cyCombine"}.}
+(default "all"). Only used with `correction_method = "cyCombine"`.}
 
 \item{batch_source_regex}{Regular expression (string) to extract batch IDs
-from the "source" element. Default \code{"[0-9]+\\\\-[A-Za-z]+\\\\-[0-9]+"}.}
+from the "source" element. Default `"[0-9]+\\-[A-Za-z]+\\-[0-9]+"`.}
 
 \item{cyCombine_SOMx}{Integer; number of grid columns for the SOM in
 cyCombine (default 8).}
@@ -43,7 +43,7 @@ cyCombine (default 8).}
 \item{cyCombine_SOMy}{Integer; number of grid rows for the SOM in
 cyCombine (default 8).}
 
-\item{cyCombine_detect_effects}{Logical; if \code{TRUE}, runs cyCombine’s
+\item{cyCombine_detect_effects}{Logical; if `TRUE`, runs cyCombine’s
 detect_batch_effects before and after normalization (default FALSE).}
 
 \item{harmony_cores}{Integer; number of CPU cores for Harmony (default 1).}
@@ -52,20 +52,18 @@ detect_batch_effects before and after normalization (default FALSE).}
 (default 10).}
 
 \item{harmony_covars}{Character vector of metadata columns in
-\code{fcs_join_obj} to use as covariates in Harmony (default \code{c("batch","sample")}).}
+`fcs_join_obj` to use as covariates in Harmony (default `c("batch","sample")`).}
 
 \item{harmony_lambda}{Numeric; ridge‐penalty parameter for Harmony to
 prevent overcorrection (default 1).}
 
-\item{harmony_sample_element}{Name of the element in \code{fcs_join_obj} to treat
+\item{harmony_sample_element}{Name of the element in `fcs_join_obj` to treat
 as the sample identifier for Harmony (default "source").}
 }
 \value{
-The input \code{fcs_join_obj} augmented with:
-\itemize{
-\item \code{batch_correction}: a list containing corrected data, method, and metadata.
-\item \code{object_history}: appended entry recording the batch correction event.
-}
+The input `fcs_join_obj` augmented with:
+- `batch_correction`: a list containing corrected data, method, and metadata.
+- `object_history`: appended entry recording the batch correction event.
 }
 \description{
 Applies batch‐effect correction to a joined flow cytometry object using
@@ -73,14 +71,12 @@ either cyCombine or Harmony. The function can operate on raw data or PCA
 coordinates and stores corrected values along with metadata and history.
 }
 \details{
-\itemize{
-\item For \code{cyCombine}, raw data are scaled, SOM clusters created, and per‐batch
-normalization performed. Corrected expression values are stored under
-\code{fcs_join_obj$batch_correction$data} along with a history list.
-\item For \code{harmony}, PCA or raw data matrix is passed to \code{RunHarmony()}, and
-corrected embeddings plus metadata are returned in
-\code{fcs_join_obj$batch_correction}.
-}
+- For `cyCombine`, raw data are scaled, SOM clusters created, and per‐batch
+  normalization performed. Corrected expression values are stored under
+  `fcs_join_obj$batch_correction$data` along with a history list.
+- For `harmony`, PCA or raw data matrix is passed to `RunHarmony()`, and
+  corrected embeddings plus metadata are returned in
+  `fcs_join_obj$batch_correction`.
 }
 \examples{
 \dontrun{

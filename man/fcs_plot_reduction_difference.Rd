@@ -30,36 +30,34 @@ fcs_plot_reduction_difference(
 \arguments{
 \item{fcs_join_obj}{A list returned by FCSimple::fcs_join() and
 FCSimple::fcs_reduce_dimensions(), containing:
-\itemize{
-\item a named element “umap” or “tsne” with component “coordinates” (cell × 2 matrix)
-\item clustering results under one of “leiden”, “louvain”, “flowsom”,
-“phenograph”, or “git”
-\item a “source” vector of sample identifiers matching rows of “coordinates”
-}}
+- a named element “umap” or “tsne” with component “coordinates” (cell × 2 matrix)
+- clustering results under one of “leiden”, “louvain”, “flowsom”,
+  “phenograph”, or “git”
+- a “source” vector of sample identifiers matching rows of “coordinates”}
 
 \item{reduction}{Character; which embedding to use. Either “UMAP” (default) or “tSNE”.}
 
 \item{compare_list}{Named list of length 2, each element a character vector of sample IDs
-to compare. Names must be unique and identical between \code{compare_list} and \code{color_list}.}
+to compare. Names must be unique and identical between `compare_list` and `color_list`.}
 
 \item{color_list}{Named list of length 2, each element a single color (e.g. “red”). Names must
-match those in \code{compare_list} and determine the low/high fill endpoints.}
+match those in `compare_list` and determine the low/high fill endpoints.}
 
-\item{n_kde}{Integer; number of grid points per axis for \code{MASS::kde2d()} (default 200).}
+\item{n_kde}{Integer; number of grid points per axis for `MASS::kde2d()` (default 200).}
 
-\item{outdir}{Character; directory path where PDFs will be saved (default \code{getwd()}).}
+\item{outdir}{Character; directory path where PDFs will be saved (default `getwd()`).}
 
 \item{axis_title_text_size}{Numeric; font size for axis titles (default 12).}
 
-\item{dbscan_eps}{Numeric or “auto”; epsilon parameter for \code{dbscan::dbscan()} on background
+\item{dbscan_eps}{Numeric or “auto”; epsilon parameter for `dbscan::dbscan()` on background
 points. If “auto”, set to mean axis‐ranges/20 (default “auto”).}
 
-\item{dbscan_minPts}{Numeric or “auto”; minPts for \code{dbscan::dbscan()}. If “auto”, set to
+\item{dbscan_minPts}{Numeric or “auto”; minPts for `dbscan::dbscan()`. If “auto”, set to
 floor(nrow(background)/100) (default “auto”).}
 
 \item{legend_label_text_size}{Numeric; font size for legend labels (default 12).}
 
-\item{annotate_clusters}{Logical; if \code{TRUE} (default), cluster IDs are annotated at each cluster’s
+\item{annotate_clusters}{Logical; if `TRUE` (default), cluster IDs are annotated at each cluster’s
 median coordinate.}
 
 \item{cluster_algorithm}{Character; which clustering result to annotate. One of
@@ -67,7 +65,7 @@ median coordinate.}
 
 \item{cluster_number_annotation_size}{Numeric; font size for cluster‐ID annotations (default 5).}
 
-\item{contour_bin_width}{Numeric; bin‐width for \code{stat_contour()} (default 0.001).}
+\item{contour_bin_width}{Numeric; bin‐width for `stat_contour()` (default 0.001).}
 
 \item{legend_orientation}{Character; “horizontal” or “vertical” (default “horizontal”) orientation
 for the difference–fill legend.}
@@ -79,36 +77,32 @@ for the difference–fill legend.}
 \item{hull_radius}{Numeric; radius (in mm) expansion around DBSCAN clusters for hull plotting
 (default 1.5).}
 
-\item{add_timestamp}{Logical; if \code{TRUE} (default), appends timestamp to PDF filenames.}
+\item{add_timestamp}{Logical; if `TRUE` (default), appends timestamp to PDF filenames.}
 
-\item{hull_concavity}{Numeric; concavity parameter for hulls drawn by \code{ggforce::geom_mark_hull()}
+\item{hull_concavity}{Numeric; concavity parameter for hulls drawn by `ggforce::geom_mark_hull()`
 (default 2).}
 }
 \value{
-Invisibly returns \code{NULL} after saving the PDF files.
+Invisibly returns `NULL` after saving the PDF files.
 }
 \description{
 Computes and plots the difference between two sample‐group density estimates
-on a 2D reduction (UMAP or tSNE). Generates filled‐contour difference maps,
-underlying enrichment hulls, and a combined figure, then saves each as a PDF.
+  on a 2D reduction (UMAP or tSNE). Generates filled‐contour difference maps,
+  underlying enrichment hulls, and a combined figure, then saves each as a PDF.
 }
 \details{
-\enumerate{
-\item Splits cells into two groups via \code{compare_list} and downsamples equally.
-\item Computes 2D kernel density estimates (\code{MASS::kde2d}) on each group.
-\item Calculates difference (\verb{group2 – group1}) and plots with \code{geom_tile()} +
-\code{stat_contour()}.
-\item Computes background islands via \code{dbscan::dbscan()} and draws enrichment
-hulls with \code{geom_mark_hull()}.
-\item Arranges difference plot, hull plot, and shared legend side‐by‐side.
-\item Saves four PDFs to \code{outdir}:
-\itemize{
-\item \verb{<grp1>_vs_<grp2>_<reduction>_density_difference_under.pdf}
-\item \verb{<grp1>_vs_<grp2>_<reduction>_density_difference_over.pdf}
-\item \verb{<grp1>_vs_<grp2>_<reduction>_density_difference_legend.pdf}
-\item \verb{<grp1>_vs_<grp2>_<reduction>_density_difference_combined.pdf}
-}
-}
+1. Splits cells into two groups via `compare_list` and downsamples equally.  
+  2. Computes 2D kernel density estimates (`MASS::kde2d`) on each group.  
+  3. Calculates difference (`group2 – group1`) and plots with `geom_tile()` +
+     `stat_contour()`.  
+  4. Computes background islands via `dbscan::dbscan()` and draws enrichment
+     hulls with `geom_mark_hull()`.  
+  5. Arranges difference plot, hull plot, and shared legend side‐by‐side.  
+  6. Saves four PDFs to `outdir`:  
+     - `<grp1>_vs_<grp2>_<reduction>_density_difference_under.pdf`  
+     - `<grp1>_vs_<grp2>_<reduction>_density_difference_over.pdf`  
+     - `<grp1>_vs_<grp2>_<reduction>_density_difference_legend.pdf`  
+     - `<grp1>_vs_<grp2>_<reduction>_density_difference_combined.pdf`
 }
 \examples{
 \dontrun{
@@ -134,8 +128,8 @@ hulls with \code{geom_mark_hull()}.
 }
 \seealso{
 FCSimple::fcs_plot_reduction_density,
-FCSimple::fcs_reduce_dimensions,
-MASS::kde2d,
-dbscan::dbscan,
-ggforce::geom_mark_hull
+  FCSimple::fcs_reduce_dimensions,
+  MASS::kde2d,
+  dbscan::dbscan,
+  ggforce::geom_mark_hull
 }

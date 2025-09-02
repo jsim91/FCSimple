@@ -48,13 +48,13 @@ fcs_set_gate(
 \item{curvature_eps}{Numeric; curvature tolerance (default 0.01).}
 }
 \value{
-If input is an “fcs_gating_object”, returns it with a new branch under
-\code{gate_trees[[tree_name]][[gate_name]]} containing positive/negative masks and cutpoint.
-Otherwise returns a list with cutpoint data.
+If input is an “fcs_gating_object”, returns it with a new branch under  
+  `gate_trees[[tree_name]][[gate_name]]` containing positive/negative masks and cutpoint.  
+  Otherwise returns a list with cutpoint data.
 }
 \description{
-Wrapper around fcs_get_em_cutpoint() to apply a univariate gate on
-a single feature, storing positive/negative masks in the gating object.
+Wrapper around fcs_get_em_cutpoint() to apply a univariate gate on  
+  a single feature, storing positive/negative masks in the gating object.
 }
 \seealso{
 fcs_get_em_cutpoint

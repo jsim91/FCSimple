@@ -10,24 +10,24 @@
 #'   A list returned by FCSimple::fcs_join() (and optionally
 #'   augmented by FCSimple::fcs_batch_correction or FCSimple::fcs_pca). Must
 #'   contain at least one of:
-#'   - `fcs_join_obj$data` (raw or transformed expression matrix), or  
-#'   - `fcs_join_obj$pca$pca_data` (when `use_rep = "pca"`), or  
+#'   - `fcs_join_obj$data` (raw or transformed expression matrix), or
+#'   - `fcs_join_obj$pca$pca_data` (when `use_rep = "pca"`), or
 #'   - `fcs_join_obj$batch_correction$data` (automatically used if present).
 #'
 #' @param use_rep
-#'   Character; which representation to reduce.  
-#'   - `"data"` (default): use `fcs_join_obj$data` or batch‐corrected data if present.  
+#'   Character; which representation to reduce.
+#'   - `"data"` (default): use `fcs_join_obj$data` or batch‐corrected data if present.
 #'   - `"pca"`: use `fcs_join_obj$pca$pca_data` (requires prior call to FCSimple::fcs_pca).
 #'
 #' @param algorithm
-#'   Character; which algorithm to run.  
-#'   - `"tsne"`: t‐distributed stochastic neighbor embedding.  
-#'   - `"umap"`: uniform manifold approximation and projection.  
+#'   Character; which algorithm to run.
+#'   - `"tsne"`: t‐distributed stochastic neighbor embedding.
+#'   - `"umap"`: uniform manifold approximation and projection.
 #'   Default is `c("tsne","umap")` (selects first).
 #'
 #' @param language
-#'   Character; runtime environment for the chosen algorithm.  
-#'   - `"R"` (default): calls uwot::umap or Rtsne::Rtsne.  
+#'   Character; runtime environment for the chosen algorithm.
+#'   - `"R"` (default): calls uwot::umap or Rtsne::Rtsne.
 #'   - `"Python"`: writes a CSV, invokes the package’s Python script, and reads back results.
 #'
 #' @param umap_nn
@@ -46,11 +46,11 @@
 #'   1. If `fcs_join_obj$batch_correction$data` exists, that matrix is used
 #'      regardless of `use_rep`. Otherwise, `use_rep` selects raw data or PCA.
 #'   2. For UMAP:
-#'      - R: calls `uwot::umap()` with a fixed seed, `umap_nn`, and `umap_min_dist`.  
-#'      - Python: writes data to `inst/python`, runs `run_umap.py`, cleans temp files.  
+#'      - R: calls `uwot::umap()` with a fixed seed, `umap_nn`, and `umap_min_dist`.
+#'      - Python: writes data to `inst/python`, runs `run_umap.py`, cleans temp files.
 #'   3. For t‐SNE:
-#'      - R: calls `Rtsne::Rtsne()` with `tsne_perplexity`, `nthread`, and fixed settings.  
-#'      - Python: similar CSV → script → import workflow via `run_tsne.py`.  
+#'      - R: calls `Rtsne::Rtsne()` with `tsne_perplexity`, `nthread`, and fixed settings.
+#'      - Python: similar CSV → script → import workflow via `run_tsne.py`.
 #'   4. The resulting 2‐column matrix is stored as
 #'      `fcs_join_obj$umap$coordinates` or `$tsne$coordinates`, and the
 #'      parameters used are recorded under
@@ -61,8 +61,8 @@
 #' @return
 #'   The input `fcs_join_obj`, with a new element named by the
 #'   lower‐case `algorithm`:
-#'   - `$<algorithm>$coordinates`: numeric matrix (cells × 2).  
-#'   - `$<algorithm>$settings`: list of parameters passed.  
+#'   - `$<algorithm>$coordinates`: numeric matrix (cells × 2).
+#'   - `$<algorithm>$settings`: list of parameters passed.
 #'   - `object_history` updated with the reduction event.
 #'
 #' @examples
@@ -191,7 +191,7 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
     if(tolower(language)=="r") {
       settings_list <- list(use_rep = use_rep, language = "R", check_duplicates = FALSE, max_iter = 2000,
                             normalize = FALSE, stop_lying_iter = 700, mom_switch_iter = 700,
-                            eta = round(nrow(map_input)/12), perplexity = round(tsne_perplexity,0),
+                            eta = round(nrow(red_data)/12), perplexity = round(tsne_perplexity,0),
                             num_threads = ceiling(detectCores()/2))
     }
     if(tolower(language)=="python") {

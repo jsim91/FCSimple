@@ -134,18 +134,62 @@
 #' @importFrom circlize colorRamp2
 #' @importFrom grid text gpar grabExpr
 #' @export
-fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparisons, denominator_cell_type,
+fcs_test_clusters <- function(fcs_join_obj, compare_list = NA, color_list = NA, comparisons = NA, denominator_cell_type = NA,
                               x_order = NULL, abundance = NA, heatmap_matrix = NA, force_max = FALSE,
                               algorithm = c("leiden","flowsom","louvain","phenograph","git"),
                               Rcolorbrewer_palette = "RdYlBu", # must be a colorbrewer palette that's 11 long such as Spectral or RdYlBu
                               dot_size = 1, overlay_heatmap_numbers = TRUE, paired_test = FALSE,
                               p_text_size = 5, paired_line_stroke = 0.1, paired_line_color = "black",
                               heatmap_fontsize = 8, relative_heights = c(0.76,0.24), heatmap_parameters = 'all',
-                              heatmap_clusters = "all")
+                              heatmap_clusters = "all", test_method = c('wilcox','sccomp'),
+                              sccomp_terms = NULL)
 {
+  # doc notes for sccomp_terms context: sccomp_terms should be given in the following format, if not NULL:
+  # sccomp_terms <- list(primary_term = 'a',
+  #                      fixed_terms = c('b','c'),
+  #                      mixed_effect_terms = c('d'))
+  # yielding a formula of: '~ a + b + c + (1 | d)'
+  # the primary_term is the term for which
+  # where a, b, c, d, etc are elements of the fcs_join_obj list, referenced internally by their element name such as fcs_join_obj[['a']],
+  #   containing values matching fcs_join_obj$data row-wise
+  #   these could be "source", "run_date", "outcome", "disease_state", or any other user addition to the fcs_join_obj list
+  # as.formula(object = paste0(" ~ ",primary_term," + ", # primary_term constructor
+  #                            paste(fixed_terms, collapse = "+"),# fixed_terms constructor
+  #                            glue::glue(" + (1|{mixed_effect_terms})"))) # mixed_effect_terms constructor
+
+  # testing
+  # fcs_join_obj = fcs_obj
+  # compare_list = NA
+  # color_list = NA
+  # comparisons = NA
+  # denominator_cell_type = NA
+  # x_order = NULL
+  # abundance = NA
+  # heatmap_matrix = NA
+  # force_max = FALSE
+  # algorithm = "flowsom"
+  # Rcolorbrewer_palette = "RdYlBu" # must be a colorbrewer palette that's 11 long such as Spectral or RdYlBu
+  # dot_size = 1
+  # overlay_heatmap_numbers = TRUE
+  # paired_test = FALSE
+  # p_text_size = 5
+  # paired_line_stroke = 0.1
+  # paired_line_color = "black"
+  # heatmap_fontsize = 8
+  # relative_heights = c(0.76,0.24)
+  # heatmap_parameters = 'all'
+  # heatmap_clusters = "all"
+  # test_method = 'sccomp'
+  # sccomp_terms = list(primary_term = 'stim',
+  #                     primary_term_reference = 'Media',
+  #                     primary_term_query = 'pp65',
+  #                     sccomp_sample = 'sample_stim', # should default to source
+  #                     fixed_terms = c(),
+  #                     mixed_effect_terms = c('sample_id'),
+  #                     n_cores = floor(parallel::detectCores()/2))
+
   require(ggplot2)
   require(ggpubr)
-  # require(ggtext)
   require(ggplot2)
   require(ggpubr)
   require(formattable)
@@ -153,8 +197,77 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
   require(ComplexHeatmap)
   require(circlize)
 
-  if(is.na(abundance[1])) {
-    abundance <- fcs_join_obj[[tolower(algorithm)]][["abundance"]]
+  if(length(test_method)>1) {
+    test_method <- 'wilcox'
+  }
+  if(test_method=='wilcox') {
+    if(is.null(fcs_join_obj[[tolower(algorithm)]][["abundance"]])) {
+      abundance <- FCSimple::fcs_calculate_abundance(fcs_join_obj = fcs_join_obj, report_algorithm = algorithm,
+                                                     report_as = 'frequency', return_abundance = TRUE)
+    } else {
+      abundance <- fcs_join_obj[[tolower(algorithm)]][["abundance"]]
+    }
+  }
+  if(test_method=='sccomp') {
+    if(mean(c('primary_term','sccomp_sample','fixed_terms','mixed_effect_terms') %in% names(sccomp_terms))!=1) {
+      stop("All list terms, 'primary_term','sccomp_sample','fixed_terms','mixed_effect_terms', must be present in 'sccomp_terms', even if empty.")
+    }
+    if(any(length(sccomp_terms[['primary_term']])==0,
+           length(sccomp_terms[['sccomp_sample']])==0)) {
+      stop("Both 'primary_term' and 'sccomp_sample' but be non-empty and of length 1. These terms must be in names(fcs_join_obj) as flat character vectors, matching fcs_join_obj$data row-wise.")
+    }
+    if(length(sccomp_terms[['primary_term']])>1) {
+      stop("Specify only one primary_term for sccomp. This is the term for which you are most interested in identifying differences.")
+    }
+    if(length(sccomp_terms[['sccomp_sample']])>1) {
+      stop("Specify only one sccomp_sample for sccomp. This is the term that provides cell source information: what sample did each cell come from? Specify full sample name, such as pid_condition.")
+    }
+    all_terms <- as.character(unlist(unlist(sccomp_terms[c('primary_term','sccomp_sample','fixed_terms','mixed_effect_terms')]))); all_terms <- unique(all_terms)
+    asdf <- lapply(X = fcs_join_obj[all_terms], FUN = as.data.frame)
+    meta_df <- do.call(cbind, asdf); colnames(meta_df) <- all_terms
+    meta_df <- meta_df[!duplicated(meta_df[,sccomp_terms[['sccomp_sample']]]),]
+    row.names(meta_df) <- meta_df[,sccomp_terms[['sccomp_sample']]]
+
+    abundance <- table(fcs_join_obj[[sccomp_terms[['sccomp_sample']]]], fcs_join_obj[[tolower(algorithm)]][['clusters']])
+    cluster_count_table_long <- reshape2::melt(abundance)
+    colnames(cluster_count_table_long) <- c('sccomp_sample','celltype','count')
+    cluster_count_table_long$celltype <- as.factor(cluster_count_table_long$celltype)
+
+    factor_groups <- c(sccomp_terms[['primary_term_reference']], sccomp_terms[['primary_term_query']])
+    sccomp_table <- merge(x = cluster_count_table_long, y = meta_df, by.x = 'sccomp_sample', by.y = sccomp_terms[['sccomp_sample']], all.x = TRUE)
+    sccomp_table <- sccomp_table[sccomp_table[,sccomp_terms[['primary_term']]] %in% factor_groups,]
+    sccomp_table[,sccomp_terms[['primary_term']]] <- factor(x = sccomp_table[,sccomp_terms[['primary_term']]],
+                                                            levels = factor_groups) # ensure levels order
+    sccomp_table <- tibble::as_tibble(sccomp_table)
+
+    # primary term
+    formula_str <- paste0("~ ", sccomp_terms$primary_term)
+    # fixed effect terms, if any
+    if (!is.null(sccomp_terms[['fixed_terms']]) && length(sccomp_terms[['fixed_terms']]) > 0) {
+      formula_str <- paste(formula_str,
+                           paste(sccomp_terms[['fixed_terms']], collapse = " + "),
+                           sep = " + ")
+    }
+    # mixed effect (random intercept) terms, if any
+    if (!is.null(sccomp_terms[['mixed_effect_terms']]) && length(sccomp_terms[['mixed_effect_terms']]) > 0) {
+      re_parts <- paste0("(1 | ", sccomp_terms[['mixed_effect_terms']], ")")
+      formula_str <- paste(formula_str,
+                           paste(re_parts, collapse = " + "),
+                           sep = " + ")
+    }
+    fmla <- as.formula(formula_str)
+
+    sccomp_est <- sccomp::sccomp_estimate(.data = sccomp_table,
+                                          formula_composition = fmla,
+                                          sample = 'sccomp_sample',
+                                          cell_group = 'celltype',
+                                          abundance = 'count',
+                                          bimodal_mean_variability_association = TRUE, # recommended to be TRUE for RNAseq
+                                          mcmc_seed = 123,
+                                          cores = sccomp_terms[['n_cores']],
+                                          verbose = F)
+    sccomp_res <- sccomp::sccomp_test(.data = sccomp_est)
+    sccomp_res_primary <- sccomp_res[sccomp_res$parameter==paste0(sccomp_terms[['primary_term']],sccomp_terms[['primary_term_query']]),]
   }
   rm_row <- which(!row.names(abundance) %in% unlist(compare_list))
   if(length(rm_row)!=0) {
@@ -192,7 +305,6 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
     cluster_list[[i]] <- tmp_df
   }
 
-  # test_out <- vector("list", length = length(cluster_list)); names(test_out) <- names(cluster_list)
   plot_cols <- unlist(color_list)
   my_compare <- comparisons
 
@@ -221,17 +333,6 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
                         abundance_alg = algorithm, pair_test = paired_test, xord = x_order,
                         pts = p_text_size, pls = paired_line_stroke, plc = paired_line_color,
                         relh = relative_heights, hmfs = heatmap_fontsize) {
-
-    # testing #
-    # abundance_alg <- algorithm
-    # heatmap_overlay_values = overlay_heatmap_numbers
-    # size_of_dots = dot_size
-    # cell_type_denom = denominator_cell_type
-    # input <- in_list[[1]]
-    # compare_these = my_compare; dplot_col = plot_cols
-    # use_palette = Rcolorbrewer_palette
-    # pair_test = paired_test
-
     plot_input <- input[[1]]
     hm_input <- input[[2]]
 
@@ -275,7 +376,6 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
         plt <- plt + ylim(floor(min(plot_input$frequency)), 100)
       }
     }
-
     colnames(hm_input) <- gsub("^.+_","",colnames(hm_input))
     if(heatmap_overlay_values) {
       hm_sub <- ComplexHeatmap::Heatmap(matrix = hm_input, col = color.map.fun, cluster_columns = FALSE,
@@ -290,6 +390,7 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list, color_list, comparison
 
     arr_plot <- ggpubr::ggarrange(plotlist = list(plt, grid.grabExpr(draw(hm_sub))), nrow = 2, ncol = 1,
                                   heights = relh)
+
     return(arr_plot)
   }
 

@@ -8,30 +8,26 @@ fcs_remove_parameters(fcs_join_obj, remove_parameters)
 }
 \arguments{
 \item{fcs_join_obj}{A list returned by FCSimple::fcs_join(), containing at least a
-\code{data} matrix and a \code{source} vector. May also include \code{run_date}.}
+`data` matrix and a `source` vector. May also include `run_date`.}
 
 \item{remove_parameters}{Character vector of column names (parameters) to remove from
-\code{fcs_join_obj$data}.}
+`fcs_join_obj$data`.}
 }
 \value{
 A list with elements:
-\itemize{
-\item \code{data}: numeric matrix of events × remaining parameters
-\item \code{source}: character vector of sample IDs (unchanged)
-\item \code{run_date}: character vector of acquisition dates (if original had it)
-}
+  - `data`: numeric matrix of events × remaining parameters  
+  - `source`: character vector of sample IDs (unchanged)  
+  - `run_date`: character vector of acquisition dates (if original had it)
 }
 \description{
-Drops one or more channels (columns) from the \code{data} matrix of an
-FCSimple object, returning a new object with the reduced parameter set.
+Drops one or more channels (columns) from the `data` matrix of an
+  FCSimple object, returning a new object with the reduced parameter set.
 }
 \details{
-\itemize{
-\item Searches \code{colnames(fcs_join_obj$data)} for any entries in
-\code{remove_parameters}.
-\item If none are found, the function errors.
-\item Otherwise, all matching columns are dropped.
-}
+- Searches `colnames(fcs_join_obj$data)` for any entries in
+    `remove_parameters`.  
+  - If none are found, the function errors.  
+  - Otherwise, all matching columns are dropped.
 }
 \examples{
 \dontrun{

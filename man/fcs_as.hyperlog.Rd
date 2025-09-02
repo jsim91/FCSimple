@@ -14,10 +14,8 @@ fcs_as.hyperlog(
 }
 \arguments{
 \item{fcs_join_obj}{A list returned by FCSimple::fcs_join(), containing at minimum:
-\itemize{
-\item raw_data: numeric matrix or data.frame of events × channels
-\item source: character vector indicating sample origin for each event
-}}
+- raw_data: numeric matrix or data.frame of events × channels  
+- source: character vector indicating sample origin for each event}
 
 \item{hyperlog_transform_T}{Numeric; top‐of‐scale parameter T controlling the maximum display value
 (default 100000).}
@@ -29,21 +27,21 @@ fcs_as.hyperlog(
 \item{hyperlog_transform_A}{Numeric; additional constant to shift the transform (default 2).}
 }
 \value{
-The input \code{fcs_join_obj}, with its \code{data} element replaced by the
-hyperlog‐transformed matrix (dimensions identical to \code{raw_data}).
+The input `fcs_join_obj`, with its `data` element replaced by the
+  hyperlog‐transformed matrix (dimensions identical to `raw_data`).
 }
 \description{
 Applies a hyperlog transformation to the raw cytometry measurements in an
-FCSimple joined object. Uses flowCore::hyperlogtGml2 internally to convert
-linear raw data into a hyperlog scale that accommodates both low and high
-intensity signals.
+  FCSimple joined object. Uses flowCore::hyperlogtGml2 internally to convert
+  linear raw data into a hyperlog scale that accommodates both low and high
+  intensity signals.
 }
 \details{
-The function splits \code{raw_data} by \code{source}, applies the hyperlogtGml2
-transformation to each channel within each sample, and then recombines
-the transformed data in the original order. The hyperlog parameters
-(T, M, W, A) control the shape of the scale, with larger T/M extending
-the dynamic range and W/A tuning the linear-to-log transition.
+The function splits `raw_data` by `source`, applies the hyperlogtGml2
+  transformation to each channel within each sample, and then recombines
+  the transformed data in the original order. The hyperlog parameters
+  (T, M, W, A) control the shape of the scale, with larger T/M extending
+  the dynamic range and W/A tuning the linear-to-log transition.
 }
 \examples{
 \dontrun{

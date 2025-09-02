@@ -30,24 +30,24 @@ fcs_join(
 
 \item{flowjo_diagnostics_file}{Optional path to a FlowJo diagnostics TXT file (Configure → Diagnostics →
 “Show XML for Workspace”). Provides per-channel transform parameters.
-Default \code{NULL}.}
+Default `NULL`.}
 
-\item{apply_transform}{Logical; if \code{TRUE} (default), applies channel transformations. If \code{FALSE},
+\item{apply_transform}{Logical; if `TRUE` (default), applies channel transformations. If `FALSE`,
 returns raw data only.}
 
-\item{instrument_type}{Character; one of \code{"cytof"} for mass cytometry or \code{"flow"} for fluorescence
-cytometry. Default \code{c("cytof","flow")} (uses first).}
+\item{instrument_type}{Character; one of `"cytof"` for mass cytometry or `"flow"` for fluorescence
+cytometry. Default `c("cytof","flow")` (uses first).}
 
-\item{use_descriptive_column_names}{Logical; if \code{TRUE} (default), replaces channel names with descriptive labels
+\item{use_descriptive_column_names}{Logical; if `TRUE` (default), replaces channel names with descriptive labels
 from FCS metadata.}
 
-\item{transform_function}{Optional user-supplied \code{transformList} (e.g., from
-\code{flowCore::transformList}) for per-channel transforms. Overrides
-\code{transform_type} when \code{transform_per_channel = TRUE}.}
+\item{transform_function}{Optional user-supplied `transformList` (e.g., from
+`flowCore::transformList`) for per-channel transforms. Overrides
+`transform_type` when `transform_per_channel = TRUE`.}
 
-\item{transform_type}{Character; global transform to apply when \code{transform_per_channel = FALSE}.
-One of \code{"asinh"}, \code{"biexp"}, or \code{"hyperlog"}. Default
-\code{c("asinh","biexp","hyperlog")}.}
+\item{transform_type}{Character; global transform to apply when `transform_per_channel = FALSE`.
+One of `"asinh"`, `"biexp"`, or `"hyperlog"`. Default
+`c("asinh","biexp","hyperlog")`.}
 
 \item{asinh_transform_cofactor}{Numeric cofactor for asinh transforms (default 5).}
 
@@ -65,51 +65,47 @@ One of \code{"asinh"}, \code{"biexp"}, or \code{"hyperlog"}. Default
 
 \item{hyperlog_transform_A}{Numeric “A” offset for hyperlog transform (default 2).}
 
-\item{transform_per_channel}{Logical; if \code{TRUE} (default), launches an interactive Shiny application
-(in \verb{transform_app/}) to preview and tweak per-channel transforms. The
-function will block until you finish and close the app. If \code{FALSE},
-applies the global \code{transform_type}.}
+\item{transform_per_channel}{Logical; if `TRUE` (default), launches an interactive Shiny application
+(in `transform_app/`) to preview and tweak per-channel transforms. The  
+function will block until you finish and close the app. If `FALSE`,  
+applies the global `transform_type`.}
 
-\item{downsample_size}{Integer or \code{NA}; maximum events per file to sample before joining.
-Default \code{c(NA, 25000)}: no sampling if \code{NA}, otherwise samples up to 25K.}
+\item{downsample_size}{Integer or `NA`; maximum events per file to sample before joining.
+Default `c(NA, 25000)`: no sampling if `NA`, otherwise samples up to 25K.}
 
-\item{batch_pattern}{Regular expression to extract \code{run_date} from sample names in \code{source}.
-Default \code{"[0-9]+\\\\-[A-Za-z]+\\\\-[0-9]+"}.}
+\item{batch_pattern}{Regular expression to extract `run_date` from sample names in `source`.
+Default `"[0-9]+\\-[A-Za-z]+\\-[0-9]+"`.}
 }
 \value{
 A list with elements:
-\itemize{
-\item \code{data}: numeric matrix of transformed events × channels.
-\item \code{raw}: numeric matrix of untransformed events × channels.
-\item \code{source}: character vector of sample identifiers for each event.
-\item \code{run_date}: character vector parsed from \code{source} via \code{batch_pattern}.
-\item \code{transform_list}: per-channel transform parameters (if FlowJo used).
-\item \code{collection_instrument}: chosen \code{instrument_type}.
-\item \code{object_history}: timestamped entry recording the join.
-}
+  - `data`: numeric matrix of transformed events × channels.  
+  - `raw`: numeric matrix of untransformed events × channels.  
+  - `source`: character vector of sample identifiers for each event.  
+  - `run_date`: character vector parsed from `source` via `batch_pattern`.  
+  - `transform_list`: per-channel transform parameters (if FlowJo used).  
+  - `collection_instrument`: chosen `instrument_type`.  
+  - `object_history`: timestamped entry recording the join.
 }
 \description{
 Reads a set of FCS files, optionally downsamples and applies transformations
-(FlowJo diagnostics, asinh, biexp, or hyperlog), and concatenates them into
-a unified data matrix with accompanying metadata and history.
+  (FlowJo diagnostics, asinh, biexp, or hyperlog), and concatenates them into
+  a unified data matrix with accompanying metadata and history.
 }
 \details{
 Internally, the function:
-\enumerate{
-\item Reads all files into a \code{flowSet} via \code{flowCore::read.flowSet()}.
-\item Optionally downsamples each file to \code{downsample_size}.
-\item Extracts expression matrices with \code{flowCore::exprs()}.
-\item If \code{transform_per_channel = TRUE}, launches the package’s
-\verb{transform_app/} Shiny GUI so you can inspect per-channel
-diagnostics and build a custom \code{transformList}.
-\item Otherwise, applies the global transform as specified by
-\code{transform_type} or user’s \code{transform_function}.
-\item Concatenates raw and transformed data into \code{raw} and \code{data} matrices.
-\item Builds \code{source} and \code{run_date} via \code{flowCore::sampleNames()} and
-\code{stringr::str_extract()}.
-\item Records \code{collection_instrument} and appends a timestamp in
-\code{object_history}.
-}
+  1. Reads all files into a `flowSet` via `flowCore::read.flowSet()`.  
+  2. Optionally downsamples each file to `downsample_size`.  
+  3. Extracts expression matrices with `flowCore::exprs()`.  
+  4. If `transform_per_channel = TRUE`, launches the package’s  
+     `transform_app/` Shiny GUI so you can inspect per-channel  
+     diagnostics and build a custom `transformList`.  
+  5. Otherwise, applies the global transform as specified by  
+     `transform_type` or user’s `transform_function`.  
+  6. Concatenates raw and transformed data into `raw` and `data` matrices.  
+  7. Builds `source` and `run_date` via `flowCore::sampleNames()` and  
+     `stringr::str_extract()`.  
+  8. Records `collection_instrument` and appends a timestamp in  
+     `object_history`.
 }
 \examples{
 \dontrun{
@@ -130,5 +126,5 @@ joined_raw <- FCSimple::fcs_join(files, apply_transform = FALSE)
 }
 \seealso{
 flowCore::read.flowSet, flowCore::exprs, flowCore::transformList,
-flowWorkspace::flowjo_biexp, stringr::str_extract
+  flowWorkspace::flowjo_biexp, stringr::str_extract
 }

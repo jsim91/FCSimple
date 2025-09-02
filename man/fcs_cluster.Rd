@@ -22,18 +22,18 @@ fcs_cluster(
 }
 \arguments{
 \item{fcs_join_obj}{A list returned by FCSimple::fcs_join(), containing at least elements
-\code{data} (numeric matrix) and, if \code{use_rep = "pca"}, \code{pca$pca_data}. If you’ve
-already run FCSimple::fcs_batch_correction(), this function will detect
-and use \code{fcs_join_obj$batch_correction$data}.}
+`data` (numeric matrix) and, if `use_rep = "pca"`, `pca$pca_data`. If you’ve  
+already run FCSimple::fcs_batch_correction(), this function will detect  
+and use `fcs_join_obj$batch_correction$data`.}
 
-\item{use_rep}{Character; representation to cluster. \code{"data"} (default) uses raw expression
-values, \code{"pca"} uses principal‐component coordinates.}
+\item{use_rep}{Character; representation to cluster. `"data"` (default) uses raw expression
+values, `"pca"` uses principal‐component coordinates.}
 
-\item{language}{Character; runtime environment for “git” clustering. \code{"R"} (default) runs
-algorithms via R packages, \code{"Python"} calls out to bundled Python scripts.}
+\item{language}{Character; runtime environment for “git” clustering. `"R"` (default) runs
+algorithms via R packages, `"Python"` calls out to bundled Python scripts.}
 
-\item{algorithm}{Character; clustering algorithm to apply. One of \code{"leiden"}, \code{"louvain"},
-\code{"flowsom"}, \code{"phenograph"}, or \code{"git"}.}
+\item{algorithm}{Character; clustering algorithm to apply. One of `"leiden"`, `"louvain"`,
+`"flowsom"`, `"phenograph"`, or `"git"`.}
 
 \item{leiden_louvain_resolution}{Numeric; resolution parameter for Leiden and Louvain clustering (default 1).}
 
@@ -45,43 +45,39 @@ algorithms via R packages, \code{"Python"} calls out to bundled Python scripts.}
 
 \item{git_k}{Integer; cluster count for Python “git” method (default 30).}
 
-\item{search_method}{Character; neighbor‐search backend: \code{"FNN"} (default) or \code{"RANN"}.}
+\item{search_method}{Character; neighbor‐search backend: `"FNN"` (default) or `"RANN"`.}
 
-\item{search_only}{Logical; if \code{TRUE}, stops after neighbor search and returns updated
-\code{fcs_join_obj} with either \code{adjacency_matrix} or \code{search} element
-(default \code{FALSE}).}
+\item{search_only}{Logical; if `TRUE`, stops after neighbor search and returns updated
+`fcs_join_obj` with either `adjacency_matrix` or `search` element  
+(default `FALSE`).}
 
 \item{num_cores}{Integer; number of CPU cores for parallel neighbor‐search (default
-\code{ceiling(parallel::detectCores()/2)}).}
+`ceiling(parallel::detectCores()/2)`).}
 
-\item{output_as}{Character; format of neighbor‐search output: \code{"adjacency"} (default) or
-\code{"search"}.}
+\item{output_as}{Character; format of neighbor‐search output: `"adjacency"` (default) or
+`"search"`.}
 }
 \value{
-The original \code{fcs_join_obj} augmented with:
-\itemize{
-\item For \code{"search_only"}: an \code{adjacency_matrix} or \code{search} element.
-\item For clustering algorithms: an element named by \code{algorithm} containing
-\code{clusters} (factor/integer vector) and \code{settings} (list).
-\item Updated \code{object_history} with timestamped entry.
-}
+The original `fcs_join_obj` augmented with:  
+  - For `"search_only"`: an `adjacency_matrix` or `search` element.  
+  - For clustering algorithms: an element named by `algorithm` containing  
+    `clusters` (factor/integer vector) and `settings` (list).  
+  - Updated `object_history` with timestamped entry.
 }
 \description{
-Applies clustering to a joined flow cytometry object using one of several
-algorithms: Leiden, Louvain, FlowSOM, PhenoGraph, or a Python‐based “git”
-method. Can operate on raw expression data or PCA coordinates. Automatically
-uses batch‐corrected data if available.
+Applies clustering to a joined flow cytometry object using one of several  
+  algorithms: Leiden, Louvain, FlowSOM, PhenoGraph, or a Python‐based “git”  
+  method. Can operate on raw expression data or PCA coordinates. Automatically  
+  uses batch‐corrected data if available.
 }
 \details{
-\itemize{
-\item If batch correction is found, clustering runs on \code{fcs_join_obj$batch_correction$data}.
-\item “git” writes a CSV/MTX, invokes a Python script, then reads back cluster IDs.
-\item Leiden/Louvain builds a sparse k‐NN graph and calls igraph::cluster_*().
-\item FlowSOM transforms data into a flowFrame and calls FlowSOM::FlowSOM().
-\item PhenoGraph invokes Rphenograph::Rphenograph() and extracts membership.
-\item After clustering, labels and algorithm settings are stored under
-\code{fcs_join_obj[[algorithm]]}, and \code{object_history} is appended.
-}
+* If batch correction is found, clustering runs on `fcs_join_obj$batch_correction$data`.  
+  * “git” writes a CSV/MTX, invokes a Python script, then reads back cluster IDs.  
+  * Leiden/Louvain builds a sparse k‐NN graph and calls igraph::cluster_*().  
+  * FlowSOM transforms data into a flowFrame and calls FlowSOM::FlowSOM().  
+  * PhenoGraph invokes Rphenograph::Rphenograph() and extracts membership.  
+  * After clustering, labels and algorithm settings are stored under  
+    `fcs_join_obj[[algorithm]]`, and `object_history` is appended.
 }
 \examples{
 \dontrun{

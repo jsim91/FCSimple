@@ -18,67 +18,61 @@ fcs_plot_distribution(
 }
 \arguments{
 \item{fcs_join_obj}{List returned by FCSimple::fcs_join(), optionally augmented by
-fcs_batch_correction (with \verb{$batch_correction$data}), clustering results
-(e.g. \verb{$leiden$clusters}), a \code{run_date} vector, and/or a \code{condition} vector.}
+fcs_batch_correction (with `$batch_correction$data`), clustering results  
+(e.g. `$leiden$clusters`), a `run_date` vector, and/or a `condition` vector.}
 
 \item{override_correction}{Logical; if TRUE (default), use the uncorrected data slot
-(\code{fcs_join_obj$data}). If FALSE and a batch‐corrected matrix exists, uses
-\code{fcs_join_obj$batch_correction$data}.}
+(`fcs_join_obj$data`). If FALSE and a batch‐corrected matrix exists, uses  
+`fcs_join_obj$batch_correction$data`.}
 
 \item{separate_by}{Character; how to group distributions. One of:
-\itemize{
-\item “none”: all events in one density curve.
-\item “date”: separate by \code{fcs_join_obj$run_date} (requires \code{run_date}).
-\item “cluster”: ridgeline densities by cluster (requires \verb{$<algorithm>$clusters};
-pick algorithm via \code{plot_algorithm}).
-\item “condition”: separate by \code{fcs_join_obj$condition} (requires \code{condition}).
-Default \code{"none"}.
-}}
+- “none”: all events in one density curve.  
+- “date”: separate by `fcs_join_obj$run_date` (requires `run_date`).  
+- “cluster”: ridgeline densities by cluster (requires `$<algorithm>$clusters`;  
+  pick algorithm via `plot_algorithm`).  
+- “condition”: separate by `fcs_join_obj$condition` (requires `condition`).  
+Default `"none"`.}
 
-\item{plot_algorithm}{Character; clustering result to use when \code{separate_by = "cluster"}.
-One of \code{"leiden"}, \code{"flowsom"}, \code{"louvain"}, \code{"phenograph"}, or \code{"git"}.
-Default \code{"leiden"}.}
+\item{plot_algorithm}{Character; clustering result to use when `separate_by = "cluster"`.
+One of `"leiden"`, `"flowsom"`, `"louvain"`, `"phenograph"`, or `"git"`.  
+Default `"leiden"`.}
 
-\item{outdir}{Character; path to an existing directory for saving the PDF. Default \code{getwd()}.}
+\item{outdir}{Character; path to an existing directory for saving the PDF. Default `getwd()`.}
 
 \item{plot_palette}{Character vector of colors for multi‐group plots. Currently not used;
-reserved for future customization. Default \code{NULL}.}
+reserved for future customization. Default `NULL`.}
 
-\item{rm_zero}{Logical; if TRUE, remove zero‐value events for \code{cytof} data before plotting
-(default FALSE). Has no effect for \code{flow} data.}
+\item{rm_zero}{Logical; if TRUE, remove zero‐value events for `cytof` data before plotting
+(default FALSE). Has no effect for `flow` data.}
 
-\item{trim_quantile}{Numeric; quantile(s) for trimming outliers. For \code{flow} data supply length‐2
-vector (low, high); for \code{cytof} data supply single upper quantile. Default NULL.}
+\item{trim_quantile}{Numeric; quantile(s) for trimming outliers. For `flow` data supply length‐2
+vector (low, high); for `cytof` data supply single upper quantile. Default NULL.}
 
 \item{add_timestamp}{Logical; if TRUE (default), append a timestamp (_YYYY-MM-DD_HHMMSS) to the
 PDF filename.}
 }
 \value{
-Invisibly returns \code{NULL}. Side effect: writes a PDF to \code{outdir}.
+Invisibly returns `NULL`. Side effect: writes a PDF to `outdir`.
 }
 \description{
-Generates density distributions of expression values for each channel in
-a joined flow cytometry object, optionally grouping by acquisition date,
-cluster membership, or experimental condition. Arranges all channel plots
-into a multi‐panel PDF.
+Generates density distributions of expression values for each channel in  
+  a joined flow cytometry object, optionally grouping by acquisition date,  
+  cluster membership, or experimental condition. Arranges all channel plots  
+  into a multi‐panel PDF.
 }
 \details{
-\enumerate{
-\item Selects either raw or batch‐corrected expression matrix based on
-\code{override_correction}.
-\item Verifies presence of \code{collection_instrument}; errors otherwise.
-\item Splits the data frame by channel into a list of single‐column data frames.
-\item Depending on \code{separate_by}, adds a grouping column:
-\itemize{
-\item date: uses \code{run_date}.
-\item cluster: uses \code{fcs_join_obj[[plot_algorithm]]$clusters}.
-\item condition: uses \code{condition}.
-}
-\item Calls an internal helper (\code{plot_none}, \code{plot_date}, \code{plot_cluster}, or
-\code{plot_condition}) for each channel to create a ggplot object.
-\item Uses \code{ggpubr::ggarrange()} to assemble a panel grid and saves it via
-\code{ggplot2::ggsave()} as a PDF named \verb{panel_distributions[_by_<mode>][_timestamp].pdf}.
-}
+1. Selects either raw or batch‐corrected expression matrix based on  
+     `override_correction`.  
+  2. Verifies presence of `collection_instrument`; errors otherwise.  
+  3. Splits the data frame by channel into a list of single‐column data frames.  
+  4. Depending on `separate_by`, adds a grouping column:  
+     - date: uses `run_date`.  
+     - cluster: uses `fcs_join_obj[[plot_algorithm]]$clusters`.  
+     - condition: uses `condition`.  
+  5. Calls an internal helper (`plot_none`, `plot_date`, `plot_cluster`, or  
+     `plot_condition`) for each channel to create a ggplot object.  
+  6. Uses `ggpubr::ggarrange()` to assemble a panel grid and saves it via  
+     `ggplot2::ggsave()` as a PDF named `panel_distributions[_by_<mode>][_timestamp].pdf`.
 }
 \examples{
  
@@ -105,6 +99,6 @@ FCSimple::fcs_plot_distribution(joined,
  
 }
 \seealso{
-FCSimple::fcs_join, FCSimple::fcs_batch_correction,
-FCSimple::fcs_cluster, ggridges::geom_density_ridges
+FCSimple::fcs_join, FCSimple::fcs_batch_correction,  
+  FCSimple::fcs_cluster, ggridges::geom_density_ridges
 }

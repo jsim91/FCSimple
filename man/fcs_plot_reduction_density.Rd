@@ -52,15 +52,13 @@ omit the border entirely.}
 }
 \value{
 A list with components:
-\itemize{
-\item \code{plot}: a ggplot2 object of the filled‐contour density map
-\item \code{legend}: a grob of the color‐bar legend, suitable for manual placement
-}
+  - `plot`: a ggplot2 object of the filled‐contour density map  
+  - `legend`: a grob of the color‐bar legend, suitable for manual placement
 }
 \description{
 Computes a kernel density estimate over a 2D reduction (UMAP or tSNE)
-and renders a filled contour plot of cell density. Returns both the
-ggplot2 object and a separate legend grob for flexible layout.
+  and renders a filled contour plot of cell density. Returns both the
+  ggplot2 object and a separate legend grob for flexible layout.
 }
 \examples{
 \dontrun{
@@ -81,5 +79,5 @@ ggplot2 object and a separate legend grob for flexible layout.
 }
 \seealso{
 FCSimple::fcs_reduce_dimensions, MASS::kde2d, metR::geom_contour_fill,
-ggpubr::get_legend
+  ggpubr::get_legend
 }

@@ -18,7 +18,7 @@ fcs_gate_singlets(
 )
 }
 \arguments{
-\item{object}{An “fcs_gating_object”, or a data.frame/matrix with columns \code{a} and \code{h}.}
+\item{object}{An “fcs_gating_object”, or a data.frame/matrix with columns `a` and `h`.}
 
 \item{tree_name}{Character; gating tree name (default “tree1”).}
 
@@ -39,23 +39,21 @@ fcs_gate_singlets(
 \item{curvature_eps}{Numeric; curvature tolerance for flex-cut (default 0.001).}
 }
 \value{
-If \code{object} is an “fcs_gating_object”, adds branch under
-\code{gate_trees[[tree_name]][[gate_name]]} with positive/negative masks,
-threshold, fit parameters, and returns the updated object.
+If `object` is an “fcs_gating_object”, adds branch under  
+`gate_trees[[tree_name]][[gate_name]]` with positive/negative masks,  
+threshold, fit parameters, and returns the updated object.  
 Otherwise returns a data.frame of gated events.
 }
 \description{
-Identifies singlet events by fitting a robust or least‐squares line
-to A vs H channels, computing residuals, then applying an EM-based or
-curvature-based cutpoint to select events above the threshold.
+Identifies singlet events by fitting a robust or least‐squares line  
+  to A vs H channels, computing residuals, then applying an EM-based or  
+  curvature-based cutpoint to select events above the threshold.
 }
 \details{
-\itemize{
-\item Subsets central data by trim_frac.
-\item Fits \code{lm()} or \code{MASS::rlm()} of h ~ a.
-\item Computes residuals and calls fcs_get_em_cutpoint() for threshold.
-\item Masks events above cutpoint as singlets.
-}
+- Subsets central data by trim_frac.  
+- Fits `lm()` or `MASS::rlm()` of h ~ a.  
+- Computes residuals and calls fcs_get_em_cutpoint() for threshold.  
+- Masks events above cutpoint as singlets.
 }
 \examples{
 \dontrun{

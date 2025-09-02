@@ -8,12 +8,12 @@ fcs_load_data()
 }
 \value{
 A character vector of full file paths to each .fcs file found in
-\code{system.file("data", package = "FCSimple")}.
+  `system.file("data", package = "FCSimple")`.
 }
 \description{
 Retrieves the file paths of all .fcs files included in the FCSimple
-package’s internal \verb{data/} directory. Useful for quickly accessing
-example or test files distributed with the package.
+  package’s internal `data/` directory. Useful for quickly accessing
+  example or test files distributed with the package.
 }
 \examples{
 \dontrun{

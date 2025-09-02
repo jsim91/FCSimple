@@ -16,70 +16,62 @@ fcs_select_islands(
 }
 \arguments{
 \item{fcs_join_obj}{A list returned by FCSimple::fcs_join() and FCSimple::fcs_reduce_dimensions(),
-containing at minimum:
-\itemize{
-\item \code{data}: numeric matrix of events × channels
-\item \code{source}: sample identifier vector
-\item \code{umap} or \code{tsne} element with \verb{$coordinates} (cells × 2)
-}}
+containing at minimum:  
+- `data`: numeric matrix of events × channels  
+- `source`: sample identifier vector  
+- `umap` or `tsne` element with `$coordinates` (cells × 2)}
 
 \item{reduction_cluster_annotate_algorithm}{Character; clustering result to use when highlighting kept islands on the
-embedding. One of \code{"leiden"}, \code{"flowsom"}, \code{"louvain"}, or \code{"phenograph"}.
+embedding. One of `"leiden"`, `"flowsom"`, `"louvain"`, or `"phenograph"`.  
 Default uses the first value.}
 
-\item{dbscan_reduction}{Character; which reduction to run DBSCAN on. Either \code{"umap"} (default) or
-\code{"tsne"}. Must match a named element in \code{fcs_join_obj}.}
+\item{dbscan_reduction}{Character; which reduction to run DBSCAN on. Either `"umap"` (default) or
+`"tsne"`. Must match a named element in `fcs_join_obj`.}
 
-\item{dbscan_minpts}{Integer; minimum points per DBSCAN cluster (\code{minPts}). Default 50.}
+\item{dbscan_minpts}{Integer; minimum points per DBSCAN cluster (`minPts`). Default 50.}
 
 \item{dbscan_eps}{Numeric; epsilon neighborhood radius for DBSCAN. Default 0.5.}
 
 \item{dbscan_lineage}{Character vector of channel names to include in the island heatmap (e.g.
-lineage markers). Default \code{c("170Yb_CD3","165Ho_CD19","145Nd_CD4","146Nd_CD8")}.
-If \code{NULL}, uses all channels.}
+lineage markers). Default `c("170Yb_CD3","165Ho_CD19","145Nd_CD4","146Nd_CD8")`.  
+If `NULL`, uses all channels.}
 
 \item{outdir}{Character; path to an existing directory where intermediate heatmaps and
 plots will be saved. Defaults to the working directory.}
 }
 \value{
-A list with elements:
-\itemize{
-\item \code{data}: numeric matrix of the selected events × channels
-\item \code{source}: character vector of sample IDs for selected events
-\item \code{run_date}: character vector of acquisition dates (if available)
-\item \code{subset_cells}: integer indices of the retained cells
-}
+A list with elements:  
+  - `data`: numeric matrix of the selected events × channels  
+  - `source`: character vector of sample IDs for selected events  
+  - `run_date`: character vector of acquisition dates (if available)  
+  - `subset_cells`: integer indices of the retained cells
 }
 \description{
-Performs density-based clustering (DBSCAN) on a UMAP or tSNE embedding,
-renders a heatmap of cluster “islands” over selected lineage markers,
-prompts the user to pick which islands to retain, and highlights those
-cells on the original embedding. Finally returns a pared-down analysis
-object containing only the selected events.
+Performs density-based clustering (DBSCAN) on a UMAP or tSNE embedding,  
+  renders a heatmap of cluster “islands” over selected lineage markers,  
+  prompts the user to pick which islands to retain, and highlights those  
+  cells on the original embedding. Finally returns a pared-down analysis  
+  object containing only the selected events.
 }
 \details{
-\enumerate{
-\item Selects the specified embedding (\code{umap} or \code{tsne}) and if there are
-more than 500,000 cells, randomly samples 500,000 for DBSCAN and uses
-k-NN to classify the remainder.
-\item Runs \code{dbscan::dbscan()} with \code{eps = dbscan_eps} and \code{minPts = dbscan_minpts}.
-\item Builds a temporary FCSimple object containing only the DBSCAN clusters
-and (optionally) the \code{dbscan_lineage} channels.
-\item Calls \code{fcs_cluster_heatmap()} + \code{fcs_plot_heatmap()} on this object to
-display median expression of each DBSCAN island.
-\item Prompts the user via \code{readline()} to enter comma-separated cluster IDs
-to keep.
-\item Calls \code{fcs_plot_reduction()} with \code{internal_call = TRUE} to highlight
-the selected events on the original embedding, colored by
-\code{reduction_cluster_annotate_algorithm}.
-\item Returns a pared object (list) with:
-\itemize{
-\item \code{data}: the original expression matrix subset to kept rows
-\item \code{source}: subset of the \code{source} vector
-\item \code{run_date} (if present) subset to kept rows
-\item \code{subset_cells}: integer indices of kept events
-}
-}
+1. Selects the specified embedding (`umap` or `tsne`) and if there are  
+     more than 500,000 cells, randomly samples 500,000 for DBSCAN and uses  
+     k-NN to classify the remainder.  
+  2. Runs `dbscan::dbscan()` with `eps = dbscan_eps` and `minPts = dbscan_minpts`.  
+  3. Builds a temporary FCSimple object containing only the DBSCAN clusters  
+     and (optionally) the `dbscan_lineage` channels.  
+  4. Calls `fcs_cluster_heatmap()` + `fcs_plot_heatmap()` on this object to  
+     display median expression of each DBSCAN island.  
+  5. Prompts the user via `readline()` to enter comma-separated cluster IDs  
+     to keep.  
+  6. Calls `fcs_plot_reduction()` with `internal_call = TRUE` to highlight  
+     the selected events on the original embedding, colored by  
+     `reduction_cluster_annotate_algorithm`.  
+  7. Returns a pared object (list) with:  
+     - `data`: the original expression matrix subset to kept rows  
+     - `source`: subset of the `source` vector  
+     - `run_date` (if present) subset to kept rows  
+     - `subset_cells`: integer indices of kept events
 }
 \examples{
  
@@ -103,7 +95,7 @@ the selected events on the original embedding, colored by
  
 }
 \seealso{
-dbscan::dbscan, FNN::knn,
-FCSimple::fcs_cluster_heatmap, FCSimple::fcs_plot_heatmap,
-FCSimple::fcs_plot_reduction
+dbscan::dbscan, FNN::knn,  
+  FCSimple::fcs_cluster_heatmap, FCSimple::fcs_plot_heatmap,  
+  FCSimple::fcs_plot_reduction
 }

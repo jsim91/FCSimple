@@ -21,71 +21,65 @@ fcs_project_parameters(
 \arguments{
 \item{fcs_join_obj}{A list returned by FCSimple::fcs_join(), optionally augmented by
 fcs_batch_correction() and fcs_reduce_dimensions(), containing:
-\itemize{
-\item \code{data}: raw or transformed expression matrix (events × channels)
-\item \code{batch_correction$data} (if present)
-\item a \code{umap} or \code{tsne} element with \verb{$coordinates} (events × 2)
-}}
+- `data`: raw or transformed expression matrix (events × channels)
+- `batch_correction$data` (if present)
+- a `umap` or `tsne` element with `$coordinates` (events × 2)}
 
-\item{override_correction}{Logical; if \code{TRUE} (default), use \code{fcs_join_obj$data} even when
-batch correction exists. If \code{FALSE}, uses
-\code{fcs_join_obj$batch_correction$data}.}
+\item{override_correction}{Logical; if `TRUE` (default), use `fcs_join_obj$data` even when
+batch correction exists. If `FALSE`, uses
+`fcs_join_obj$batch_correction$data`.}
 
-\item{reduction}{Character; embedding to use. Must be either \code{"UMAP"} (default) or \code{"tSNE"}.}
+\item{reduction}{Character; embedding to use. Must be either `"UMAP"` (default) or `"tSNE"`.}
 
-\item{parameters}{Character vector of channel names to project. If \code{"all"} (default),
+\item{parameters}{Character vector of channel names to project. If `"all"` (default),
 all columns in the selected data matrix are plotted.}
 
 \item{outdir}{Character; path to an existing directory where the PDF will be saved.
-Defaults to \code{getwd()}.}
+Defaults to `getwd()`.}
 
 \item{sample_size}{Integer; maximum number of events to sample per parameter before plotting
 (default 50000).}
 
-\item{point_size}{Numeric; point size for the rasterized scatter (\code{geom_point_rast})
+\item{point_size}{Numeric; point size for the rasterized scatter (`geom_point_rast`)
 (default 0.8).}
 
-\item{trim_outliers}{Logical; if \code{TRUE} (default), trims the lower and upper
-\code{trim_quantile} fraction of observations before sampling.}
+\item{trim_outliers}{Logical; if `TRUE` (default), trims the lower and upper
+`trim_quantile` fraction of observations before sampling.}
 
 \item{trim_quantile}{Numeric; quantile threshold for outlier trimming (default 0.01).}
 
-\item{force_xlim}{Numeric vector of length 2 to fix the x‐axis limits, or \code{FALSE}
+\item{force_xlim}{Numeric vector of length 2 to fix the x‐axis limits, or `FALSE`
 (default) to use the data range.}
 
-\item{force_ylim}{Numeric vector of length 2 to fix the y‐axis limits, or \code{FALSE}
+\item{force_ylim}{Numeric vector of length 2 to fix the y‐axis limits, or `FALSE`
 (default) to use the data range.}
 }
 \value{
-Invisibly returns \code{NULL}. The side effect is a multi‐page PDF written
-to \code{outdir}.
+Invisibly returns `NULL`. The side effect is a multi‐page PDF written
+  to `outdir`.
 }
 \description{
 Creates a multi‐panel PDF of channel (parameter) expression projected onto
-a 2D reduction embedding (UMAP or tSNE). For each specified parameter,
-events are optionally trimmed of outliers, subsampled, and plotted as a
-rasterized scatter colored by expression intensity. Panels are arranged
-in 2×2 grids and written to disk.
+  a 2D reduction embedding (UMAP or tSNE). For each specified parameter,
+  events are optionally trimmed of outliers, subsampled, and plotted as a
+  rasterized scatter colored by expression intensity. Panels are arranged
+  in 2×2 grids and written to disk.
 }
 \details{
-\enumerate{
-\item Determines which expression matrix to use based on
-\code{override_correction}.
-\item Extracts UMAP or tSNE coordinates from
-\code{fcs_join_obj[[ tolower(reduction) ]][["coordinates"]]}.
-\item Selects the requested \code{parameters} (all by default).
-\item For each parameter:
-\itemize{
-\item Trims outliers at the specified quantiles.
-\item Subsamples up to \code{sample_size} points.
-\item Creates a rasterized scatter plot colored by expression
-(\code{scale_color_viridis(option="D")}).
-\item Honors any fixed \code{force_xlim}/\code{force_ylim}.
-}
-\item Arranges plots into pages of 2×2 panels via ggpubr::ggarrange().
-\item Saves a timestamped PDF named
-\verb{<reduction>_parameter_projections_<YYYY-MM-DD_HHMMSS>.pdf}.
-}
+1. Determines which expression matrix to use based on
+     `override_correction`.  
+  2. Extracts UMAP or tSNE coordinates from
+     `fcs_join_obj[[ tolower(reduction) ]][["coordinates"]]`.  
+  3. Selects the requested `parameters` (all by default).  
+  4. For each parameter:  
+     - Trims outliers at the specified quantiles.  
+     - Subsamples up to `sample_size` points.  
+     - Creates a rasterized scatter plot colored by expression  
+       (`scale_color_viridis(option="D")`).  
+     - Honors any fixed `force_xlim`/`force_ylim`.  
+  5. Arranges plots into pages of 2×2 panels via ggpubr::ggarrange().  
+  6. Saves a timestamped PDF named  
+     `<reduction>_parameter_projections_<YYYY-MM-DD_HHMMSS>.pdf`.
 }
 \examples{
 \dontrun{
@@ -112,6 +106,6 @@ in 2×2 grids and written to disk.
 }
 \seealso{
 FCSimple::fcs_reduce_dimensions, FCSimple::fcs_plot_reduction,
-ggplot2::ggplot, viridis::scale_color_viridis,
-ggrastr::geom_point_rast, ggpubr::ggarrange
+  ggplot2::ggplot, viridis::scale_color_viridis,
+  ggrastr::geom_point_rast, ggpubr::ggarrange
 }
