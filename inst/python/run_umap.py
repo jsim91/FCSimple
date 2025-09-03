@@ -1,8 +1,23 @@
+# check dependencies
+import importlib
+import subprocess
+import sys
+
+REQUIRED_PACKAGES = ['pandas','numpy','umap-learn','pynndescent','os']
+for package in REQUIRED_PACKAGES:
+    try:
+        importlib.import_module(package)
+        print(f'{package} is installed')
+    except ImportError:
+        print(f'{package} not installed. Installing now...')
+        subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+        print(f'{package} installed successfully')
+
+# finish imports
 import umap
 import pynndescent
 import numpy as np
 import pandas as pd
-import sys
 import os
 
 in_file = sys.argv[1]
