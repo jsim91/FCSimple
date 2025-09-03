@@ -1,8 +1,26 @@
+# check dependencies
+import importlib
+import subprocess
+import sys
+
+REQUIRED_PACKAGES = ['pandas','numpy','git_cluster','os']
+for package in REQUIRED_PACKAGES:
+    try:
+        importlib.import_module(package)
+        print(f'{package} is installed')
+    except ImportError:
+        print(f'{package} not installed. Installing now...')
+        if package=='git_cluster':
+            subprocess.check_call([sys.executable, "-m", "pip", "install", "git+https://github.com/gaozhangyang/GIT"])
+        else:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+        print(f'{package} installed successfully')
+
+# finish imports
 from git_cluster import GIT
 # https://github.com/gaozhangyang/GIT
 import numpy as np
 import pandas as pd
-import sys
 import os
 
 in_file = sys.argv[1]
