@@ -1,7 +1,22 @@
+# check dependencies
+import importlib
+import subprocess
+import sys
+
+REQUIRED_PACKAGES = ['pandas','igraph','scipy','os']
+for package in REQUIRED_PACKAGES:
+    try:
+        importlib.import_module(package)
+        print(f'{package} is installed')
+    except ImportError:
+        print(f'{package} not installed. Installing now...')
+        subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+        print(f'{package} installed successfully')
+
+# import dependencies
 from scipy.io import mmread
 import igraph as ig
 import pandas as pd
-import sys
 import os
 
 in_file = sys.argv[1]
