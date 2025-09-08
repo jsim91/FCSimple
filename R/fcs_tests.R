@@ -142,7 +142,7 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list = NA, color_list = NA, 
                               p_text_size = 5, paired_line_stroke = 0.1, paired_line_color = "black",
                               heatmap_fontsize = 8, relative_heights = c(0.76,0.24), heatmap_parameters = 'all',
                               heatmap_clusters = "all", test_method = c('wilcox','sccomp'),
-                              sccomp_terms = NULL)
+                              sccomp_terms = NULL, boxplot_text_scaling = 1)
 {
   # doc notes for sccomp_terms context: sccomp_terms should be given in the following format, if not NULL:
   # sccomp_terms <- list(primary_term = 'a',
@@ -332,7 +332,8 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list = NA, color_list = NA, 
                         heatmap_overlay_values = overlay_heatmap_numbers, fm = force_max,
                         abundance_alg = algorithm, pair_test = paired_test, xord = x_order,
                         pts = p_text_size, pls = paired_line_stroke, plc = paired_line_color,
-                        relh = relative_heights, hmfs = heatmap_fontsize) {
+                        relh = relative_heights, hmfs = heatmap_fontsize,
+                        bpts = boxplot_text_scaling) {
     plot_input <- input[[1]]
     hm_input <- input[[2]]
 
@@ -367,10 +368,10 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list = NA, color_list = NA, 
       theme_minimal() +
       theme(axis.title.x = element_blank(),
             legend.position = "none",
-            plot.title = element_text(size = 16, face = "bold", hjust = 0.5),
-            axis.text.x = element_text(size = 14, face = "bold"),
-            axis.text.y = element_text(size = 12),
-            axis.title.y = element_text(size = 14))
+            plot.title = element_text(size = 16*bpts, face = "bold", hjust = 0.5),
+            axis.text.x = element_text(size = 14*bpts, face = "bold"),
+            axis.text.y = element_text(size = 12*bpts),
+            axis.title.y = element_text(size = 14*bpts))
     if(fm) {
       if(max(plot_input$frequency)>95) {
         plt <- plt + ylim(floor(min(plot_input$frequency)), 100)
