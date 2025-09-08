@@ -54,17 +54,17 @@
 #'
 #' @details
 #' - Chooses raw or batch‐corrected data based on `override_correction` and
-#'   presence of `fcs_join_obj$batch_correction$data`.  
+#'   presence of `fcs_join_obj$batch_correction$data`.
 #' - Scales expression values to [0,1] per channel using
-#'   CATALYST:::.scale_exprs.  
-#' - Computes median expression for each cluster × parameter.  
-#' - Builds a ComplexHeatmap object with cluster‐size annotations.  
+#'   CATALYST:::.scale_exprs.
+#' - Computes median expression for each cluster × parameter.
+#' - Builds a ComplexHeatmap object with cluster‐size annotations.
 #' - Stores the result under
 #'   `fcs_join_obj[[paste0(tolower(algorithm), "_heatmap")]]`:
-#'     - `heatmap`: the Heatmap object  
-#'     - `heatmap_tile_data`: the numeric matrix used  
-#'     - `population_size`: cluster event counts  
-#'     - `rep_used`: “with batch correction” or “without batch correction”  
+#'     - `heatmap`: the Heatmap object
+#'     - `heatmap_tile_data`: the numeric matrix used
+#'     - `population_size`: cluster event counts
+#'     - `rep_used`: “with batch correction” or “without batch correction”
 #' - Appends a timestamped entry to `object_history`.
 #'
 #' @return
@@ -102,11 +102,11 @@
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom grid unit gpar
 #' @export
-fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "all", include_clusters = "all", 
+fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "all", include_clusters = "all",
                                 heatmap_color_palette = rev(RColorBrewer::brewer.pal(11, "RdYlBu")),
                                 transpose_heatmap = FALSE, cluster_row = TRUE, cluster_col = TRUE,
-                                override_correction = TRUE, return_heatmap_data = FALSE, 
-                                heatmap_linewidth = 0.5)
+                                override_correction = TRUE, return_heatmap_data = FALSE,
+                                heatmap_linewidth = 0.5, row_text_size = 13, column_text_size = 12)
 {
   if(!tolower(algorithm) %in% names(fcs_join_obj)) {
     stop("error in argument 'algorithm': algorithm not found in fcs_join_obj. Try 'View(fcs_join_obj)'")
@@ -194,7 +194,8 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
                             heatmap_legend_param=list(at=c(0,0.2,0.4,0.6,0.8,1),legend_height=unit(3,"cm"),
                                                       grid_width=unit(0.6,"cm"),title_position="topleft",
                                                       labels_gp=gpar(fontsize=11),title_gp=gpar(fontsize=11)),
-                            row_names_gp=gpar(fontsize=13,fontface="bold"),column_names_gp=gpar(fontsize=12,fontface="bold"),
+                            row_names_gp=gpar(fontsize=row_text_size,fontface="bold"),
+                            column_names_gp=gpar(fontsize=column_text_size,fontface="bold"),
                             rect_gp = gpar(lwd = heatmap_linewidth, col = "black"), border = "black",
                             cluster_columns = ifelse(cluster_col,TRUE,FALSE), cluster_rows = ifelse(cluster_row,TRUE,FALSE),
                             row_gap=unit(1,"mm"),column_gap=unit(1,"mm"),row_dend_gp=gpar(lwd=1.2),row_dend_width=unit(1,"cm"),
