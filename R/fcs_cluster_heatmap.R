@@ -106,7 +106,8 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
                                 heatmap_color_palette = rev(RColorBrewer::brewer.pal(11, "RdYlBu")),
                                 transpose_heatmap = FALSE, cluster_row = TRUE, cluster_col = TRUE,
                                 override_correction = TRUE, return_heatmap_data = FALSE,
-                                heatmap_linewidth = 0.5, row_text_size = 13, column_text_size = 12)
+                                heatmap_linewidth = 0.5, row_text_size = 13, column_text_size = 12,
+                                legend_text_size = 11)
 {
   if(!tolower(algorithm) %in% names(fcs_join_obj)) {
     stop("error in argument 'algorithm': algorithm not found in fcs_join_obj. Try 'View(fcs_join_obj)'")
@@ -193,7 +194,8 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
                             name="median\nscaled\nexpression",
                             heatmap_legend_param=list(at=c(0,0.2,0.4,0.6,0.8,1),legend_height=unit(3,"cm"),
                                                       grid_width=unit(0.6,"cm"),title_position="topleft",
-                                                      labels_gp=gpar(fontsize=11),title_gp=gpar(fontsize=11)),
+                                                      labels_gp=gpar(fontsize=legend_text_size),
+                                                      title_gp=gpar(fontsize=legend_text_size)),
                             row_names_gp=gpar(fontsize=row_text_size,fontface="bold"),
                             column_names_gp=gpar(fontsize=column_text_size,fontface="bold"),
                             rect_gp = gpar(lwd = heatmap_linewidth, col = "black"), border = "black",
