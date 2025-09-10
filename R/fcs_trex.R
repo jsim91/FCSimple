@@ -471,6 +471,10 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   }
   write.csv(x = freq_mat, file = file.path(outdir,paste0(file_output_prefix,"trex_significant_cluster_frequencies_",
                                                          strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".csv")), row.names = TRUE)
+  trex_count_table <- table(clustered_data$source, clustered_data$cluster)
+  trex_count_matrix <- as.data.frame.matrix(trex_count_table)
+  write.csv(x = trex_count_matrix, file = file.path(outdir,paste0(file_output_prefix,"trex_significant_cluster_counts_",
+                                                                  strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".csv")), row.names = TRUE)
 
   require(CATALYST)
   require(ComplexHeatmap)
