@@ -60,9 +60,9 @@
 #'   Numeric “A” offset for hyperlog transform (default 2).
 #'
 #' @param transform_per_channel
-#'   Logical; if `TRUE` (default), launches an interactive Shiny application  
-#'   (in `transform_app/`) to preview and tweak per-channel transforms. The  
-#'   function will block until you finish and close the app. If `FALSE`,  
+#'   Logical; if `TRUE` (default), launches an interactive Shiny application
+#'   (in `transform_app/`) to preview and tweak per-channel transforms. The
+#'   function will block until you finish and close the app. If `FALSE`,
 #'   applies the global `transform_type`.
 #'
 #' @param downsample_size
@@ -75,28 +75,28 @@
 #'
 #' @details
 #'   Internally, the function:
-#'   1. Reads all files into a `flowSet` via `flowCore::read.flowSet()`.  
-#'   2. Optionally downsamples each file to `downsample_size`.  
-#'   3. Extracts expression matrices with `flowCore::exprs()`.  
-#'   4. If `transform_per_channel = TRUE`, launches the package’s  
-#'      `transform_app/` Shiny GUI so you can inspect per-channel  
-#'      diagnostics and build a custom `transformList`.  
-#'   5. Otherwise, applies the global transform as specified by  
-#'      `transform_type` or user’s `transform_function`.  
-#'   6. Concatenates raw and transformed data into `raw` and `data` matrices.  
-#'   7. Builds `source` and `run_date` via `flowCore::sampleNames()` and  
-#'      `stringr::str_extract()`.  
-#'   8. Records `collection_instrument` and appends a timestamp in  
+#'   1. Reads all files into a `flowSet` via `flowCore::read.flowSet()`.
+#'   2. Optionally downsamples each file to `downsample_size`.
+#'   3. Extracts expression matrices with `flowCore::exprs()`.
+#'   4. If `transform_per_channel = TRUE`, launches the package’s
+#'      `transform_app/` Shiny GUI so you can inspect per-channel
+#'      diagnostics and build a custom `transformList`.
+#'   5. Otherwise, applies the global transform as specified by
+#'      `transform_type` or user’s `transform_function`.
+#'   6. Concatenates raw and transformed data into `raw` and `data` matrices.
+#'   7. Builds `source` and `run_date` via `flowCore::sampleNames()` and
+#'      `stringr::str_extract()`.
+#'   8. Records `collection_instrument` and appends a timestamp in
 #'      `object_history`.
 #'
 #' @return
 #'   A list with elements:
-#'   - `data`: numeric matrix of transformed events × channels.  
-#'   - `raw`: numeric matrix of untransformed events × channels.  
-#'   - `source`: character vector of sample identifiers for each event.  
-#'   - `run_date`: character vector parsed from `source` via `batch_pattern`.  
-#'   - `transform_list`: per-channel transform parameters (if FlowJo used).  
-#'   - `collection_instrument`: chosen `instrument_type`.  
+#'   - `data`: numeric matrix of transformed events × channels.
+#'   - `raw`: numeric matrix of untransformed events × channels.
+#'   - `source`: character vector of sample identifiers for each event.
+#'   - `run_date`: character vector parsed from `source` via `batch_pattern`.
+#'   - `transform_list`: per-channel transform parameters (if FlowJo used).
+#'   - `collection_instrument`: chosen `instrument_type`.
 #'   - `object_history`: timestamped entry recording the join.
 #'
 #' @examples
@@ -216,10 +216,12 @@ fcs_join <- function(files,
     colnames(raw_data) <- fs[[1]]@parameters@data$desc
   }
   if(!apply_transform) {
+    src <- rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))
     return(list(data = raw_data,
                 raw = raw_data,
-                source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow))),
-                collection_instrument = instrument_type, 
+                source = src,
+                metadata = data.frame(source = src),
+                collection_instrument = instrument_type,
                 object_history = paste0("joined: ",Sys.time())))
   }
   if(!is.null(flowjo_diagnostics_file)) {
@@ -339,6 +341,7 @@ fcs_join <- function(files,
                   raw = tmp_raw,
                   source = src,
                   run_date = stringr::str_extract(string = src, pattern = batch_pattern),
+                  metadata = data.frame(source = src),
                   transform_list = tf_list,
                   collection_instrument = instrument_type,
                   object_history = paste0("joined: ",Sys.time())))
@@ -372,6 +375,7 @@ fcs_join <- function(files,
                   raw = raw_data,
                   source = src,
                   run_date = stringr::str_extract(string = src, pattern = batch_pattern),
+                  metadata = data.frame(source = src),
                   collection_instrument = instrument_type,
                   object_history = paste0("joined: ",Sys.time())))
     } else if(tolower(instrument_type)=="flow") {
@@ -452,6 +456,7 @@ fcs_join <- function(files,
                     raw = raw_data,
                     source = src,
                     run_date = stringr::str_extract(string = src, pattern = batch_pattern),
+                    metadata = data.frame(source = src),
                     collection_instrument = instrument_type,
                     object_history = paste0("joined: ",Sys.time())))
       # } else {
