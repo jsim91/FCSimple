@@ -184,6 +184,7 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
   require(ggplot2)
   require(ggrastr)
   require(ggpubr)
+  require(shadowtext)
 
   reduction_coords <- fcs_join_obj[[tolower(reduction)]][["coordinates"]]
   cluster_numbers <- as.character(fcs_join_obj[[tolower(algorithm)]][["clusters"]])
@@ -286,7 +287,6 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
                                                                                         y = colnames(reduction_coords)[2]),
                                alpha = point_alpha, color = "red")
     if(annotation_method=='shadowtext') {
-      require(shadowtext)
       plt_reduction <- plt_reduction + annotate("shadowtext", x = xval, y = yval, label = names(xval), size = annotate_text_size)
     } else if(annotation_method=='repel') {
       require(ggrepel)
