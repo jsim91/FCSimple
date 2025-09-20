@@ -61,6 +61,13 @@
 #' @param annotate_text_size  
 #'   Numeric; font size for cluster labels (use `NA` to disable, default 5).  
 #'
+#' @param annotation_method  
+#'   Character; method for drawing cluster labels. Options are:  
+#'   - `"shadowtext"` (default): labels with shadowed outlines using  
+#'     **shadowtext::geom_shadowtext**.  
+#'   - `"repel"`: labels with repelling force to avoid overlap using  
+#'     **ggrepel::geom_text_repel**.  
+#'
 #' @param title_size  
 #'   Numeric; font size for plot title (default 14).  
 #'
@@ -162,11 +169,10 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
                                figure_width = 10, figure_height = 10, plotting_device = "pdf", annotate_text_size = 5,
                                title_size = 14, return_plot = TRUE, randomize_colors = FALSE, color_random_seed = 123,
                                color_clusters = TRUE, force_title = FALSE, sample_equally = TRUE,
-                               cluster_substitute_names = NA, add_timestamp = TRUE)
+                               cluster_substitute_names = NA, add_timestamp = TRUE, annotation_method = 'shadowtext')
 {
   # use annotate_text_size = NA to produce a plot without cluster annotations
   require(ggplot2)
-  require(shadowtext)
   require(ggrastr)
   require(ggpubr)
 
@@ -269,9 +275,18 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
       ggrastr::geom_point_rast(alpha = point_alpha, color = "grey") +
       ggrastr::geom_point_rast(data = plt_input[keep_indices,], mapping = aes_string(x = colnames(reduction_coords)[1],
                                                                                         y = colnames(reduction_coords)[2]),
-                               alpha = point_alpha, color = "red") +
-      annotate("shadowtext", x = xval, y = yval, label = names(xval), size = annotate_text_size) +
-      theme_void() +
+                               alpha = point_alpha, color = "red")
+    if(annotation_method=='shadowtext') {
+      require(shadowtext)
+      plt_reduction <- plt_reduction + annotate("shadowtext", x = xval, y = yval, label = names(xval), size = annotate_text_size)
+    } else if(annotation_method=='repel') {
+      require(ggrepel)
+      color_text_add <- data.frame(UMAP1 = xval, UMAP2 = yval, cluster = names(xval))
+      plt_reduction <- plt_reduction + ggrepel::geom_text_repel(data = color_text_add, 
+                                                                mapping = aes(x = UMAP1, y = UMAP2, label = cluster), color = "white", 
+                                                                size = annotate_text_size, bg.color = "black", bg.r = 0.04, seed = 123)
+    }
+      plt_reduction <- theme_void() +
       theme(legend.position = "none")
     if(add_timestamp) {
       fname <- paste0(outdir,"/islands_selected_for_by_dbscan_",
