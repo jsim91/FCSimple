@@ -220,7 +220,7 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
   plt_input <- cbind(reduction_coords,data.frame(cluster = cluster_numbers))
   plt_input$cluster <- factor(plt_input$cluster)
   if(!internal_call) {
-    pl_fun <- function(plin, ptalpha = point_alpha, xanno = xval,
+    pl_fun <- function(plin, ptalpha = point_alpha, xanno = xval, ameth = annotation_method, 
                        yanno = yval, sizeanno = annotate_text_size, ftitle = force_title,
                        color_clus = color_clusters, ptsize = point_size)
     {
@@ -240,11 +240,15 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
           labs(x = cnamex, y = cnamey)
       }
       if(!is.na(sizeanno)) {
-        mypl <- mypl +
-          annotate("shadowtext", x = xanno, y = yanno, label = names(xanno), size = sizeanno)
+        if(ameth=='shadowtext') {
+      plt_reduction <- plt_reduction + annotate("shadowtext", x = xanno, y = yanno, label = names(xval), size = sizeanno)
+      } else if(ameth=='repel') {
+        require(ggrepel)
+        color_text_add <- data.frame(UMAP1 = xanno, UMAP2 = yanno, cluster = names(xanno))
+        plt_reduction <- plt_reduction + ggrepel::geom_text_repel(data = color_text_add,
+                                                                  mapping = aes(x = UMAP1, y = UMAP2, label = cluster), color = "white",
+                                                                  size = sizeanno, bg.color = "black", bg.r = 0.04, seed = 123)
       }
-      mypl <- mypl + theme_void() +
-        theme(legend.position = "none")
       if(ftitle) {
         mypl <- mypl + ggtitle(colnames(plin)[ncol(plin)]) + theme(plot.title = element_text(hjust = 0.5, size = title_size))
       }
