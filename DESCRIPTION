@@ -7,6 +7,7 @@ Description: Streamlined functions for loading, joining, and analyzing high-dime
 License: GPL-3
 Encoding: UTF-8
 LazyData: true
+Roxygen: list(markdown = TRUE)
 Imports:
     uwot, Rtsne, FNN, Matrix, igraph, circlize, 
     grid, ggplot2, ggpubr, ggrastr, ggridges, dbscan, 

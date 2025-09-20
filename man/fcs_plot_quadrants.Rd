@@ -33,8 +33,8 @@ fcs_plot_quadrants(
 A ggplot2 object with points, contours, quadrant lines, and percentage labels.
 }
 \description{
-Splits data.frame `df` into four quadrants by `xcut`/`ycut`, computes  
-  percentages in UL/UR/LR/LL, and overlays density contours and labels.
+Splits data.frame \code{df} into four quadrants by \code{xcut}/\code{ycut}, computes
+percentages in UL/UR/LR/LL, and overlays density contours and labels.
 }
 \examples{
 \dontrun{

@@ -30,8 +30,8 @@ fcs_plot_singlets(
 A ggplot2 object.
 }
 \description{
-Visualizes area vs height, highlighting singlets in blue and background  
-  events in black.
+Visualizes area vs height, highlighting singlets in blue and background
+events in black.
 }
 \examples{
 \dontrun{

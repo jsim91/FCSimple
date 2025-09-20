@@ -19,22 +19,30 @@ fcs_reduce_dimensions(
 \item{fcs_join_obj}{A list returned by FCSimple::fcs_join() (and optionally
 augmented by FCSimple::fcs_batch_correction or FCSimple::fcs_pca). Must
 contain at least one of:
-- `fcs_join_obj$data` (raw or transformed expression matrix), or  
-- `fcs_join_obj$pca$pca_data` (when `use_rep = "pca"`), or  
-- `fcs_join_obj$batch_correction$data` (automatically used if present).}
+\itemize{
+\item \code{fcs_join_obj$data} (raw or transformed expression matrix), or
+\item \code{fcs_join_obj$pca$pca_data} (when \code{use_rep = "pca"}), or
+\item \code{fcs_join_obj$batch_correction$data} (automatically used if present).
+}}
 
 \item{use_rep}{Character; which representation to reduce.
-- `"data"` (default): use `fcs_join_obj$data` or batch‐corrected data if present.  
-- `"pca"`: use `fcs_join_obj$pca$pca_data` (requires prior call to FCSimple::fcs_pca).}
+\itemize{
+\item \code{"data"} (default): use \code{fcs_join_obj$data} or batch‐corrected data if present.
+\item \code{"pca"}: use \code{fcs_join_obj$pca$pca_data} (requires prior call to FCSimple::fcs_pca).
+}}
 
 \item{algorithm}{Character; which algorithm to run.
-- `"tsne"`: t‐distributed stochastic neighbor embedding.  
-- `"umap"`: uniform manifold approximation and projection.  
-Default is `c("tsne","umap")` (selects first).}
+\itemize{
+\item \code{"tsne"}: t‐distributed stochastic neighbor embedding.
+\item \code{"umap"}: uniform manifold approximation and projection.
+Default is \code{c("tsne","umap")} (selects first).
+}}
 
 \item{language}{Character; runtime environment for the chosen algorithm.
-- `"R"` (default): calls uwot::umap or Rtsne::Rtsne.  
-- `"Python"`: writes a CSV, invokes the package’s Python script, and reads back results.}
+\itemize{
+\item \code{"R"} (default): calls uwot::umap or Rtsne::Rtsne.
+\item \code{"Python"}: writes a CSV, invokes the package’s Python script, and reads back results.
+}}
 
 \item{umap_nn}{Numeric; number of neighbors for UMAP (default 30).}
 
@@ -42,36 +50,44 @@ Default is `c("tsne","umap")` (selects first).}
 
 \item{tsne_perplexity}{Numeric; perplexity parameter for t‐SNE (default 30).}
 
-\item{nthread}{Integer; number of CPU threads for Rtsne (default `ceiling(parallel::detectCores()/2)`).}
+\item{nthread}{Integer; number of CPU threads for Rtsne (default \code{ceiling(parallel::detectCores()/2)}).}
 }
 \value{
-The input `fcs_join_obj`, with a new element named by the
-  lower‐case `algorithm`:
-  - `$<algorithm>$coordinates`: numeric matrix (cells × 2).  
-  - `$<algorithm>$settings`: list of parameters passed.  
-  - `object_history` updated with the reduction event.
+The input \code{fcs_join_obj}, with a new element named by the
+lower‐case \code{algorithm}:
+\itemize{
+\item \verb{$<algorithm>$coordinates}: numeric matrix (cells × 2).
+\item \verb{$<algorithm>$settings}: list of parameters passed.
+\item \code{object_history} updated with the reduction event.
+}
 }
 \description{
 Performs UMAP or t‐SNE on a flow cytometry analysis object. By default,
-  reduces the (batch‐corrected) expression matrix to two dimensions
-  using either the R implementation (uwot or Rtsne) or an external
-  Python script. The result is stored in your object under “umap” or “tsne”.
+reduces the (batch‐corrected) expression matrix to two dimensions
+using either the R implementation (uwot or Rtsne) or an external
+Python script. The result is stored in your object under “umap” or “tsne”.
 }
 \details{
-1. If `fcs_join_obj$batch_correction$data` exists, that matrix is used
-     regardless of `use_rep`. Otherwise, `use_rep` selects raw data or PCA.
-  2. For UMAP:
-     - R: calls `uwot::umap()` with a fixed seed, `umap_nn`, and `umap_min_dist`.  
-     - Python: writes data to `inst/python`, runs `run_umap.py`, cleans temp files.  
-  3. For t‐SNE:
-     - R: calls `Rtsne::Rtsne()` with `tsne_perplexity`, `nthread`, and fixed settings.  
-     - Python: similar CSV → script → import workflow via `run_tsne.py`.  
-  4. The resulting 2‐column matrix is stored as
-     `fcs_join_obj$umap$coordinates` or `$tsne$coordinates`, and the
-     parameters used are recorded under
-     `fcs_join_obj$<algorithm>$settings`.
-  5. An entry is appended to `fcs_join_obj$object_history`:
-     `<algorithm> on <use_rep>: <timestamp>`.
+\enumerate{
+\item If \code{fcs_join_obj$batch_correction$data} exists, that matrix is used
+regardless of \code{use_rep}. Otherwise, \code{use_rep} selects raw data or PCA.
+\item For UMAP:
+\itemize{
+\item R: calls \code{uwot::umap()} with a fixed seed, \code{umap_nn}, and \code{umap_min_dist}.
+\item Python: writes data to \code{inst/python}, runs \code{run_umap.py}, cleans temp files.
+}
+\item For t‐SNE:
+\itemize{
+\item R: calls \code{Rtsne::Rtsne()} with \code{tsne_perplexity}, \code{nthread}, and fixed settings.
+\item Python: similar CSV → script → import workflow via \code{run_tsne.py}.
+}
+\item The resulting 2‐column matrix is stored as
+\code{fcs_join_obj$umap$coordinates} or \verb{$tsne$coordinates}, and the
+parameters used are recorded under
+\verb{fcs_join_obj$<algorithm>$settings}.
+\item An entry is appended to \code{fcs_join_obj$object_history}:
+\verb{<algorithm> on <use_rep>: <timestamp>}.
+}
 }
 \examples{
 \dontrun{

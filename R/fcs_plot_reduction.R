@@ -1,128 +1,136 @@
 #' @title Plot Clustered Reduction Embedding
 #'
 #' @description
-#'   Visualizes cell clusters on a 2D reduction embedding (UMAP or tSNE) as a  
-#'   scatter plot with optional cluster labels, split panels, and flexible  
-#'   output options. Supports coloring by cluster, randomizing palettes, and  
-#'   saving to file or returning the ggplot object.
+#'   Visualizes cell clusters on a 2D reduction embedding (UMAP or tSNE) as a
+#'   scatter plot with optional cluster labels, split panels, and flexible
+#'   output options. Supports coloring by cluster, randomizing palettes, and
+#'   saving to file or returning the ggplot object. Cluster labels can be drawn
+#'   using either shadowed text or repelled text annotations.
 #'
-#' @param fcs_join_obj  
-#'   A list containing reduction coordinates and clustering results, as  
-#'   produced by FCSimple::fcs_reduce_dimensions() and  
-#'   FCSimple::fcs_cluster(). Must include:  
-#'   - `fcs_join_obj[[ tolower(reduction) ]][["coordinates"]]`: a numeric  
-#'     matrix of cell × 2 embedding coordinates  
-#'   - `fcs_join_obj[[ tolower(algorithm) ]][["clusters"]]`: a vector of  
-#'     cluster IDs for each cell
+#' @param fcs_join_obj
+#'   A list containing reduction coordinates and clustering results, as
+#'   produced by FCSimple::fcs_reduce_dimensions() and
+#'   FCSimple::fcs_cluster(). Must include:
+#'   \itemize{
+#'     \item `fcs_join_obj[[ tolower(reduction) ]][["coordinates"]]`: a numeric
+#'       matrix of cell × 2 embedding coordinates
+#'     \item `fcs_join_obj[[ tolower(algorithm) ]][["clusters"]]`: a vector of
+#'       cluster IDs for each cell
+#'   }
 #'
-#' @param algorithm  
-#'   Character; clustering result to visualize (e.g. “leiden”, “flowsom”).  
+#' @param algorithm
+#'   Character; clustering result to visualize (e.g. `"leiden"`, `"flowsom"`).
 #'
-#' @param reduction  
-#'   Character; dimensionality‐reduction to plot. Either “UMAP” or “tSNE”.  
+#' @param reduction
+#'   Character; dimensionality‐reduction to plot. Either `"UMAP"` or `"tSNE"`.
 #'
-#' @param point_alpha  
-#'   Numeric; point transparency (alpha) for scatter (default 0.1).  
+#' @param point_alpha
+#'   Numeric; point transparency (alpha) for scatter (default 0.1).
 #'
-#' @param point_size  
-#'   Numeric; point size for scatter (default 1).  
+#' @param point_size
+#'   Numeric; point size for scatter (default 1).
 #'
-#' @param outdir  
-#'   Character; directory path to save the plot when `return_plot = FALSE`  
-#'   (default: `getwd()`).  
+#' @param outdir
+#'   Character; directory path to save the plot when `return_plot = FALSE`
+#'   (default: `getwd()`).
 #'
-#' @param split_factor  
-#'   Optional vector or factor the same length as rows of the reduction  
-#'   coordinates. If not `NA`, splits data by its levels and arranges panels  
-#'   using ggpubr::ggarrange() (default: `NA`).  
+#' @param split_factor
+#'   Optional vector or factor the same length as rows of the reduction
+#'   coordinates. If not `NA`, splits data by its levels and arranges panels
+#'   using ggpubr::ggarrange() (default: `NA`).
 #'
-#' @param internal_call  
-#'   Logical; if `TRUE`, uses internal logic to highlight and annotate a subset  
-#'   of events (`keep_indices`) and clusters (`anno_indices`) rather than full scatter (default `FALSE`).  
+#' @param internal_call
+#'   Logical; if `TRUE`, uses internal logic to highlight and annotate a subset
+#'   of events (`keep_indices`) and clusters (`anno_indices`) rather than full scatter (default `FALSE`).
 #'
-#' @param anno_indices  
-#'   Integer vector; cluster indices to annotate when `internal_call = TRUE`  
-#'   (default `NULL`).  
+#' @param anno_indices
+#'   Integer vector; cluster indices to annotate when `internal_call = TRUE`
+#'   (default `NULL`).
 #'
-#' @param keep_indices  
-#'   Integer vector; cell indices to highlight (in red) when  
-#'   `internal_call = TRUE` (default `NA`).  
+#' @param keep_indices
+#'   Integer vector; cell indices to highlight (in red) when
+#'   `internal_call = TRUE` (default `NA`).
 #'
-#' @param figure_width  
-#'   Numeric; width in inches for saving plot (default 10).  
+#' @param figure_width
+#'   Numeric; width in inches for saving plot (default 10).
 #'
-#' @param figure_height  
-#'   Numeric; height in inches for saving plot (default 10).  
+#' @param figure_height
+#'   Numeric; height in inches for saving plot (default 10).
 #'
-#' @param plotting_device  
-#'   Character; “pdf” or “png” to select output device when writing file  
-#'   (default “pdf”).  
+#' @param plotting_device
+#'   Character; `"pdf"` or `"png"` to select output device when writing file
+#'   (default `"pdf"`).
 #'
-#' @param annotate_text_size  
-#'   Numeric; font size for cluster labels (use `NA` to disable, default 5).  
+#' @param annotate_text_size
+#'   Numeric; font size for cluster labels (use `NA` to disable, default 5).
 #'
-#' @param annotation_method  
-#'   Character; method for drawing cluster labels. Options are:  
-#'   - `"shadowtext"` (default): labels with shadowed outlines using  
-#'     **shadowtext::geom_shadowtext**.  
-#'   - `"repel"`: labels with repelling force to avoid overlap using  
-#'     **ggrepel::geom_text_repel**.  
+#' @param annotation_method
+#'   Character; method for drawing cluster labels. Options are:
+#'   \itemize{
+#'     \item `"shadowtext"` (default): labels with shadowed outlines using
+#'       **shadowtext::geom_shadowtext**
+#'     \item `"repel"`: labels with repelling force to avoid overlap using
+#'       **ggrepel::geom_text_repel**
+#'   }
 #'
-#' @param title_size  
-#'   Numeric; font size for plot title (default 14).  
+#' @param title_size
+#'   Numeric; font size for plot title (default 14).
 #'
-#' @param return_plot  
-#'   Logical; if `TRUE` (default), returns the ggplot2 object; if `FALSE`,  
-#'   writes the plot to file and invisibly returns `NULL`.  
+#' @param return_plot
+#'   Logical; if `TRUE` (default), returns the ggplot2 object; if `FALSE`,
+#'   writes the plot to file and invisibly returns `NULL`.
 #'
-#' @param randomize_colors  
-#'   Logical; if `TRUE`, shuffles cluster‐color assignment (default `FALSE`).  
+#' @param randomize_colors
+#'   Logical; if `TRUE`, shuffles cluster‐color assignment (default `FALSE`).
 #'
-#' @param color_random_seed  
-#'   Integer; seed for random color assignment when `randomize_colors = TRUE`  
-#'   (default 123).  
+#' @param color_random_seed
+#'   Integer; seed for random color assignment when `randomize_colors = TRUE`
+#'   (default 123).
 #'
-#' @param color_clusters  
-#'   Logical; if `TRUE` (default), color points by cluster; if `FALSE`, all  
-#'   points are drawn in a single color.  
+#' @param color_clusters
+#'   Logical; if `TRUE` (default), color points by cluster; if `FALSE`, all
+#'   points are drawn in a single color.
 #'
-#' @param force_title  
-#'   Logical; if `TRUE`, forces display of the reduction name as a title even  
-#'   in split panels (default `FALSE`).  
+#' @param force_title
+#'   Logical; if `TRUE`, forces display of the reduction name as a title even
+#'   in split panels (default `FALSE`).
 #'
-#' @param sample_equally  
-#'   Logical; if `TRUE`, downsamples each split‐group to equal size before plotting (default `TRUE`).  
+#' @param sample_equally
+#'   Logical; if `TRUE`, downsamples each split‐group to equal size before plotting (default `TRUE`).
 #'
-#' @param cluster_substitute_names  
-#'   Named character vector; optional mapping from original cluster IDs to  
-#'   replacement labels. The names of this vector must exactly match the unique  
-#'   cluster IDs in `fcs_join_obj[[ tolower(algorithm) ]][["clusters"]]`;  
-#'   a mismatch will trigger an error. If supplied (i.e. not `NA`), cluster  
-#'   numbers in the plot are replaced by their mapped labels. Labels may  
-#'   include the `\n` character for multi‐line annotations (e.g. `"My\nCluster"`).  
-#'   Default is `NA` (no substitution).  
+#' @param cluster_substitute_names
+#'   Named character vector; optional mapping from original cluster IDs to
+#'   replacement labels. The names of this vector must exactly match the unique
+#'   cluster IDs in `fcs_join_obj[[ tolower(algorithm) ]][["clusters"]]`;
+#'   a mismatch will trigger an error. If supplied (i.e. not `NA`), cluster
+#'   numbers in the plot are replaced by their mapped labels. Labels may
+#'   include the newline characters for multi‐line annotations.
+#'   Default is `NA` (no substitution).
 #'
-#' @param add_timestamp  
-#'   Logical; if `TRUE` (default), appends a timestamp (`_YYYY-MM-DD_HHMMSS`)  
-#'   to filenames when saving.  
+#' @param add_timestamp
+#'   Logical; if `TRUE` (default), appends a timestamp (`_YYYY-MM-DD_HHMMSS`)
+#'   to filenames when saving.
 #'
 #' @details
-#'   The function:
-#'   1. Extracts embedding coordinates and cluster IDs.  
-#'   2. Builds a data.frame for ggplot, mapping clusters to colors via a  
-#'      default HCL palette (or randomized if requested).  
-#'   3. Computes median centroids for each cluster for annotation.  
-#'   4. If `split_factor` is `NA`, draws a single scatter plot. Otherwise splits  
-#'      cells by factor levels, optionally downsamples equally, and arranges  
-#'      subplots with ggpubr::ggarrange().  
-#'   5. If `internal_call = TRUE`, highlights cells in `keep_indices` and  
-#'      annotates clusters in `anno_indices`.  
-#'   6. When `return_plot = FALSE`, saves to `outdir` as  
-#'      `<algorithm>_<reduction>_labeled[(_timestamp)].pdf` or `.png`.  
+#' \enumerate{
+#'   \item Extracts embedding coordinates and cluster IDs.
+#'   \item Builds a data.frame for ggplot, mapping clusters to colors via a
+#'      default HCL palette (or randomized if requested).
+#'   \item Computes median centroids for each cluster for annotation.
+#'   \item If `split_factor` is `NA`, draws a single scatter plot. Otherwise splits
+#'      cells by factor levels, optionally downsamples equally, and arranges
+#'      subplots with ggpubr::ggarrange().
+#'   \item If `internal_call = TRUE`, highlights cells in `keep_indices` and
+#'      annotates clusters in `anno_indices`.
+#'   \item Cluster labels are drawn using the method specified in
+#'      `annotation_method` (`"shadowtext"` or `"repel"`).
+#'   \item When `return_plot = FALSE`, saves to `outdir` as
+#'      `<algorithm>_<reduction>_labeled[(_timestamp)].pdf` or `.png`.
+#' }
 #'
 #' @return
-#'   If `return_plot = TRUE`, a ggplot2 object (or ggarrange object) is returned.  
-#'   If `return_plot = FALSE`, the plot is written to file and the function  
+#'   If `return_plot = TRUE`, a ggplot2 object (or ggarrange object) is returned.
+#'   If `return_plot = FALSE`, the plot is written to file and the function
 #'   invisibly returns `NULL`.
 #'
 #' @examples
@@ -156,7 +164,8 @@
 #'
 #' @seealso
 #'   FCSimple::fcs_reduce_dimensions, FCSimple::fcs_cluster,
-#'   ggplot2::ggplot, ggrastr::geom_point_rast, ggpubr::ggarrange
+#'   ggplot2::ggplot, ggrastr::geom_point_rast, ggpubr::ggarrange,
+#'   shadowtext::geom_shadowtext, ggrepel::geom_text_repel
 #'
 #' @importFrom grDevices hcl
 #' @importFrom ggplot2 ggplot aes scale_color_manual labs theme_void theme ggtitle annotate ggsave
@@ -282,8 +291,8 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
     } else if(annotation_method=='repel') {
       require(ggrepel)
       color_text_add <- data.frame(UMAP1 = xval, UMAP2 = yval, cluster = names(xval))
-      plt_reduction <- plt_reduction + ggrepel::geom_text_repel(data = color_text_add, 
-                                                                mapping = aes(x = UMAP1, y = UMAP2, label = cluster), color = "white", 
+      plt_reduction <- plt_reduction + ggrepel::geom_text_repel(data = color_text_add,
+                                                                mapping = aes(x = UMAP1, y = UMAP2, label = cluster), color = "white",
                                                                 size = annotate_text_size, bg.color = "black", bg.r = 0.04, seed = 123)
     }
       plt_reduction <- theme_void() +

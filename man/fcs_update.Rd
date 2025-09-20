@@ -7,30 +7,34 @@
 fcs_update(fcs_join_obj, instrument_type = c("cytof", "flow"))
 }
 \arguments{
-\item{fcs_join_obj}{An FCSimple analysis object (list) returned by `FCSimple::fcs_join()`.
-May already include `collection_instrument` and `object_history`.}
+\item{fcs_join_obj}{An FCSimple analysis object (list) returned by \code{FCSimple::fcs_join()}.
+May already include \code{collection_instrument} and \code{object_history}.}
 
 \item{instrument_type}{Character of length one; the type of cytometry data. Must be either
-`"cytof"` (mass cytometry) or `"flow"` (fluorescence cytometry).  
-Default is the first element of `c("cytof","flow")`.}
+\code{"cytof"} (mass cytometry) or \code{"flow"} (fluorescence cytometry).
+Default is the first element of \code{c("cytof","flow")}.}
 }
 \value{
-The input `fcs_join_obj`, with the fields:
-  - `collection_instrument`: set to the specified `instrument_type`.
-  - `object_history`: a character string recording the update timestamp.
+The input \code{fcs_join_obj}, with the fields:
+\itemize{
+\item \code{collection_instrument}: set to the specified \code{instrument_type}.
+\item \code{object_history}: a character string recording the update timestamp.
+}
 }
 \description{
-Adds or updates the collection instrument type and history in an FCSimple  
-  analysis object. If the object already contains both `collection_instrument`  
-  and `object_history`, the function issues a warning and returns the object  
-  unchanged.
+Adds or updates the collection instrument type and history in an FCSimple
+analysis object. If the object already contains both \code{collection_instrument}
+and \code{object_history}, the function issues a warning and returns the object
+unchanged.
 }
 \details{
-- If both `collection_instrument` and `object_history` are present in  
-    `fcs_join_obj`, a warning `"object is already up to date"` is issued  
-    and the original object is returned.  
-  - Otherwise, `collection_instrument` is set to `instrument_type`, and  
-    `object_history` is initialized with `"updated: <timestamp>"`.
+\itemize{
+\item If both \code{collection_instrument} and \code{object_history} are present in
+\code{fcs_join_obj}, a warning \code{"object is already up to date"} is issued
+and the original object is returned.
+\item Otherwise, \code{collection_instrument} is set to \code{instrument_type}, and
+\code{object_history} is initialized with \code{"updated: <timestamp>"}.
+}
 }
 \examples{
 \dontrun{

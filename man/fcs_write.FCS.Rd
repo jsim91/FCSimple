@@ -19,56 +19,62 @@ fcs_write.FCS(
 \item{fcs_join_obj}{A list returned by FCSimple::fcs_join(), optionally augmented by
 FCSimple::fcs_batch_correction(), FCSimple::fcs_reduce_dimensions(), and
 FCSimple::fcs_cluster(). Must contain at least one of:
-- `data`: transformed expression matrix (events × channels)
-- `raw`: raw (reverse‐transformed) matrix, if `data_format = "raw"` is used}
+\itemize{
+\item \code{data}: transformed expression matrix (events × channels)
+\item \code{raw}: raw (reverse‐transformed) matrix, if \code{data_format = "raw"} is used
+}}
 
 \item{fcs_name}{Character string (without “.fcs”) to use as the base filename for the output
-FCS file (default `"fcs_out"`).}
+FCS file (default \code{"fcs_out"}).}
 
 \item{data_format}{Character; which data slot to write. Options are:
-- `"raw"`: write `fcs_join_obj$raw` if present, otherwise falls back to
-  `fcs_join_obj$data` (default)
-- `"transformed"`: write `fcs_join_obj$data`}
+\itemize{
+\item \code{"raw"}: write \code{fcs_join_obj$raw} if present, otherwise falls back to
+\code{fcs_join_obj$data} (default)
+\item \code{"transformed"}: write \code{fcs_join_obj$data}
+}}
 
 \item{include_reductions}{Character vector naming reduction embeddings to include as extra columns.
-Each element (e.g. `"UMAP"` or `"tSNE"`) must match a named list element
-in `fcs_join_obj` containing `$coordinates`. Defaults to `c("UMAP","tSNE")`.}
+Each element (e.g. \code{"UMAP"} or \code{"tSNE"}) must match a named list element
+in \code{fcs_join_obj} containing \verb{$coordinates}. Defaults to \code{c("UMAP","tSNE")}.}
 
 \item{include_clusterings}{Character vector of clustering results to include. Each element (e.g.
-`"leiden"`, `"flowsom"`, `"louvain"`, `"phenograph"`, `"git"`) must match
-a list element in `fcs_join_obj` with `clusters`. Defaults to all five.
-Cluster columns are named `<algorithm>_cluster`.}
+\code{"leiden"}, \code{"flowsom"}, \code{"louvain"}, \code{"phenograph"}, \code{"git"}) must match
+a list element in \code{fcs_join_obj} with \code{clusters}. Defaults to all five.
+Cluster columns are named \verb{<algorithm>_cluster}.}
 
-\item{subset_rows}{Either `"all"` (default) to write every event, or an integer vector of
+\item{subset_rows}{Either \code{"all"} (default) to write every event, or an integer vector of
 row indices to subset before writing.}
 
-\item{outdir}{Directory path where the .fcs file will be saved (default `getwd()`).}
+\item{outdir}{Directory path where the .fcs file will be saved (default \code{getwd()}).}
 
-\item{include_timestamp}{Logical; if `TRUE` (default), appends `_YYYY-MM-DD_HHMMSS` to the filename.}
+\item{include_timestamp}{Logical; if \code{TRUE} (default), appends \verb{_YYYY-MM-DD_HHMMSS} to the filename.}
 }
 \value{
-Invisibly returns `NULL`. The main effect is the creation of an .fcs file
-  at `file.path(outdir, paste0(fcs_name, [optional _timestamp], ".fcs"))`.
+Invisibly returns \code{NULL}. The main effect is the creation of an .fcs file
+at \verb{file.path(outdir, paste0(fcs_name, [optional _timestamp], ".fcs"))}.
 }
 \description{
 Takes an FCSimple analysis object and writes its expression data (raw or
-  transformed), with optional dimensionality‐reduction coordinates and
-  clustering labels, into a new .fcs file. Useful for exporting combined
-  data back into flowCore‐compatible format for downstream tools.
+transformed), with optional dimensionality‐reduction coordinates and
+clustering labels, into a new .fcs file. Useful for exporting combined
+data back into flowCore‐compatible format for downstream tools.
 }
 \details{
 The function proceeds as follows:
-  1. Selects the expression matrix according to `data_format`.  
-  2. Gathers any requested embeddings by extracting
-     `fcs_join_obj[[ tolower(reduction) ]][["coordinates"]]`.  
-  3. Gathers any requested cluster assignments by extracting
-     `fcs_join_obj[[ tolower(algorithm) ]][["clusters"]]`.  
-  4. Warns about any missing slots and omits them.  
-  5. Column‐binds the data, embeddings, and clustering vectors into a single
-     numeric matrix.  
-  6. Constructs a new `flowFrame` and, if `subset_rows != "all"`, subsets
-     to those rows.  
-  7. Writes the `flowFrame` to disk via `flowCore::write.FCS()`.
+\enumerate{
+\item Selects the expression matrix according to \code{data_format}.
+\item Gathers any requested embeddings by extracting
+\code{fcs_join_obj[[ tolower(reduction) ]][["coordinates"]]}.
+\item Gathers any requested cluster assignments by extracting
+\code{fcs_join_obj[[ tolower(algorithm) ]][["clusters"]]}.
+\item Warns about any missing slots and omits them.
+\item Column‐binds the data, embeddings, and clustering vectors into a single
+numeric matrix.
+\item Constructs a new \code{flowFrame} and, if \code{subset_rows != "all"}, subsets
+to those rows.
+\item Writes the \code{flowFrame} to disk via \code{flowCore::write.FCS()}.
+}
 }
 \examples{
 \dontrun{
@@ -95,5 +101,5 @@ The function proceeds as follows:
 }
 \seealso{
 flowCore::write.FCS, FCSimple::fcs_join,
-  FCSimple::fcs_reduce_dimensions, FCSimple::fcs_cluster
+FCSimple::fcs_reduce_dimensions, FCSimple::fcs_cluster
 }

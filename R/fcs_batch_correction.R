@@ -28,7 +28,7 @@
 #'   cyCombine (default 8).
 #'
 #' @param cyCombine_detect_effects Logical; if `TRUE`, runs cyCombine’s
-#'   detect_batch_effects before and after normalization (default FALSE).
+#'   detect_batch_effect before and after normalization (default FALSE).
 #'
 #' @param harmony_cores Integer; number of CPU cores for Harmony (default 1).
 #'
@@ -82,7 +82,7 @@
 #' @seealso
 #' FCSimple::fcs_join, FCSimple::fcs_pca, cyCombine::normalize, harmony::RunHarmony
 #'
-#' @importFrom cyCombine normalize get_markers detect_batch_effects
+#' @importFrom cyCombine normalize get_markers detect_batch_effect
 #' @importFrom harmony RunHarmony
 #' @importFrom stringr str_extract
 #' @export
@@ -123,11 +123,11 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
     if(cyCombine_detect_effects) {
       cyc_outdir1 <- paste0(getwd(),"/dbe_pre_correction")
       cyc_outdir2 <- paste0(getwd(),"/dbe_post_correction")
-      # rl <- readline(paste0("Based on getwd(), cyCombine detect_batch_effects will be saved here: ",cyc_outdir1,". Is this okay? (y/n) "))
-      paste0("Based on getwd(), cyCombine detect_batch_effects will be saved here: ",cyc_outdir1," ... save location uses getwd() as root.")
+      # rl <- readline(paste0("Based on getwd(), cyCombine detect_batch_effect will be saved here: ",cyc_outdir1,". Is this okay? (y/n) "))
+      paste0("Based on getwd(), cyCombine detect_batch_effect will be saved here: ",cyc_outdir1," ... save location uses getwd() as root.")
       dir.create(path = cyc_outdir1, showWarnings = FALSE); dir.create(path = cyc_outdir2, showWarnings = FALSE)
       # if(rl!="y") {
-      #   stop("please update current working directory so that cyCombine::detect_batch_effects will be saved appropriately.")
+      #   stop("please update current working directory so that cyCombine::detect_batch_effect will be saved appropriately.")
       # }
       require(outliers)
       print("...detecting batch effects before correction...")
@@ -177,8 +177,8 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
                                                method = cmeth,
                                                other = list(number_of_batches = length(unique(harm_meta$batch)),
                                                             batches = unique(harm_meta$batch),
-                                                            lambda = harmony_lambda, 
-                                                            n_iterations = harmony_iterations, 
+                                                            lambda = harmony_lambda,
+                                                            n_iterations = harmony_iterations,
                                                             datetime = Sys.time(),
                                                             session_info = sessionInfo()))
   }

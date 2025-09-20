@@ -11,8 +11,10 @@
 #' @param fcs_join_obj
 #'   A list returned by FCSimple::fcs_join() and FCSimple::fcs_cluster(),
 #'   containing at minimum:
-#'   - `fcs_join_obj[[ tolower(algorithm) ]][["abundance"]]`: sample × cluster matrix of abundances
-#'   - (optionally) `fcs_join_obj[[ paste0(tolower(algorithm), "_heatmap") ]][["heatmap_tile_data"]]`
+#'   \itemize{
+#'     \item `fcs_join_obj[[ tolower(algorithm) ]][["abundance"]]`: sample × cluster matrix of abundances
+#'     \item (optionally) `fcs_join_obj[[ paste0(tolower(algorithm), "_heatmap") ]][["heatmap_tile_data"]]`
+#'   }
 #'
 #' @param compare_list
 #'   Named list of character vectors. Each element’s name defines a group
@@ -87,30 +89,40 @@
 #'   Character vector of cluster IDs to include in the heatmap (default `"all"`).
 #'
 #' @details
-#' 1. Retrieve or use the provided `abundance` matrix and subset to the samples in `compare_list`.
-#' 2. For each cluster, construct a data.frame of frequencies with group labels.
-#' 3. Generate a distribution plot per cluster:
-#'    - Boxplot or dotplot, colored by group
-#'    - Optional paired or unpaired Wilcoxon tests via `ggpubr::stat_compare_means()`
-#'    - Y-axis labeled `"% of {denominator_cell_type}"`
-#'    - If `force_max = TRUE`, force y-axis maximum at 100
-#' 4. Retrieve or compute a median-expression heatmap for the same clusters.
-#' 5. Assemble each cluster’s distribution plot + heatmap into a vertical two-panel figure using `ggpubr::ggarrange()`.
-#' 6. Store the resulting ggarrange list under
-#'    `fcs_join_obj[[ tolower(algorithm) ]][["cluster_test_results"]]`.
+#' \enumerate{
+#'   \item Retrieve or use the provided `abundance` matrix and subset to the samples in `compare_list`.
+#'   \item For each cluster, construct a data.frame of frequencies with group labels.
+#'   \item Generate a distribution plot per cluster:
+#'     \itemize{
+#'       \item Boxplot or dotplot, colored by group
+#'       \item Optional paired or unpaired Wilcoxon tests via `ggpubr::stat_compare_means()`
+#'       \item Y-axis labeled `"% of {denominator_cell_type}"`
+#'       \item If `force_max = TRUE`, force y-axis maximum at 100
+#'     }
+#'   \item Retrieve or compute a median-expression heatmap for the same clusters.
+#'   \item Assemble each cluster’s distribution plot + heatmap into a vertical two-panel figure using `ggpubr::ggarrange()`.
+#'   \item Store the resulting ggarrange list under
+#'     `fcs_join_obj[[ tolower(algorithm) ]][["cluster_test_results"]]`.
+#' }
 #'
 #' @return
 #'   The input `fcs_join_obj`, modified by adding:
-#'   - `fcs_join_obj[[ tolower(algorithm) ]][["cluster_test_results"]]`:
-#'     a named list of ggarrange objects, one per cluster.
+#'   \itemize{
+#'     \item `fcs_join_obj[[ tolower(algorithm) ]][["cluster_test_results"]]`:
+#'       a named list of ggarrange objects, one per cluster.
+#'   }
 #'   The function also prints a message indicating where the results are stored.
 #'
 #' @examples
 #' \dontrun{
+#'   # 1. Join FCS files
 #'   files   <- list(ff1, ff2)
 #'   joined  <- FCSimple::fcs_join(files)
+#'
+#'   # 2. Cluster the data
 #'   clustered <- FCSimple::fcs_cluster(joined, algorithm = "leiden")
 #'
+#'   # 3. Run statistical testing
 #'   tests <- FCSimple::fcs_test_clusters(
 #'     clustered,
 #'     compare_list = list(Healthy = c("S1","S2"), Diseased = c("S3","S4")),
@@ -118,7 +130,8 @@
 #'     comparisons  = list(c("Healthy","Diseased")),
 #'     denominator_cell_type = "T cells"
 #'   )
-#'   # View the figure for cluster "1":
+#'
+#'   # 4. Inspect the figure for cluster "1"
 #'   print(tests[["leiden"]][["cluster_test_results"]][["1"]])
 #' }
 #'
@@ -132,7 +145,7 @@
 #' @importFrom ggpubr stat_compare_means ggarrange
 #' @importFrom ComplexHeatmap Heatmap
 #' @importFrom circlize colorRamp2
-#' @importFrom grid text gpar grabExpr
+#' @importFrom grid grid.text grid.grabExpr
 #' @export
 fcs_test_clusters <- function(fcs_join_obj, compare_list = NA, color_list = NA, comparisons = NA, denominator_cell_type = NA,
                               x_order = NULL, abundance = NA, heatmap_matrix = NA, force_max = FALSE,

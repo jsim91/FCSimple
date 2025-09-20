@@ -39,14 +39,16 @@ fcs_get_em_cutpoint(
 \item{return.model}{Logical; if TRUE, include fitted model in output (default TRUE).}
 }
 \value{
-A list with:  
-  - cut: numeric cutpoint  
-  - method: character tag of method used  
-  - model: the fitted EM object (if return.model = TRUE)
+A list with:
+\itemize{
+\item cut: numeric cutpoint
+\item method: character tag of method used
+\item model: the fitted EM object (if return.model = TRUE)
+}
 }
 \description{
-Fits a two-component Gaussian mixture model (via mclust or mixtools) or  
-  applies a curvature (“flex”) fallback to estimate a data‐driven cutpoint.
+Fits a two-component Gaussian mixture model (via mclust or mixtools) or
+applies a curvature (“flex”) fallback to estimate a data‐driven cutpoint.
 }
 \examples{
 \dontrun{

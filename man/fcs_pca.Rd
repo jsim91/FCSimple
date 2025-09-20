@@ -4,48 +4,59 @@
 \alias{fcs_pca}
 \title{Principal Component Analysis of Flow Cytometry Data}
 \usage{
-fcs_pca(fcs_join_obj, pca_method = c("prcomp"), num_pc = NULL)
+fcs_pca(
+  fcs_join_obj,
+  pca_method = c("prcomp"),
+  num_pc = NULL,
+  apply_scaling = TRUE
+)
 }
 \arguments{
 \item{fcs_join_obj}{A list returned by FCSimple::fcs_join(), optionally augmented by
 fcs_batch_correction, containing at minimum:
-- `data`: numeric matrix of events × channels  
-- if batch correction was applied, `batch_correction$data`}
+\itemize{
+\item \code{data}: numeric matrix of events × channels
+\item if batch correction was applied, \code{batch_correction$data}
+}}
 
-\item{pca_method}{Character; PCA method to use. Currently only `"prcomp"` (default).}
+\item{pca_method}{Character; PCA method to use. Currently only \code{"prcomp"} (default).}
 
-\item{num_pc}{Integer or `NULL` (default); number of principal components to extract.
-If `NULL`, the function displays a plot of 1 – cumulative variance vs. PC,  
-prompts for input (e.g. a number or `"drawN"` to draw a vertical line at  
+\item{num_pc}{Integer or \code{NULL} (default); number of principal components to extract.
+If \code{NULL}, the function displays a plot of 1 – cumulative variance vs. PC,
+prompts for input (e.g. a number or \code{"drawN"} to draw a vertical line at
 PC N), and repeats until a valid integer is provided.}
 }
 \value{
-The original `fcs_join_obj` augmented with a new element `pca`, a list with:
-  - `pca_data`: numeric matrix (events × selected PCs)  
-  - `PCs`: integer number of PCs retained  
-  - `cumulative_variance`: numeric vector of cumulative variance explained  
-  - `pca_method`: character string of the method used  
-  - `elbow_plot`: a ggplot2 object illustrating cumulative variance and  
-                  highlighting the chosen PC count
+The original \code{fcs_join_obj} augmented with a new element \code{pca}, a list with:
+\itemize{
+\item \code{pca_data}: numeric matrix (events × selected PCs)
+\item \code{PCs}: integer number of PCs retained
+\item \code{cumulative_variance}: numeric vector of cumulative variance explained
+\item \code{pca_method}: character string of the method used
+\item \code{elbow_plot}: a ggplot2 object illustrating cumulative variance and
+highlighting the chosen PC count
+}
 }
 \description{
-Performs PCA on expression data (using batch‐corrected data if available)  
-  and stores the selected principal components, variance explained, and an  
-  elbow plot. If `num_pc` is `NULL`, shows an interactive plot of  
-  (1 – cumulative variance) vs. PC and prompts the user to enter the number  
-  of PCs to retain.
+Performs PCA on expression data (using batch‐corrected data if available)
+and stores the selected principal components, variance explained, and an
+elbow plot. If \code{num_pc} is \code{NULL}, shows an interactive plot of
+(1 – cumulative variance) vs. PC and prompts the user to enter the number
+of PCs to retain.
 }
 \details{
 The function:
-  1. Detects and uses `batch_correction$data` if present.  
-  2. Runs `stats::prcomp` on the selected data with a fixed seed.  
-  3. Computes cumulative variance explained (`cumVar`) and its complement.  
-  4. If `num_pc` is `NULL`, displays the inverse‐variance plot, captures  
-     user input, and highlights the chosen PC on the plot.  
-  5. Extracts the first `num_pc` principal components into `pca_data`.  
-  6. Builds an elbow plot (`ggplot2`) marking the selected PCs.  
-  7. Appends a message to `object_history` noting whether PCA was run on  
-     corrected or uncorrected data and the timestamp.
+\enumerate{
+\item Detects and uses \code{batch_correction$data} if present.
+\item Runs \code{stats::prcomp} on the selected data with a fixed seed.
+\item Computes cumulative variance explained (\code{cumVar}) and its complement.
+\item If \code{num_pc} is \code{NULL}, displays the inverse‐variance plot, captures
+user input, and highlights the chosen PC on the plot.
+\item Extracts the first \code{num_pc} principal components into \code{pca_data}.
+\item Builds an elbow plot (\code{ggplot2}) marking the selected PCs.
+\item Appends a message to \code{object_history} noting whether PCA was run on
+corrected or uncorrected data and the timestamp.
+}
 }
 \examples{
 \dontrun{
@@ -62,5 +73,5 @@ The function:
 }
 \seealso{
 stats::prcomp, ggplot2::ggplot, FCSimple::fcs_join,
-  FCSimple::fcs_batch_correction
+FCSimple::fcs_batch_correction
 }

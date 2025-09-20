@@ -96,7 +96,6 @@
 #' @seealso
 #'   FCSimple::fcs_cluster, FCSimple::fcs_plot_heatmap
 #'
-#' @importFrom CATALYST .scale_exprs
 #' @importFrom ComplexHeatmap Heatmap rowAnnotation
 #' @importFrom circlize colorRamp2
 #' @importFrom RColorBrewer brewer.pal

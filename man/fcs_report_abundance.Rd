@@ -7,37 +7,63 @@
 fcs_report_abundance(
   fcs_join_obj,
   report_algorithm = c("leiden", "flowsom", "louvain", "phenograph", "git"),
-  outdir = getwd()
+  outdir = getwd(),
+  add_timestamp = TRUE,
+  append_file_string = NA
 )
 }
 \arguments{
-\item{fcs_join_obj}{A list with a `[[algorithm]][["abundance"]]` matrix, as produced by
-FCSimple::fcs_calculate_abundance().}
+\item{fcs_join_obj}{A list containing an \verb{[[algorithm]][["abundance"]]}
+numeric matrix, as produced by \code{FCSimple::fcs_calculate_abundance()}.}
 
-\item{report_algorithm}{Character; name of the abundance matrix to export. One of
-`"leiden"`, `"flowsom"`, `"louvain"`, `"phenograph"`, or `"git"`.}
+\item{report_algorithm}{Character scalar. Name of the abundance matrix to
+export; must be one of \code{"leiden"}, \code{"flowsom"}, \code{"louvain"},
+\code{"phenograph"}, or \code{"git"}. Defaults to \code{"leiden"}.}
 
-\item{outdir}{Character; file path to an existing directory. Defaults to `getwd()`.}
+\item{outdir}{Character scalar. Path to an existing directory where the
+CSV will be written. Trailing slashes are removed internally.
+Defaults to \code{getwd()}.}
+
+\item{add_timestamp}{Logical scalar. If \code{TRUE} (the default), a second
+timestamp (\verb{\%Y-\%m-\%d_\%H\%M\%S}) is appended to the filename after the
+initial timestamp.}
+
+\item{append_file_string}{Character scalar or \code{NA}. If non‐\code{NA}, this
+string is appended (after any timestamps) to the filename. Defaults to
+\code{NA}, which means no extra string is added.}
 }
 \value{
-Invisibly returns the abundance matrix (numeric matrix with sample rows
-  and cluster‐ID columns).
+Invisibly returns the same abundance matrix that was written to disk
+(a numeric matrix with sample rows and cluster‐ID columns).
 }
 \description{
-Exports the cluster‐abundance matrix (samples × clusters) to a CSV in the
-  specified directory, and returns the matrix invisibly.
+Exports the cluster‐abundance matrix (samples × clusters) to a CSV file
+in the specified directory and returns the matrix invisibly. By default,
+the function prepends one timestamp and can optionally add a second
+timestamp or custom string to the filename.
+}
+\details{
+The output filename is built in three parts:
+1. \verb{<report_algorithm>_cluster_abundance_<timestamp1>}
+2. \verb{_<timestamp2>} (only if \code{add_timestamp = TRUE})
+3. \verb{_<append_file_string>} (only if \code{append_file_string} is not \code{NA})
+
+All timestamps use the format \verb{\%Y-\%m-\%d_\%H\%M\%S}. The final suffix \code{.csv}
+is then added.
 }
 \examples{
 \dontrun{
-  # Assume 'clustered' has abundance computed
-  abundance_mat <- FCSimple::fcs_calculate_abundance(clustered)
+# Assuming 'clustered' has had abundance computed
+abundance_mat <- FCSimple::fcs_calculate_abundance(clustered)
 
-  # Write to your working directory
-  FCSimple::fcs_report_abundance(
-    clustered,
-    report_algorithm = "leiden",
-    outdir = "~/my_analysis/results"
-  )
+# Write to your working directory, with only one timestamp
+FCSimple::fcs_report_abundance(
+  clustered,
+  report_algorithm   = "leiden",
+  outdir             = "~/my_analysis/results",
+  add_timestamp      = FALSE,
+  append_file_string = "v1"
+)
 }
 
 }

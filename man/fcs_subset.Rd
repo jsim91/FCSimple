@@ -14,45 +14,51 @@ fcs_subset(
 \arguments{
 \item{fcs_join_obj}{A list returned by FCSimple::fcs_join(), optionally processed by
 FCSimple::fcs_cluster() or other functions. Should include at least
-`data` (numeric matrix) and `source` (vector of sample identifiers).}
+\code{data} (numeric matrix) and \code{source} (vector of sample identifiers).}
 
-\item{subset_by}{Character; one of `"source"` or `"cluster"`. Determines whether to subset
-by sample names (`source`) or by cluster membership (`cluster`).
-Default `c("cluster","source")`.}
+\item{subset_by}{Character; one of \code{"source"} or \code{"cluster"}. Determines whether to subset
+by sample names (\code{source}) or by cluster membership (\code{cluster}).
+Default \code{c("cluster","source")}.}
 
-\item{subset_cluster_algorithm}{Character or `NA`; when `subset_by = "cluster"`, the name of the clustering
-element in `fcs_join_obj` (e.g. `"leiden"`, `"flowsom"`). Ignored if
-`subset_by = "source"`. Default `NA`.}
+\item{subset_cluster_algorithm}{Character or \code{NA}; when \code{subset_by = "cluster"}, the name of the clustering
+element in \code{fcs_join_obj} (e.g. \code{"leiden"}, \code{"flowsom"}). Ignored if
+\code{subset_by = "source"}. Default \code{NA}.}
 
-\item{subset_values}{Vector; the values to retain. If `subset_by = "source"`, a character
-vector of sample names. If `subset_by = "cluster"`, a numeric or character
+\item{subset_values}{Vector; the values to retain. If \code{subset_by = "source"}, a character
+vector of sample names. If \code{subset_by = "cluster"}, a numeric or character
 vector of cluster IDs.}
 }
 \value{
 A list with elements:
-  - `data`: numeric matrix of selected events × parameters  
-  - `source`: character vector of sample IDs for selected events  
-  - `run_date`: character vector of acquisition dates (if original had it)  
-  - `subset_on`: list recording subsetting criteria and indices
+\itemize{
+\item \code{data}: numeric matrix of selected events × parameters
+\item \code{source}: character vector of sample IDs for selected events
+\item \code{run_date}: character vector of acquisition dates (if original had it)
+\item \code{subset_on}: list recording subsetting criteria and indices
+}
 }
 \description{
 Creates a new FCSimple-style object containing only the events that match
-  specified sample names or cluster IDs. Records the subsetting criteria and
-  original indices in a `subset_on` element for provenance.
+specified sample names or cluster IDs. Records the subsetting criteria and
+original indices in a \code{subset_on} element for provenance.
 }
 \details{
-- If the input object lacks an `object_history` entry, prints a message
-    recommending `FCSimple::fcs_update()`.  
-  - When subsetting by `"source"`, all rows where
-    `fcs_join_obj$source %in% subset_values` are retained.  
-  - When subsetting by `"cluster"`, the function extracts
-    `fcs_join_obj[[subset_cluster_algorithm]]$clusters` and retains rows
-    matching `subset_values`.  
-  - The returned object contains only the selected `data`, `source`, and
-    (if present) `run_date` entries.  
-  - A new list element `subset_on` records:
-    - `subset_by`, `subset_cluster_algorithm`, `subset_values`, and
-      `source_object_indices` (the row indices kept).
+\itemize{
+\item If the input object lacks an \code{object_history} entry, prints a message
+recommending \code{FCSimple::fcs_update()}.
+\item When subsetting by \code{"source"}, all rows where
+\code{fcs_join_obj$source \%in\% subset_values} are retained.
+\item When subsetting by \code{"cluster"}, the function extracts
+\code{fcs_join_obj[[subset_cluster_algorithm]]$clusters} and retains rows
+matching \code{subset_values}.
+\item The returned object contains only the selected \code{data}, \code{source}, and
+(if present) \code{run_date} entries.
+\item A new list element \code{subset_on} records:
+\itemize{
+\item \code{subset_by}, \code{subset_cluster_algorithm}, \code{subset_values}, and
+\code{source_object_indices} (the row indices kept).
+}
+}
 }
 \examples{
 \dontrun{

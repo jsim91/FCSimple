@@ -16,12 +16,12 @@ fcs_set_node(object, phenotype, tree_name = "tree1", node_name = "phenotype1")
 \item{node_name}{Character; new node label (no “+”/“–” allowed).}
 }
 \value{
-The updated “fcs_gating_object” with `gate_trees[[tree_name]][[node_name]]`  
-  containing the composite mask and phenotype metadata.
+The updated “fcs_gating_object” with \code{gate_trees[[tree_name]][[node_name]]}
+containing the composite mask and phenotype metadata.
 }
 \description{
-Combines existing “+”/“–” gates in a tree into a composite phenotype node,  
-  storing the logical AND of positive/negative masks.
+Combines existing “+”/“–” gates in a tree into a composite phenotype node,
+storing the logical AND of positive/negative masks.
 }
 \seealso{
 fcs_set_gate

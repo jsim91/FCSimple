@@ -14,44 +14,50 @@ fcs_calculate_abundance(
 \arguments{
 \item{fcs_join_obj}{A list returned by FCSimple::fcs_join() and FCSimple::fcs_cluster(),
 containing at minimum:
-- `source`: a character vector of original sample identifiers
-- `<algorithm>`: a list whose first element is a vector of cluster IDs
-- `object_history`: an optional history log}
+\itemize{
+\item \code{source}: a character vector of original sample identifiers
+\item \verb{<algorithm>}: a list whose first element is a vector of cluster IDs
+\item \code{object_history}: an optional history log
+}}
 
 \item{report_algorithm}{Character; name of the clustering result to summarize. One of
-`"leiden"`, `"flowsom"`, `"louvain"`, `"phenograph"`, or `"git"`.}
+\code{"leiden"}, \code{"flowsom"}, \code{"louvain"}, \code{"phenograph"}, or \code{"git"}.}
 
 \item{report_as}{Character; type of abundance metric. One of
-`"frequency"` (0–100), `"fraction"` (0–1), or `"count"` (raw cell counts).
-Defaults to `"frequency"`.}
+\code{"frequency"} (0–100), \code{"fraction"} (0–1), or \code{"count"} (raw cell counts).
+Defaults to \code{"frequency"}.}
 
-\item{return_abundance}{Logical; if `TRUE`, the function returns the abundance matrix directly
-and does not modify `fcs_join_obj`. Defaults to `FALSE`.}
+\item{return_abundance}{Logical; if \code{TRUE}, the function returns the abundance matrix directly
+and does not modify \code{fcs_join_obj}. Defaults to \code{FALSE}.}
 }
 \value{
-If `return_abundance = TRUE`, a numeric matrix (samples × clusters)
-  containing counts, frequencies, or fractions. Otherwise, the input
-  `fcs_join_obj`, augmented with:
-  - `<algorithm>$abundance`: a numeric matrix (samples × clusters)
-  - updated `object_history`
+If \code{return_abundance = TRUE}, a numeric matrix (samples × clusters)
+containing counts, frequencies, or fractions. Otherwise, the input
+\code{fcs_join_obj}, augmented with:
+\itemize{
+\item \verb{<algorithm>$abundance}: a numeric matrix (samples × clusters)
+\item updated \code{object_history}
+}
 }
 \description{
 Computes per‐sample cluster abundances for a previously clustered flow
-  cytometry object. Stores a matrix of raw cell counts, frequencies (0–100),
-  or fractions (0–1) under the chosen algorithm’s `abundance` element, and
-  appends a timestamped entry to `object_history`.
+cytometry object. Stores a matrix of raw cell counts, frequencies (0–100),
+or fractions (0–1) under the chosen algorithm’s \code{abundance} element, and
+appends a timestamped entry to \code{object_history}.
 }
 \details{
 The function will:
-  1. Validate that the specified algorithm and `source` exist.
-  2. If `report_as = "count"`, tabulate raw cell counts per cluster, per sample.
-     Otherwise, compute proportions of cells in each cluster per sample.
-  3. If `report_as = "frequency"`, multiply proportions by 100.
-  4. If `return_abundance = TRUE`, return the abundance matrix.
-     Otherwise, store it in
-     `fcs_join_obj[[report_algorithm]][["abundance"]]`.
-  5. If not returning directly, append a timestamped note to
-     `object_history`.
+\enumerate{
+\item Validate that the specified algorithm and \code{source} exist.
+\item If \code{report_as = "count"}, tabulate raw cell counts per cluster, per sample.
+Otherwise, compute proportions of cells in each cluster per sample.
+\item If \code{report_as = "frequency"}, multiply proportions by 100.
+\item If \code{return_abundance = TRUE}, return the abundance matrix.
+Otherwise, store it in
+\code{fcs_join_obj[[report_algorithm]][["abundance"]]}.
+\item If not returning directly, append a timestamped note to
+\code{object_history}.
+}
 }
 \examples{
 \dontrun{
