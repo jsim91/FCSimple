@@ -247,7 +247,8 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
           color_text_add <- data.frame(UMAP1 = xanno, UMAP2 = yanno, cluster = names(xanno))
           mypl <- mypl + ggrepel::geom_text_repel(data = color_text_add,
                                                                     mapping = aes(x = UMAP1, y = UMAP2, label = cluster), color = "white",
-                                                                    size = sizeanno, bg.color = "black", bg.r = 0.04, seed = 123)
+                                                                    size = sizeanno, bg.color = "black", bg.r = 0.05, seed = 123,
+                                                  box.padding = 0.01)
         }
       }
       if(ftitle) {
