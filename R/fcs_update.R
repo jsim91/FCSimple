@@ -45,9 +45,9 @@
 #' @export
 fcs_update <- function(fcs_join_obj, instrument_type = c("cytof","flow"))
 {
-  if(all('object_history' %in% names(fcs_join_obj), 
-         "collection_instrument" %in% names(fcs_join_obj), 
-         'run_date' %in%  names(fcs_join_obj), 
+  if(all('object_history' %in% names(fcs_join_obj),
+         "collection_instrument" %in% names(fcs_join_obj),
+         'run_date' %in%  names(fcs_join_obj),
          'metadata' %in% names(fcs_join_obj))) { # check if up to date first
     warning("object is already up to date")
     return(fcs_join_obj)
@@ -60,9 +60,9 @@ fcs_update <- function(fcs_join_obj, instrument_type = c("cytof","flow"))
       }
       if(!"metadata" %in% names(fcs_join_obj)) {
         src_data <- fcs_join_obj[['source']]
-        base_metadata <- data.frame(patient_ID = gsub(pattern = '[0-9]+\\-[A-Za-z]+\\-[0-9]+|(\\.csv$|\\.fcs$)', 
-                                                      replacement = '', 
-                                                      x = src_data), 
+        base_metadata <- data.frame(patient_ID = gsub(pattern = '_[0-9]+\\-[A-Za-z]+\\-[0-9]+|(\\.csv$|\\.fcs$)',
+                                                      replacement = '',
+                                                      x = src_data),
                                     run_date = fcs_join_obj[['run_date']])
         fcs_join_obj[['metadata']] <- base_metadata[!duplicated(base_metadata$patient_ID),]
       }
