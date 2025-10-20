@@ -113,6 +113,7 @@ fcs_project_parameters <- function(fcs_join_obj,
                                    outdir = getwd(),
                                    sample_size = 50000,
                                    point_size = 0.8,
+                                   point_alpha = 0.1, 
                                    trim_outliers = TRUE,
                                    trim_quantile = 0.01, 
                                    force_xlim = FALSE, 
@@ -156,7 +157,7 @@ fcs_project_parameters <- function(fcs_join_obj,
     tmp_param <- include_params[i]
     intens_list[[i]] <- cbind(join_data[,tmp_param],reduction_coords); colnames(intens_list[[i]])[1] <- names(intens_list)[i]
   }
-  intens_pl <- function(arg1, method = "color", pts = point_size,
+  intens_pl <- function(arg1, method = "color", pts = point_size, palpha = point_alpha, 
                         tr_out = trim_outliers, tr_q = trim_quantile) { # allow for later output as pch = 21 or similar with fill
     arg1 <- as.data.frame(arg1)
     if(tr_out) {
@@ -175,7 +176,7 @@ fcs_project_parameters <- function(fcs_join_obj,
         plt <- ggplot(data = arg1, mapping = aes(x = tSNE1, y = tSNE2, color = col1))
       }
       plt <- plt +
-        geom_point_rast(size = pts, pch = 19, alpha = 0.1) +
+        geom_point_rast(size = pts, pch = 19, alpha = palpha) +
         scale_color_viridis(option = "D") +
         ggtitle(cname1) +
         theme_minimal() +
@@ -191,7 +192,7 @@ fcs_project_parameters <- function(fcs_join_obj,
         plt <- ggplot(data = arg1, mapping = aes(x = tSNE1, y = tSNE2, fill = col1))
       }
       plt <- plt +
-        geom_point_rast(size = pts, pch = 21, stroke = 0.05) +
+        geom_point_rast(size = pts, pch = 21, stroke = 0.05, alpha = palpha) +
         scale_fill_viridis(option = "D") +
         ggtitle(cname1) +
         theme_minimal() +
