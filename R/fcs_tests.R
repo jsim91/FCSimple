@@ -155,7 +155,7 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list = NA, color_list = NA, 
                               p_text_size = 5, paired_line_stroke = 0.1, paired_line_color = "black",
                               heatmap_fontsize = 8, relative_heights = c(0.76,0.24), heatmap_parameters = 'all',
                               heatmap_clusters = "all", test_method = c('wilcox','sccomp'),
-                              sccomp_terms = NULL, boxplot_text_scaling = 1)
+                              sccomp_terms = NULL, boxplot_text_scaling = 1, hm_feature_text_size = 12)
 {
   # doc notes for sccomp_terms context: sccomp_terms should be given in the following format, if not NULL:
   # sccomp_terms <- list(primary_term = 'a',
@@ -346,7 +346,7 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list = NA, color_list = NA, 
                         abundance_alg = algorithm, pair_test = paired_test, xord = x_order,
                         pts = p_text_size, pls = paired_line_stroke, plc = paired_line_color,
                         relh = relative_heights, hmfs = heatmap_fontsize,
-                        bpts = boxplot_text_scaling) {
+                        bpts = boxplot_text_scaling, hfts = hm_feature_text_size) {
     plot_input <- input[[1]]
     hm_input <- input[[2]]
 
@@ -394,11 +394,13 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list = NA, color_list = NA, 
     if(heatmap_overlay_values) {
       hm_sub <- ComplexHeatmap::Heatmap(matrix = hm_input, col = color.map.fun, cluster_columns = FALSE,
                                         show_heatmap_legend = FALSE,
+                                        column_names_gp=gpar(fontsize=hfts,fontface="bold"),
                                         cell_fun = function(j, i, x, y, width, height, fill) {
                                           grid.text(sprintf("%.2f", hm_input[i, j]), x, y, gp = gpar(fontsize = hmfs))
                                         })
     } else {
       hm_sub <- ComplexHeatmap::Heatmap(matrix = hm_input, col = color.map.fun, cluster_columns = FALSE,
+                                        column_names_gp=gpar(fontsize=hfts,fontface="bold"),
                                         show_heatmap_legend = FALSE)
     }
 
