@@ -394,13 +394,13 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list = NA, color_list = NA, 
     if(heatmap_overlay_values) {
       hm_sub <- ComplexHeatmap::Heatmap(matrix = hm_input, col = color.map.fun, cluster_columns = FALSE,
                                         show_heatmap_legend = FALSE,
-                                        column_names_gp=gpar(fontsize=hfts,fontface="bold"),
+                                        column_names_gp=gpar(fontsize=hfts),
                                         cell_fun = function(j, i, x, y, width, height, fill) {
                                           grid.text(sprintf("%.2f", hm_input[i, j]), x, y, gp = gpar(fontsize = hmfs))
                                         })
     } else {
       hm_sub <- ComplexHeatmap::Heatmap(matrix = hm_input, col = color.map.fun, cluster_columns = FALSE,
-                                        column_names_gp=gpar(fontsize=hfts,fontface="bold"),
+                                        column_names_gp=gpar(fontsize=hfts),
                                         show_heatmap_legend = FALSE)
     }
 
