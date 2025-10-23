@@ -182,13 +182,13 @@ fcs_project_parameters <- function(fcs_join_obj,
                                                    frame.colour = "black",
                                                    ticks.colour = "black",
                                                    frame.linewidth = 0.4, draw.ulim = TRUE, draw.llim = TRUE,
-                                                   title.theme = element_text(vjust = -1, hjust = 0.5), 
-                                                   label.theme = element_text(angle = 0, vjust = 3, size = 16), 
-                                                   position = 'bottom', order = 1, barwidth = 8, barheight = 0.75)) +
+                                                   label.theme = element_text(angle = 90, vjust = 2.5, size = 16), 
+                                                   position = 'bottom', barwidth = 10, barheight = 1)) +
         ggtitle(cname1) +
         theme_bw(base_size = 18) + 
         theme(axis.title = element_blank(),
-              axis.text = element_blank(),
+              axis.text = element_blank(), 
+              axis.ticks = element_blank(), 
               legend.title = element_blank(),
               plot.title = element_text(hjust = 0.5),
               legend.position = "bottom")
@@ -205,13 +205,13 @@ fcs_project_parameters <- function(fcs_join_obj,
                                                   frame.colour = "black",
                                                   ticks.colour = "black",
                                                   frame.linewidth = 0.4, draw.ulim = TRUE, draw.llim = TRUE,
-                                                  title.theme = element_text(vjust = -1, hjust = 0.5), 
-                                                  label.theme = element_text(angle = 0, vjust = 3, size = 16), 
-                                                  position = 'bottom', order = 1, barwidth = 8, barheight = 0.75)) +
+                                                  label.theme = element_text(angle = 90, vjust = 3, size = 16), 
+                                                  position = 'bottom', barwidth = 8, barheight = 1)) +
         ggtitle(cname1) +
         theme_bw(base_size = 18) + 
         theme(axis.title = element_blank(),
-              axis.text = element_blank(),
+              axis.text = element_blank(), 
+              axis.ticks = element_blank(), 
               legend.title = element_blank(),
               plot.title = element_text(hjust = 0.5),
               legend.position = "bottom")
