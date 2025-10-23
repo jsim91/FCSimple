@@ -182,7 +182,7 @@ fcs_project_parameters <- function(fcs_join_obj,
                                                    frame.colour = "black",
                                                    ticks.colour = "black",
                                                    frame.linewidth = 0.4, draw.ulim = TRUE, draw.llim = TRUE,
-                                                   label.theme = element_text(angle = 90, vjust = 3, hjust = 0.5, size = 16), 
+                                                   label.theme = element_text(angle = 90, vjust = 3, hjust = 1, size = 16), 
                                                    position = 'bottom', barwidth = 10, barheight = 1)) +
         ggtitle(cname1) +
         theme_bw(base_size = 18) + 
@@ -193,7 +193,7 @@ fcs_project_parameters <- function(fcs_join_obj,
               plot.title = element_text(hjust = 0.5),
               legend.position = "bottom", 
               legend.spacing = unit(0, "pt"),
-              legend.margin = margin(t = 0, r = 0, b = 0, l = 0),
+              legend.margin = margin(t = 0, r = 0, b = 10, l = 0),
               plot.margin = margin(t = 5, r = 5, b = 0, l = 5),)
     } else if(method=="fill") {
       if(tolower(reduction)=="umap") {
@@ -208,7 +208,7 @@ fcs_project_parameters <- function(fcs_join_obj,
                                                   frame.colour = "black",
                                                   ticks.colour = "black",
                                                   frame.linewidth = 0.4, draw.ulim = TRUE, draw.llim = TRUE,
-                                                  label.theme = element_text(angle = 90, vjust = 3, hjust = 0.5, size = 16), 
+                                                  label.theme = element_text(angle = 90, vjust = 3, hjust = 1, size = 16), 
                                                   position = 'bottom', barwidth = 8, barheight = 1)) +
         ggtitle(cname1) +
         theme_bw(base_size = 18) + 
@@ -219,7 +219,7 @@ fcs_project_parameters <- function(fcs_join_obj,
               plot.title = element_text(hjust = 0.5),
               legend.position = "bottom", 
               legend.spacing = unit(0, "pt"),
-              legend.margin = margin(t = 0, r = 0, b = 0, l = 0),
+              legend.margin = margin(t = 0, r = 0, b = 10, l = 0),
               plot.margin = margin(t = 5, r = 5, b = 0, l = 5),)
     }
     if(class(force_xlim)=='numeric') {
