@@ -177,9 +177,16 @@ fcs_project_parameters <- function(fcs_join_obj,
       }
       plt <- plt +
         geom_point_rast(size = pts, pch = 19, alpha = palpha) +
-        scale_color_viridis(option = "D") +
+        scale_color_viridis(option = "D", 
+                            guide = guide_colorbar(title.position = 'top', 
+                                                   frame.colour = "black",
+                                                   ticks.colour = "black",
+                                                   frame.linewidth = 0.4, draw.ulim = TRUE, draw.llim = TRUE,
+                                                   title.theme = element_text(vjust = -1, hjust = 0.5), 
+                                                   label.theme = element_text(angle = 0, vjust = 3, size = 16), 
+                                                   position = 'bottom', order = 1, barwidth = 8, barheight = 0.75)) +
         ggtitle(cname1) +
-        theme_minimal() +
+        theme_bw(base_size = 18) + 
         theme(axis.title = element_blank(),
               axis.text = element_blank(),
               legend.title = element_blank(),
@@ -193,9 +200,16 @@ fcs_project_parameters <- function(fcs_join_obj,
       }
       plt <- plt +
         geom_point_rast(size = pts, pch = 21, stroke = 0.05, alpha = palpha) +
-        scale_fill_viridis(option = "D") +
+        scale_fill_viridis(option = "D", 
+                           guide = guide_colorbar(title.position = 'top', 
+                                                  frame.colour = "black",
+                                                  ticks.colour = "black",
+                                                  frame.linewidth = 0.4, draw.ulim = TRUE, draw.llim = TRUE,
+                                                  title.theme = element_text(vjust = -1, hjust = 0.5), 
+                                                  label.theme = element_text(angle = 0, vjust = 3, size = 16), 
+                                                  position = 'bottom', order = 1, barwidth = 8, barheight = 0.75)) +
         ggtitle(cname1) +
-        theme_minimal() +
+        theme_bw(base_size = 18) + 
         theme(axis.title = element_blank(),
               axis.text = element_blank(),
               legend.title = element_blank(),
