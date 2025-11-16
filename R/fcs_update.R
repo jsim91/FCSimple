@@ -47,13 +47,22 @@ fcs_update <- function(fcs_join_obj, instrument_type = c("cytof","flow"))
 {
   if(system(command = 'python --version')==0) {
     pyv <- system(command = 'python --version', intern = TRUE)
+    # assumes pip is installed if python is installed
+    pipl <- system("pip list", intern = TRUE)
+    pipl <- pipl[-c(1,2)]
+    split_lines <- strsplit(pipl, "\\s+")
+    pip_df <- do.call(rbind, lapply(split_lines, function(x) x[1:2]))
+    pip_df <- as.data.frame(pip_df, stringsAsFactors = FALSE)
+    colnames(pip_df) <- c("Package", "Version")
   } else {
     pyv <- 'none'
+    pip_df <- 'none'
   }
   rv <- getRversion()
   fcs_join_obj[['versions']] <- list(R = rv, 
                                      Python = pyv, 
-                                     Rsession = sessionInfo())
+                                     Rsession = sessionInfo(), 
+                                     pip_list = pip_df)
   if(all('object_history' %in% names(fcs_join_obj),
          "collection_instrument" %in% names(fcs_join_obj),
          'run_date' %in%  names(fcs_join_obj),
