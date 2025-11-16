@@ -3,7 +3,7 @@ import importlib
 import subprocess
 import sys
 
-REQUIRED_PACKAGES = ['pandas','numpy','umap-learn','pynndescent','os']
+REQUIRED_PACKAGES = ['pandas','numpy','pynndescent','umap-learn','os']
 for package in REQUIRED_PACKAGES:
     try:
         importlib.import_module(package)
