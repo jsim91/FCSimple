@@ -217,10 +217,13 @@ fcs_join <- function(files,
   }
   if(!apply_transform) {
     src <- rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))
+    rd <- stringr::str_extract(string = src, pattern = batch_pattern)
+    meta <- data.frame(patient_ID = src, run_date = rd); meta <- meta[!duplicated(meta$patient_ID),]
     return(list(data = raw_data,
                 raw = raw_data,
-                source = src,
-                metadata = data.frame(source = src),
+                source = src, 
+                run_date = rd,
+                metadata = meta,
                 collection_instrument = instrument_type,
                 object_history = paste0("joined: ",Sys.time())))
   }
@@ -337,11 +340,13 @@ fcs_join <- function(files,
       }
       print("transformation completed successfully")
       src <- rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))
+      rd <- stringr::str_extract(string = src, pattern = batch_pattern)
+      meta <- data.frame(patient_ID = src, run_date = rd); meta <- meta[!duplicated(meta$patient_ID),]
       return(list(data = tmp_data,
                   raw = tmp_raw,
                   source = src,
-                  run_date = stringr::str_extract(string = src, pattern = batch_pattern),
-                  metadata = data.frame(source = src),
+                  run_date = rd,
+                  metadata = meta,
                   transform_list = tf_list,
                   collection_instrument = instrument_type,
                   object_history = paste0("joined: ",Sys.time())))
@@ -371,11 +376,13 @@ fcs_join <- function(files,
         }
       }
       src <- rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))
+      rd <- stringr::str_extract(string = src, pattern = batch_pattern)
+      meta <- data.frame(patient_ID = src, run_date = rd); meta <- meta[!duplicated(meta$patient_ID),]
       return(list(data = tmp_data,
                   raw = raw_data,
                   source = src,
-                  run_date = stringr::str_extract(string = src, pattern = batch_pattern),
-                  metadata = data.frame(source = src),
+                  run_date = rd,
+                  metadata = meta,
                   collection_instrument = instrument_type,
                   object_history = paste0("joined: ",Sys.time())))
     } else if(tolower(instrument_type)=="flow") {
@@ -452,11 +459,13 @@ fcs_join <- function(files,
       }
       # if(length(grep("DATE|date|Date",names(fs[[1]]@description)))!=0) {
         src <- rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))
+        rd <- stringr::str_extract(string = src, pattern = batch_pattern)
+        meta <- data.frame(patient_ID = src, run_date = rd); meta <- meta[!duplicated(meta$patient_ID),]
         return(list(data = tmp_data,
                     raw = raw_data,
                     source = src,
-                    run_date = stringr::str_extract(string = src, pattern = batch_pattern),
-                    metadata = data.frame(source = src),
+                    run_date = rd,
+                    metadata = meta,
                     collection_instrument = instrument_type,
                     object_history = paste0("joined: ",Sys.time())))
       # } else {
