@@ -45,6 +45,15 @@
 #' @export
 fcs_update <- function(fcs_join_obj, instrument_type = c("cytof","flow"))
 {
+  if(system(command = 'python --version')==0) {
+    pyv <- system(command = 'python --version', intern = TRUE)
+  } else {
+    pyv <- 'none'
+  }
+  rv <- getRversion()
+  fcs_join_obj[['versions']] <- list(R = rv, 
+                                     Python = pyv, 
+                                     Rsession = sessionInfo())
   if(all('object_history' %in% names(fcs_join_obj),
          "collection_instrument" %in% names(fcs_join_obj),
          'run_date' %in%  names(fcs_join_obj),
