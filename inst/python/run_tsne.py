@@ -3,7 +3,7 @@ import importlib
 import subprocess
 import sys
 
-REQUIRED_PACKAGES = ['pandas','numpy','openTSNE','os']
+REQUIRED_PACKAGES = ['pandas','numpy','opentsne','os']
 for package in REQUIRED_PACKAGES:
     try:
         importlib.import_module(package)
