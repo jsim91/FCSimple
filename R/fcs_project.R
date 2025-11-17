@@ -170,9 +170,9 @@ fcs_project_parameters <- function(fcs_join_obj,
     cname1 <- colnames(arg1)[1]
     colnames(arg1)[1] <- "col1"
     if(method=="color") {
-      if(tolower(reduction)=="umap"){
+      if(regexpr(pattern = 'umap', text = tolower(reduction))!=-1){
         plt <- ggplot(data = arg1, mapping = aes(x = UMAP1, y = UMAP2, color = col1))
-      } else if(tolower(reduction)=="tsne") {
+      } else if(regexpr(pattern = 'tsne', text = tolower(reduction))!=-1) {
         plt <- ggplot(data = arg1, mapping = aes(x = tSNE1, y = tSNE2, color = col1))
       }
       plt <- plt +
@@ -196,9 +196,9 @@ fcs_project_parameters <- function(fcs_join_obj,
               legend.margin = margin(t = -5, r = 0, b = 20, l = 0),
               plot.margin = margin(t = 5, r = 5, b = 0, l = 5))
     } else if(method=="fill") {
-      if(tolower(reduction)=="umap") {
+      if(regexpr(pattern = 'umap', text = tolower(reduction))!=-1) {
         plt <- ggplot(data = arg1, mapping = aes(x = UMAP1, y = UMAP2, fill = col1))
-      } else if(tolower(reduction)=="tsne") {
+      } else if(regexpr(pattern = 'tsne', text = tolower(reduction))!=-1) {
         plt <- ggplot(data = arg1, mapping = aes(x = tSNE1, y = tSNE2, fill = col1))
       }
       plt <- plt +
