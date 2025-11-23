@@ -157,7 +157,7 @@ fcs_plot_distribution <- function(fcs_join_obj,
       data_split[[i]] <- data.frame(val1 = obj_data[,which(colnames(obj_data)==names(data_split)[i])])
       colnames(data_split[[i]])[1] <- colnames(obj_data)[i]
     }
-    if(!tolower(plot_algorithm) %in% c("leiden","flowsom","louvain","phenograph","git")) {
+    if(!tolower(plot_algorithm) %in% names(fcs_join_obj)) {
       stop(paste0("error in argument 'plot_algorithm': clusters not found for ",tolower(plot_algorithm)," not found in 'fcs_join_obj'"))
     }
     for(i in 1:length(data_split)) {
