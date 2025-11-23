@@ -106,7 +106,7 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
                                 transpose_heatmap = FALSE, cluster_row = TRUE, cluster_col = TRUE,
                                 override_correction = TRUE, return_heatmap_data = FALSE,
                                 heatmap_linewidth = 0.5, row_text_size = 13, column_text_size = 12,
-                                legend_text_size = 11)
+                                legend_text_size = 11, scaling_quantile = 0.01)
 {
   if(!tolower(algorithm) %in% names(fcs_join_obj)) {
     stop("error in argument 'algorithm': algorithm not found in fcs_join_obj. Try 'View(fcs_join_obj)'")
@@ -147,7 +147,7 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
     include_channels <- include_parameters
   }
 
-  scaled.global <- CATALYST:::.scale_exprs(t(heatmap_data[,include_channels]), 1, 0.01)
+  scaled.global <- CATALYST:::.scale_exprs(t(heatmap_data[,include_channels]), 1, q = scaling_quantile)
   global.t <- t(scaled.global)
   backend.matrix <- matrix(data=NA,nrow=length(unique(cluster_numbers)),ncol=ncol(global.t))
   row.names(backend.matrix) <- unique(cluster_numbers)[order(unique(cluster_numbers))]
