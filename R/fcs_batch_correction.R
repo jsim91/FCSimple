@@ -36,13 +36,10 @@
 #'   (default 10).
 #'
 #' @param harmony_covars Character vector of metadata columns in
-#'   `fcs_join_obj` to use as covariates in Harmony (default `c("batch","sample")`).
+#'   `fcs_join_obj` to use as covariates in Harmony (default `c("run_date")`).
 #'
 #' @param harmony_lambda Numeric; ridge‐penalty parameter for Harmony to
 #'   prevent overcorrection (default 1).
-#'
-#' @param harmony_sample_element Name of the element in `fcs_join_obj` to treat
-#'   as the sample identifier for Harmony (default "source").
 #'
 #' @details
 #' - For `cyCombine`, raw data are scaled, SOM clusters created, and per‐batch
@@ -75,7 +72,7 @@
 #'   use_rep = "pca",
 #'   correction_method = "harmony",
 #'   harmony_cores = 4,
-#'   harmony_covars = c("batch", "sample")
+#'   harmony_covars = c("run_date")
 #' )
 #' }
 #'
@@ -89,10 +86,9 @@
 fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_method = c("cyCombine", "harmony"),
                                  correction_markers = "all", batch_source_regex = "[0-9]+\\-[A-Za-z]+\\-[0-9]+",
                                  cyCombine_SOMx = 8, cyCombine_SOMy = 8, cyCombine_detect_effects = FALSE,
-                                 harmony_cores = 1, harmony_iterations = 10, harmony_covars = c("batch","sample"),
-                                 harmony_lambda = 1, harmony_sample_element = 'source')
+                                 harmony_cores = 1, harmony_iterations = 10, harmony_covars = c("run_date"),
+                                 harmony_lambda = 1)
 {
-  # larger harmony_lambda (ridge regression penalty) protect against over correction
   use_rep <- tolower(use_rep)
   if(!use_rep %in% c("data","pca")) {
     stop("'use_rep' indicates what representation of the data will be passed to the algorithm. Use 'data' or 'pca'. 'pca' requires that FCSimple::fcs_pca was already run on the data.")
@@ -115,9 +111,10 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
     } else {
       marks <- correction_markers
     }
-    # exp_data$samples <- fcs_join_obj$source
-    exp_data$samples <- as.numeric(factor(fcs_join_obj$source))
-    # exp_data$batch <- stringr::str_extract(string = fcs_join_obj$source, pattern = batch_source_regex)
+    exp_data$samples <- as.numeric(factor(fcs_join_obj[['source']]))
+    if(!"run_date" %in% names(fcs_join_obj)) {
+      stop("'run_date' must exist in names(fcs_join_obj) to run cyCombine.")
+    }
     exp_data$batch <- as.numeric(factor(fcs_join_obj[["run_date"]]))
     print(paste0(length(unique(exp_data$batch))," batches found for correction: ",paste0(unique(exp_data$batch),collapse = ", ")))
     if(cyCombine_detect_effects) {
@@ -167,16 +164,50 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
   } else if(correction_method[1]=="harmony") {
     require(harmony)
     cmeth <- "harmony"
+    harmony_covars <- unique(harmony_covars)
     harm_in <- as.matrix(rep_data)
     print(paste0("batches found for harmony correction: ", paste0(unique(fcs_join_obj[["run_date"]]), collapse = ", ")))
-    harm_meta <- data.frame(cell_id = 1:nrow(harm_in), batch = fcs_join_obj[["run_date"]], sample = fcs_join_obj[[harmony_sample_element]])
-    harm_out <- harmony::RunHarmony(data_mat = harm_in, meta_data = harm_meta, vars_use = harmony_covars, ncores = harmony_cores,
+    if (!missing('harmony_sample_element')) {
+      warning("'harmony_sample_element' is deprecated. Halting function call; remove 'harmony_sample_element' from function call. 'harmony_covars' must contain all effect names to be treated as noise by Harmony. All listed 'harmoy_covars' must exist as names(fcs_join_obj).", call. = FALSE)
+    }
+    if('source' %in% harmony_covars) {
+      stop("source should not be included as a covariate.")
+    }
+    if(mean(harmony_covars) %in% names(fcs_join_obj)!=1) {
+      stop("All 'harmony_covars' must be in names(fcs_join_obj).")
+    }
+    if(!'run_date' %in% harmony_covars) {
+      stop("'run_date' must be in 'harmony_covars'. If all data was run in a single batch, batch correction step should not be run. If all data was run on the same date, insert a unique batch identifier for each batch in the fcs_join_obj[['run_date']] slot for integration. Other covars may be specified such as 'operator', 'cytometer' etc.")
+    }
+    harm_meta_no_id <- as.data.frame(fcs_join_obj[harmony_covars])
+    n_unique <- vector('list', length = ncol(harm_meta_no_id)); names(n_unique) <- colnames(harm_meta_no_id)
+    for(i in 1:ncol(harm_meta_no_id)) {
+      len_unique <- length(unique(harm_meta_no_id[,i]))
+      if(len_unique<2) {
+        warning(paste0("covar '",colnames(harm_meta_no_id)[i],"' has ",len_unique," unique values. Covariates in 'harmony_covars' should have >1 unique value. Dropping '",colnames(harm_meta_no_id)[i],"' from the covariate set"))
+      }
+      n_unique[[colnames(harm_meta_no_id)[i]]] <- len_unique
+    }
+    keep_covars <- names(n_unique)[sapply(n_unique, function(arg) return(arg>1))]
+    if(length(keep_covars)==0) {
+      stop("No covariates passed filtering. All covariates have less than 2 unique values. Nothing available to integrate. Covariates must have >1 unique value for integration.")
+    } else {
+      harm_meta_no_id <- harm_meta_no_id[,keep_covars]
+    }
+    message('harmony metadata data.frame for batch correction:')
+    print(head(harm_meta_no_id))
+    message('harmony covars to use for batch correction:')
+    print(paste0(harmony_covars, collapse = ', '))
+    message('unique values per covariate to be used:')
+    print(n_unique)
+    harm_meta <- cbind(data.frame(cell_id=fcs_join_obj[['source']]), harm_meta_no_id) # cell_id is specified in the harmony vignette so I add here for consistency, although only harmony_covars will be passed as variables to integrate out
+    harm_out <- harmony::RunHarmony(data_mat = harm_in, meta_data = harm_meta, vars_use = keep_covars, ncores = harmony_cores,
                                     max_iter = harmony_iterations, lambda = harmony_lambda)
     fcs_join_obj[['batch_correction']] <- list(data = harm_out,
                                                harmony_meta = harm_meta,
                                                method = cmeth,
-                                               other = list(number_of_batches = length(unique(harm_meta$batch)),
-                                                            batches = unique(harm_meta$batch),
+                                               other = list(covariates_used = keep_covars, 
+                                                            unique_covariate_values = n_unique[keep_covars], 
                                                             lambda = harmony_lambda,
                                                             n_iterations = harmony_iterations,
                                                             datetime = Sys.time(),
