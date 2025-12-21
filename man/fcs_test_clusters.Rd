@@ -28,7 +28,8 @@ fcs_test_clusters(
   heatmap_clusters = "all",
   test_method = c("wilcox", "sccomp"),
   sccomp_terms = NULL,
-  boxplot_text_scaling = 1
+  boxplot_text_scaling = 1,
+  hm_feature_text_size = 12
 )
 }
 \arguments{

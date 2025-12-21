@@ -18,7 +18,8 @@ fcs_cluster_heatmap(
   heatmap_linewidth = 0.5,
   row_text_size = 13,
   column_text_size = 12,
-  legend_text_size = 11
+  legend_text_size = 11,
+  scaling_quantile = 0.01
 )
 }
 \arguments{
@@ -74,7 +75,7 @@ aggregates by cluster, and stores both the heatmap object and tile data.
 \itemize{
 \item Chooses raw or batch‐corrected data based on \code{override_correction} and
 presence of \code{fcs_join_obj$batch_correction$data}.
-\item Scales expression values to \link{0,1} per channel using
+\item Scales expression values to 0-1 per channel using
 CATALYST:::.scale_exprs.
 \item Computes median expression for each cluster × parameter.
 \item Builds a ComplexHeatmap object with cluster‐size annotations.

@@ -12,6 +12,7 @@ fcs_project_parameters(
   outdir = getwd(),
   sample_size = 50000,
   point_size = 0.8,
+  point_alpha = 0.1,
   trim_outliers = TRUE,
   trim_quantile = 0.01,
   force_xlim = FALSE,

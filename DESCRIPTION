@@ -1,8 +1,8 @@
 Package: FCSimple
 Type: Package
 Title: Streamlined High-Dimensional Flow Cytometry Processing in R
-Version: 1.0.0
-Author: jsim91
+Version: 1.1.1
+Authors@R: person("Joshua", "D.", "Simmons", email = "joshua.d.simmons@vumc.org", role = c("aut", "cre"))
 Description: Streamlined functions for loading, joining, and analyzing high-dimensional flow cytometry data.
 License: GPL-3
 Encoding: UTF-8
@@ -15,7 +15,7 @@ Imports:
     shinythemes, metR, harmony, outliers, future.apply, 
     RANN, shadowtext, stringr, formattable, ComplexHeatmap, 
     CATALYST, flowWorkspace, cytoMEM, scales, mclust, sp, 
-    rlang, MASS, pracma, mixtools
+    rlang, MASS, pracma, mixtools, cyCombine
 Suggests:
     roxygen2 (>= 7.3.2),
     devtools,
@@ -24,8 +24,7 @@ Suggests:
     rmarkdown
 Remotes:
     biosurf/cyCombine
-VignetteBuilder: knitr
-RoxygenNote: 7.3.2
+RoxygenNote: 7.3.3
 Config:
   roxygen:
     markdown: true

@@ -15,9 +15,8 @@ fcs_batch_correction(
   cyCombine_detect_effects = FALSE,
   harmony_cores = 1,
   harmony_iterations = 10,
-  harmony_covars = c("batch", "sample"),
-  harmony_lambda = 1,
-  harmony_sample_element = "source"
+  harmony_covars = c("run_date"),
+  harmony_lambda = 1
 )
 }
 \arguments{
@@ -52,13 +51,10 @@ detect_batch_effect before and after normalization (default FALSE).}
 (default 10).}
 
 \item{harmony_covars}{Character vector of metadata columns in
-\code{fcs_join_obj} to use as covariates in Harmony (default \code{c("batch","sample")}).}
+\code{fcs_join_obj} to use as covariates in Harmony (default \code{c("run_date")}).}
 
 \item{harmony_lambda}{Numeric; ridge‐penalty parameter for Harmony to
 prevent overcorrection (default 1).}
-
-\item{harmony_sample_element}{Name of the element in \code{fcs_join_obj} to treat
-as the sample identifier for Harmony (default "source").}
 }
 \value{
 The input \code{fcs_join_obj} augmented with:
@@ -100,7 +96,7 @@ corrected2 <- FCSimple::fcs_batch_correction(
   use_rep = "pca",
   correction_method = "harmony",
   harmony_cores = 4,
-  harmony_covars = c("batch", "sample")
+  harmony_covars = c("run_date")
 )
 }
 

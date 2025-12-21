@@ -77,30 +77,31 @@ enrichment scores for each hotspot region.
 }
 }
 \examples{
- 
-\dontrun{  
-files   <- list(ff1, ff2)  
-joined  <- FCSimple::fcs_join(files)  
-reduced <- FCSimple::fcs_reduce_dimensions(joined, method = "UMAP")  
- 
-res <- FCSimple::fcs_trex(  
-  reduced,  
-  reduction         = "UMAP",  
-  k                 = 60,  
-  change_thresholds = c(0.05, 0.95),  
-  ref_label         = "day0",  
-  mem_features      = c("CD3","CD4","CD8")  
-)  
-}  
- 
+\dontrun{
+files   <- list(ff1, ff2)
+joined  <- FCSimple::fcs_join(files)
+reduced <- FCSimple::fcs_reduce_dimensions(joined, method = "UMAP")
+
+res <- FCSimple::fcs_trex(
+  reduced,
+  reduction         = "UMAP",
+  k                 = 60,
+  change_thresholds = c(0.05, 0.95),
+  ref_label         = "day0",
+  mem_features      = c("CD3","CD4","CD8")
+)
+}
+
 }
 \references{
-\link{1} Barone SM, Paul AG, Muehling LM, et al. Unsupervised machine learning
+\enumerate{
+\item Barone SM, Paul AG, Muehling LM, et al. Unsupervised machine learning
 reveals key immune cell subsets in COVID-19, rhinovirus infection, and cancer
 therapy. eLife. 2021;10:e64653. doi:10.7554/eLife.64653
-\link{2} Diggins KE, Greenplate AR, Leelatian N, Wogsland CE, Irish JM.
+\item Diggins KE, Greenplate AR, Leelatian N, Wogsland CE, Irish JM.
 Characterizing cell subsets using Marker Enrichment Modeling. Nat Methods.
 2017;14(3):275–278. doi:10.1038/nmeth.4149
+}
 }
 \seealso{
 FCSimple::fcs_plot_reduction, FCSimple::fcs_cluster_heatmap,

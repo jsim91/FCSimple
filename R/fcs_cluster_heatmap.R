@@ -55,7 +55,7 @@
 #' @details
 #' - Chooses raw or batch‐corrected data based on `override_correction` and
 #'   presence of `fcs_join_obj$batch_correction$data`.
-#' - Scales expression values to [0,1] per channel using
+#' - Scales expression values to 0-1 per channel using
 #'   CATALYST:::.scale_exprs.
 #' - Computes median expression for each cluster × parameter.
 #' - Builds a ComplexHeatmap object with cluster‐size annotations.
