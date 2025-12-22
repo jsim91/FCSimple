@@ -173,8 +173,8 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
     if('source' %in% harmony_covars) {
       stop("source should not be included as a covariate.")
     }
-    if(mean(harmony_covars) %in% names(fcs_join_obj)!=1) {
-      stop("All 'harmony_covars' must be in names(fcs_join_obj).")
+    if(mean(harmony_covars %in% names(fcs_join_obj)!=1)) {
+      stop("all 'harmony_covars' must be in names(fcs_join_obj).")
     }
     if(!'run_date' %in% harmony_covars) {
       stop("'run_date' must be in 'harmony_covars'. If all data was run in a single batch, batch correction step should not be run. If all data was run on the same date, insert a unique batch identifier for each batch in the fcs_join_obj[['run_date']] slot for integration. Other covars may be specified such as 'operator', 'cytometer' etc.")
@@ -193,6 +193,10 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
       stop("No covariates passed filtering. All covariates have less than 2 unique values. Nothing available to integrate. Covariates must have >1 unique value for integration.")
     } else {
       harm_meta_no_id <- harm_meta_no_id[,keep_covars]
+    }
+    if(class(harm_meta_no_id)!='data.frame') {
+      harm_meta_no_id <- as.data.frame(harm_meta_no_id)
+      colnames(harm_meta_no_id) <- keep_covars
     }
     message('harmony metadata data.frame for batch correction:')
     print(head(harm_meta_no_id))
