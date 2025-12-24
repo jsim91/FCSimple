@@ -107,7 +107,7 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
     require(stringr)
     exp_data <- as.data.frame(rep_data)
     if(correction_markers[1]=="all") {
-      marks <- cyCombine::get_markers(df = exp_data)
+      marks <- cyCombine::get_markers(x = exp_data)
     } else {
       marks <- correction_markers
     }
