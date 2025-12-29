@@ -413,7 +413,7 @@ plot_condition <- function(input_data, rm0, trq, instr_type)
   }
   plt1 <- ggplot(data = input_data, mapping = aes(x = tmp, group = condition,
                                                   color = condition, fill = condition)) +
-    geom_density(size = 0.75, alpha = 0.1) +
+    geom_density(linewidth = 0.75, alpha = 0.1) +
     theme_minimal() +
     ggtitle(capture_channel) +
     theme(axis.text.y = element_blank(),
