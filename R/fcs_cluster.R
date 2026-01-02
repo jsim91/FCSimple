@@ -168,6 +168,7 @@ fcs_cluster <- function(fcs_join_obj,
     return(fcs_join_obj)
   }
   if(tolower(algorithm) %in% c("leiden","louvain")) {
+    Sys.setenv(OMP_NUM_THREADS = "1", MKL_NUM_THREADS = "1", OPENBLAS_NUM_THREADS = "1")
     require(FNN)
     require(Matrix)
     if("adjacency_matrix" %in% names(fcs_join_obj)) {
@@ -190,36 +191,57 @@ fcs_cluster <- function(fcs_join_obj,
         require(future)
         require(future.apply)
 
-        if(num_cores>parallel::detectCores()) {
+        if(num_cores > parallel::detectCores()) {
           warning(paste0(num_cores," specified but only ",parallel::detectCores()," available. Proceeding with max available cores."))
         }
-        if(num_cores==0) {
+        if(num_cores == 0) {
           num_core <- parallel::detectCores()
         } else {
           num_core <- num_cores
         }
-        if(num_core>1) {
-          print(paste0("searching with ",num_core," cores"))
+        if(num_core > 1) {
+          print(paste0("searching with ", num_core, " cores"))
         } else {
-          print(paste0("searching with ",num_core," core"))
+          print(paste0("searching with ", num_core, " core"))
         }
         options(future.globals.maxSize= Inf)
-        future::plan("multisession", workers = num_cores)
+        future::plan("multisession", workers = num_core)
 
         num_neighbors <- adjacency_knn + 1
-        sub_data <- vector(mode="list",length=num_core)
-        split_sums <- round(seq(from=1,to=nrow(cl_data),length.out=num_core+1),0)
-        for(i in 1:length(sub_data)) {
-          if(i==1) {
-            sub_data[[i]] <- cl_data[1:(split_sums[i+1]),]
+        sub_data <- vector(mode = "list", length = num_core)
+        split_sums <- round(seq(from = 1, to = nrow(cl_data), length.out = num_core + 1), 0)
+        
+        for(i in seq_along(sub_data)) {
+          if(i == 1) {
+            sub_data[[i]] <- cl_data[1:(split_sums[i + 1]), , drop = FALSE]
           } else {
-            sub_data[[i]] <- cl_data[(split_sums[i] + 1):(split_sums[i+1]),]
+            sub_data[[i]] <- cl_data[(split_sums[i] + 1):(split_sums[i + 1]), , drop = FALSE]
           }
         }
-        search_out <- future.apply::future_lapply(sub_data,FUN=function(x) {
-          return(RANN::nn2(data=cl_data,query=x,k=num_neighbors,treetype = "kd",searchtype = "standard"))
+        
+        search_out <- NULL
+        parallel_error <- NULL
+        try({
+          search_out <- future.apply::future_lapply(sub_data, FUN = function(x) {
+            RANN::nn2(data = cl_data, query = x, k = num_neighbors, treetype = "kd", searchtype = "standard")
+          })
+        }, silent = TRUE, finally = {
+            tryCatch({
+            future::plan(future::sequential)
+          }, error = function(e) {})
+          gc()
         })
-        future::plan(future::sequential)
+        
+        if(is.null(search_out)) {
+          parallel_error <- "multisession future_lapply failed; retrying sequentially to capture error."
+          warning(parallel_error)
+          future::plan(future::sequential)
+          search_out <- lapply(sub_data, FUN = function(x) {
+            RANN::nn2(data = cl_data, query = x, k = num_neighbors, treetype = "kd", searchtype = "standard")
+          })
+        } else {
+          future::plan(future::sequential)
+        }
 
         for(i in 1:length(search_out)) {
           if(i==1) {
