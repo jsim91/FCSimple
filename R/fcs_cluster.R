@@ -228,7 +228,7 @@ fcs_cluster <- function(fcs_join_obj,
                       treetype = "kd", searchtype = "standard")
           })
         }, error = function(e) {
-          parallel_error <<- paste("multisession future_lapply failed:", conditionMessage(e))
+          parallel_error <- paste("multisession future_lapply failed:", conditionMessage(e))
           warning(parallel_error)
           NULL
         }, finally = {
