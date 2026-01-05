@@ -10,7 +10,15 @@ for package in REQUIRED_PACKAGES:
         print(f'{package} is installed')
     except ImportError:
         print(f'{package} not installed. Installing now...')
-        subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            print("pip install failed; trying pip3...")
+            try:
+                subprocess.check_call(["pip3", "install", package])
+            except (subprocess.CalledProcessError, FileNotFoundError) as e:
+                print(f"Failed to install {package} with pip and pip3: {e}")
+                continue
         print(f'{package} installed successfully')
 
 # import dependencies
@@ -22,4 +30,5 @@ import leidenalg as la
 import umap
 import pynndescent
 import numpy as np
+
 from openTSNE import TSNE
