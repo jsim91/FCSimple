@@ -47,8 +47,7 @@ fcs_update <- function(fcs_join_obj, instrument_type = c("cytof","flow"))
 {
   if(system(command = 'python --version')==0) {
     pyv <- system(command = 'python --version', intern = TRUE)
-    # assumes pip is installed if python is installed
-    pipl <- system("pip list", intern = TRUE)
+    # assumes pip is installed if python is installed; pip3 fallback if pip fails
     pipl <- tryCatch(system("pip list", intern = TRUE), error = function(e) character())
     if (length(pipl) == 0) {
       # try pip3 if pip unsuccessful
