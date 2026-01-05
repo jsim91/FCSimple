@@ -49,11 +49,21 @@ fcs_update <- function(fcs_join_obj, instrument_type = c("cytof","flow"))
     pyv <- system(command = 'python --version', intern = TRUE)
     # assumes pip is installed if python is installed
     pipl <- system("pip list", intern = TRUE)
-    pipl <- pipl[-c(1,2)]
-    split_lines <- strsplit(pipl, "\\s+")
-    pip_df <- do.call(rbind, lapply(split_lines, function(x) x[1:2]))
-    pip_df <- as.data.frame(pip_df, stringsAsFactors = FALSE)
-    colnames(pip_df) <- c("Package", "Version")
+    pipl <- tryCatch(system("pip list", intern = TRUE), error = function(e) character())
+    if (length(pipl) == 0) {
+      # try pip3 if pip unsuccessful
+      pipl <- tryCatch(system("pip3 list", intern = TRUE), error = function(e) character())
+      pipl <- gsub(pattern = '( )+', replacement = 'UniqueSeparator', x = pipl)[-c(1,2)]
+      pipl_spl <- strsplit(x = pipl, split = 'UniqueSeparator')
+      pip_df <- data.frame(Package = sapply(pipl_spl,function(x) return(x[1])), 
+                           Version = sapply(pipl_spl,function(x) return(x[2])))
+    } else {
+      pipl <- pipl[-c(1,2)]
+      split_lines <- strsplit(pipl, "\\s+")
+      pip_df <- do.call(rbind, lapply(split_lines, function(x) x[1:2]))
+      pip_df <- as.data.frame(pip_df, stringsAsFactors = FALSE)
+      colnames(pip_df) <- c("Package", "Version")
+    }
   } else {
     pyv <- 'none'
     pip_df <- 'none'
