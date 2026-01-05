@@ -10,11 +10,27 @@ for package in REQUIRED_PACKAGES:
         print(f'{package} is installed')
     except ImportError:
         print(f'{package} not installed. Installing now...')
-        if package=='git_cluster':
-            subprocess.check_call([sys.executable, "-m", "pip", "install", "git+https://github.com/gaozhangyang/GIT"])
+        if package == 'git_cluster':
+            pkg_spec = "git+https://github.com/gaozhangyang/GIT"
         else:
-            subprocess.check_call([sys.executable, "-m", "pip", "install", package])
-        print(f'{package} installed successfully')
+            pkg_spec = package
+
+        installed = False
+        try:
+            subprocess.check_call([sys.executable, "-m", "pip", "install", pkg_spec])
+            installed = True
+        except (subprocess.CalledProcessError, FileNotFoundError):
+            print("pip install failed; trying pip3...")
+            try:
+                subprocess.check_call(["pip3", "install", pkg_spec])
+                installed = True
+            except (subprocess.CalledProcessError, FileNotFoundError) as e:
+                print(f"Failed to install {package} with pip and pip3: {e}")
+
+        if installed:
+            print(f'{package} installed successfully')
+        else:
+            print(f'Could not install {package}; continuing without it.')
 
 # finish imports
 from git_cluster import GIT
