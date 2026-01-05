@@ -221,27 +221,35 @@ fcs_cluster <- function(fcs_join_obj,
         
         search_out <- NULL
         parallel_error <- NULL
-        try({
-          search_out <- future.apply::future_lapply(sub_data, FUN = function(x) {
-            RANN::nn2(data = cl_data, query = x, k = num_neighbors, treetype = "kd", searchtype = "standard")
+        
+        search_out <- tryCatch({
+          future.apply::future_lapply(sub_data, FUN = function(x) {
+            RANN::nn2(data = cl_data, query = x, k = num_neighbors,
+                      treetype = "kd", searchtype = "standard")
           })
-        }, silent = TRUE, finally = {
-            tryCatch({
-            future::plan(future::sequential)
-          }, error = function(e) {})
+        }, error = function(e) {
+          parallel_error <<- paste("multisession future_lapply failed:", conditionMessage(e))
+          warning(parallel_error)
+          NULL
+        }, finally = {
+          tryCatch(future::plan(future::sequential), error = function(e) {})
           gc()
         })
         
-        if(is.null(search_out)) {
-          parallel_error <- "multisession future_lapply failed; retrying sequentially to capture error."
-          warning(parallel_error)
+        if (is.null(search_out)) {
+          # fallback to sequential with captured message in parallel_error
+          if (is.null(parallel_error)) {
+            parallel_error <- "multisession future_lapply returned NULL; retrying sequentially."
+            warning(parallel_error)
+          }
           future::plan(future::sequential)
           search_out <- lapply(sub_data, FUN = function(x) {
-            RANN::nn2(data = cl_data, query = x, k = num_neighbors, treetype = "kd", searchtype = "standard")
+            RANN::nn2(data = cl_data, query = x, k = num_neighbors,
+                      treetype = "kd", searchtype = "standard")
           })
-        } else {
-          future::plan(future::sequential)
         }
+        # conservatively reset to sequential
+        future::plan(future::sequential)
 
         for(i in 1:length(search_out)) {
           if(i==1) {
