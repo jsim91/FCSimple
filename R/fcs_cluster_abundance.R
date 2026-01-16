@@ -98,7 +98,7 @@ fcs_calculate_abundance <- function(fcs_join_obj,
     if(return_abundance) {
       return(abundance_matrix)
     } else {
-      fcs_join_obj[[report_algorithm]][["abundance"]] <- abundance_matrix
+      fcs_join_obj[[report_algorithm]][["counts"]] <- abundance_matrix
     }
   } else {
     usrc <- unique(cluster_source); uclus <- unique(cluster_numbers)[order(unique(cluster_numbers))]
