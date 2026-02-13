@@ -16,7 +16,8 @@ fcs_batch_correction(
   harmony_cores = 1,
   harmony_iterations = 10,
   harmony_covars = c("run_date"),
-  harmony_lambda = 1
+  harmony_lambda = 1,
+  harmony_sample_element = NULL
 )
 }
 \arguments{

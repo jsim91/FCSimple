@@ -175,7 +175,7 @@
 #' @export
 fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha = 0.1, point_size = 1, outdir = getwd(),
                                split_factor = NA, internal_call = FALSE, anno_indices = NULL, keep_indices = NA,
-                               figure_width = 10, figure_height = 10, plotting_device = "pdf", annotate_text_size = 5,
+                               figure_width = 10, figure_height = 10, plotting_device = "pdf", annotate_text_size = 8,
                                title_size = 14, return_plot = TRUE, randomize_colors = FALSE, color_random_seed = 123,
                                color_clusters = TRUE, force_title = FALSE, sample_equally = TRUE,
                                cluster_substitute_names = NA, add_timestamp = TRUE, annotation_method = 'shadowtext')
@@ -198,17 +198,121 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
   }
   uclus <- unique(cluster_numbers)[order(unique(cluster_numbers))]
 
+  # Helper function to optimize color assignment based on cluster spatial proximity
+  optimize_cluster_colors <- function(xval, yval, n_colors) {
+    # xval, yval: named vectors of cluster center coordinates
+    # n_colors: number of colors to generate
+    # Returns: named vector of colors optimized for spatial separation
+
+    # Compute pairwise distances between cluster centers
+    coords <- cbind(xval, yval)
+    dist_matrix <- as.matrix(dist(coords, method = "euclidean"))
+    rownames(dist_matrix) <- names(xval)
+    colnames(dist_matrix) <- names(xval)
+
+    # Generate base colors from gg_color_hue
+    gg_color_hue <- function(n) {
+      hues = seq(15, 375, length = n + 1)
+      hcl(h = hues, l = 65, c = 100)[1:n]
+    }
+    base_colors <- gg_color_hue(n_colors)
+
+    # Greedy algorithm: assign colors to maximize color difference for nearby clusters
+    cluster_names <- names(xval)
+    n_clusters <- length(cluster_names)
+    color_assignments <- rep(NA, n_clusters)
+    names(color_assignments) <- cluster_names
+    assigned_colors <- logical(n_colors)
+
+    # Start with cluster closest to centroid of all clusters
+    centroid_x <- mean(xval)
+    centroid_y <- mean(yval)
+    start_dists <- sqrt((xval - centroid_x)^2 + (yval - centroid_y)^2)
+    start_cluster <- names(which.min(start_dists))
+
+    # Assign first color to starting cluster
+    color_assignments[start_cluster] <- 1
+    assigned_colors[1] <- TRUE
+    assigned_clusters <- start_cluster
+
+    # Iteratively assign remaining clusters
+    while(length(assigned_clusters) < n_clusters) {
+      # Find unassigned cluster closest to any assigned cluster
+      unassigned <- setdiff(cluster_names, assigned_clusters)
+      min_dist_to_assigned <- sapply(unassigned, function(uc) {
+        min(dist_matrix[uc, assigned_clusters])
+      })
+      next_cluster <- names(which.min(min_dist_to_assigned))
+
+      # Find nearby assigned clusters (within median distance)
+      nearby_assigned <- assigned_clusters[dist_matrix[next_cluster, assigned_clusters] <= median(dist_matrix[next_cluster, assigned_clusters])]
+      nearby_colors <- color_assignments[nearby_assigned]
+      nearby_colors <- nearby_colors[!is.na(nearby_colors)]
+
+      # Compute color distances in HCL space for available colors
+      if(length(nearby_colors) > 0) {
+        nearby_hcl <- t(sapply(base_colors[nearby_colors], function(col) {
+          as(colorspace::hex2RGB(col), "polarLUV")@coords
+        }))
+
+        available_color_indices <- which(!assigned_colors)
+        if(length(available_color_indices) > 0) {
+          color_dists <- sapply(available_color_indices, function(ci) {
+            col_hcl <- as(colorspace::hex2RGB(base_colors[ci]), "polarLUV")@coords
+            # Compute minimum distance to nearby colors in HCL space
+            min(sqrt(rowSums((sweep(nearby_hcl, 2, col_hcl))^2)))
+          })
+          best_color <- available_color_indices[which.max(color_dists)]
+        } else {
+          # All colors assigned, wrap around
+          best_color <- which.min(assigned_colors)[1]
+        }
+      } else {
+        # No nearby assigned clusters, pick first available
+        best_color <- which(!assigned_colors)[1]
+      }
+
+      color_assignments[next_cluster] <- best_color
+      assigned_colors[best_color] <- TRUE
+      assigned_clusters <- c(assigned_clusters, next_cluster)
+    }
+
+    # Return named vector of colors
+    result <- base_colors[color_assignments]
+    names(result) <- cluster_names
+    return(result)
+  }
+
   # https://stackoverflow.com/questions/8197559/emulate-ggplot2-default-color-palette
   gg_color_hue <- function(n) {
     hues = seq(15, 375, length = n + 1)
     hcl(h = hues, l = 65, c = 100)[1:n]
   }
-  colorby <- gg_color_hue(n = length(uclus))
+
+  # Modified section in fcs_plot_reduction function
+  # Replace the colorby assignment section (lines with gg_color_hue and colorby assignment)
+  # with:
+
+  # Calculate cluster centers first (needed for optimized coloring)
+  xval <- rep(NA,times=length(uclus)); names(xval) <- uclus; yval <- xval
+  for(i in 1:length(xval)) {
+    xval[i] <- median(reduction_coords[,1][which(cluster_numbers==names(xval)[i])])
+    yval[i] <- median(reduction_coords[,2][which(cluster_numbers==names(yval)[i])])
+  }
+
+  # Optimized color assignment based on spatial proximity
   if(randomize_colors) {
+    # Original random assignment
+    gg_color_hue <- function(n) {
+      hues = seq(15, 375, length = n + 1)
+      hcl(h = hues, l = 65, c = 100)[1:n]
+    }
+    colorby <- gg_color_hue(n = length(uclus))
     set.seed(color_random_seed)
     names(colorby) <- sample(x = uclus, size = length(uclus), replace = FALSE)
   } else {
-    names(colorby) <- uclus
+    # Optimized assignment: nearby clusters get maximally different colors
+    colorby <- optimize_cluster_colors(xval, yval, n_colors = length(uclus))
   }
 
   xval <- rep(NA,times=length(uclus)); names(xval) <- uclus; yval <- xval
@@ -297,11 +401,11 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
     } else if(annotation_method=='repel') {
       require(ggrepel)
       color_text_add <- data.frame(UMAP1 = xval, UMAP2 = yval, cluster = names(xval))
-      plt_reduction <- plt_reduction + ggrepel::geom_text_repel(data = color_text_add,
+      plt_reduction <- plt_reduction + ggrepel::geom_text_repel(data = color_text_add, force = 0, force_pull = Inf,
                                                                 mapping = aes(x = UMAP1, y = UMAP2, label = cluster), color = "white",
                                                                 size = annotate_text_size, bg.color = "black", bg.r = 0.04, seed = 123)
     }
-      plt_reduction <- theme_void() +
+      plt_reduction <- theme_bw(base_size = 22) +
       theme(legend.position = "none")
     if(add_timestamp) {
       fname <- paste0(outdir,"/islands_selected_for_by_dbscan_",

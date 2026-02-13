@@ -218,10 +218,14 @@ fcs_join <- function(files,
   if(!apply_transform) {
     src <- rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))
     rd <- stringr::str_extract(string = src, pattern = batch_pattern)
+    if(sum(is.na(rd))!=0) {
+      warning('One or more run_date is NA. Returning placeholder run_date values. Consider adjusting batch_pattern.')
+      rd <- rep('placeholder')
+    }
     meta <- data.frame(patient_ID = src, run_date = rd); meta <- meta[!duplicated(meta$patient_ID),]
     return(list(data = raw_data,
                 raw = raw_data,
-                source = src, 
+                source = src,
                 run_date = rd,
                 metadata = meta,
                 collection_instrument = instrument_type,
@@ -341,6 +345,10 @@ fcs_join <- function(files,
       print("transformation completed successfully")
       src <- rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))
       rd <- stringr::str_extract(string = src, pattern = batch_pattern)
+      if(sum(is.na(rd))!=0) {
+        warning('One or more run_date is NA. Returning placeholder run_date values. Consider adjusting batch_pattern.')
+        rd <- rep('placeholder')
+      }
       meta <- data.frame(patient_ID = src, run_date = rd); meta <- meta[!duplicated(meta$patient_ID),]
       return(list(data = tmp_data,
                   raw = tmp_raw,
@@ -377,6 +385,10 @@ fcs_join <- function(files,
       }
       src <- rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))
       rd <- stringr::str_extract(string = src, pattern = batch_pattern)
+      if(sum(is.na(rd))!=0) {
+        warning('One or more run_date is NA. Returning placeholder run_date values. Consider adjusting batch_pattern.')
+        rd <- rep('placeholder')
+      }
       meta <- data.frame(patient_ID = src, run_date = rd); meta <- meta[!duplicated(meta$patient_ID),]
       return(list(data = tmp_data,
                   raw = raw_data,
@@ -460,6 +472,10 @@ fcs_join <- function(files,
       # if(length(grep("DATE|date|Date",names(fs[[1]]@description)))!=0) {
         src <- rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))
         rd <- stringr::str_extract(string = src, pattern = batch_pattern)
+        if(sum(is.na(rd))!=0) {
+          warning('One or more run_date is NA. Returning placeholder run_date values. Consider adjusting batch_pattern.')
+          rd <- rep('placeholder')
+        }
         meta <- data.frame(patient_ID = src, run_date = rd); meta <- meta[!duplicated(meta$patient_ID),]
         return(list(data = tmp_data,
                     raw = raw_data,

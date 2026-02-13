@@ -18,7 +18,7 @@ fcs_plot_reduction(
   figure_width = 10,
   figure_height = 10,
   plotting_device = "pdf",
-  annotate_text_size = 5,
+  annotate_text_size = 8,
   title_size = 14,
   return_plot = TRUE,
   randomize_colors = FALSE,
