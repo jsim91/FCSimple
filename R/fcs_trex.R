@@ -86,7 +86,7 @@
 #'    2017;14(3):275–278. doi:10.1038/nmeth.4149
 #'
 #' @importFrom FNN get.knnx
-#' @importFrom MEM MarkerEnrichment
+#' @importFrom cytoMEM MEM build_heatmaps
 #' @export
 fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), outdir,
                      point_alpha = 0.05, neighborhood_size = 60,
