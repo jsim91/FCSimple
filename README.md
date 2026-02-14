@@ -81,7 +81,17 @@ Subsequent functions will take the object created with function
 fcs_join()
 ```
 
-as input. Analysis outputs will be joined to this object as new list entries. It's highly recommended to set the transform parameters for all relevant features in Flowjo then pass the workspace diagnostics output (as .txt file) to fcs_join() using the flowjo_diagnostics_file argument. This is how you can get the workspace diagnostics output in Flowjo:
+as input. Analysis outputs will be joined to this object as new list entries. 
+
+# Data Input Format
+
+It's highly recommended to set transform parameters for all features in Flowjo then:
+
+1) If feeding in .csv files to fcs_join(), you may prepare the .csv files by exporting the transformed data from Flowjo:
+
+// iamge here
+
+2) If feeding in .fcs files to fcs_join(), pass the workspace diagnostics output (as .txt file) to fcs_join() using the flowjo_diagnostics_file argument. To prepare the workspace diagnostics file, in Flowjo:
 
 <img width="1588" alt="readme_flowjo_diagnostics" src="https://github.com/user-attachments/assets/88b137d4-9947-48e1-952f-035646626245">
 
