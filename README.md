@@ -68,12 +68,20 @@ The dimension reduction and clustering steps do offer methods to run the calcula
 
 # Usage
 
-This package requires the user to initiate a list object like this:
+This package requires the user to initiate a list object. If using csv file format:
+
+```
+include_files <- list.files(path = "csv_file_directory", pattern = ".csv", full.names = TRUE) # Point to the directory where the csv file(s) of interest are located. It's recommended to use full names.
+my_object <- fcs_join(files = include_files) # This function takes the listed files as input and will initialize the list object that will store all subsequent analyses.
+```
+
+or if using fcs format:
 
 ```
 include_files <- list.files(path = "fcs_file_directory", pattern = ".fcs", full.names = TRUE) # Point to the directory where the FCS file(s) of interest are located. It's recommended to use full names.
 my_object <- fcs_join(files = include_files) # This function takes the listed files as input and will initialize the list object that will store all subsequent analyses.
 ```
+
 
 Subsequent functions will take the object created with function
 
@@ -89,9 +97,9 @@ It's highly recommended to set transform parameters for all features in Flowjo t
 
 1) If feeding in .csv files to fcs_join(), you may prepare the .csv files by exporting the transformed data from Flowjo:
 
-// iamge here
+<img src="https://raw.githubusercontent.com/jsim91/FCSimple/main/vignette_outs/rmd_img/flowjo_csv_export_method.png" alt="FlowJo CSV export method">
 
-2) If feeding in .fcs files to fcs_join(), pass the workspace diagnostics output (as .txt file) to fcs_join() using the flowjo_diagnostics_file argument. To prepare the workspace diagnostics file, in Flowjo:
+2) If feeding in .fcs files to fcs_join(), you may prepare a workspace diagnostics file (as .txt file) for use with fcs_join() using the flowjo_diagnostics_file argument. To prepare the workspace diagnostics file, in Flowjo:
 
 <img width="1588" alt="readme_flowjo_diagnostics" src="https://github.com/user-attachments/assets/88b137d4-9947-48e1-952f-035646626245">
 
