@@ -10,7 +10,7 @@ note:
 
 # FCSimple
 
-Tools for the analysis of .fcs data sets.
+Tools for the analysis of .fcs data sets. Pair with [FCView](https://github.com/jsim91/FCView) using ```FCSimple::fcs_prepare_fcview_object``` for an interactive analysis of FCSimple results.
 
 ## Installation
 
