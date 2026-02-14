@@ -70,6 +70,7 @@
 #'   FCSimple::fcs_cluster, FCSimple::fcs_report_abundance
 #'
 #' @importFrom utils write.csv
+#' @export
 fcs_calculate_abundance <- function(fcs_join_obj,
                                     report_algorithm = c("leiden","flowsom","louvain","phenograph","git"),
                                     report_as = c("frequency", "fraction", "count"), return_abundance = FALSE)

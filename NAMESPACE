@@ -3,6 +3,8 @@
 export(fcs_add_metadata)
 export(fcs_as.hyperlog)
 export(fcs_batch_correction)
+export(fcs_calculate_abundance)
+export(fcs_cluster)
 export(fcs_cluster_heatmap)
 export(fcs_gate_cells)
 export(fcs_gate_singlets)

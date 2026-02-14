@@ -108,6 +108,7 @@
 #' @importFrom FlowSOM FlowSOM GetMetaclusters
 #' @importFrom flowCore flowFrame
 #' @importFrom Rphenograph Rphenograph
+#' @export
 fcs_cluster <- function(fcs_join_obj,
                         use_rep = "data", # 'data' or 'pca'
                         language = c("R","Python"),
