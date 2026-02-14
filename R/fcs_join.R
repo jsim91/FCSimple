@@ -4,15 +4,15 @@
 #'   Reads a set of FCS or CSV files, optionally downsamples and applies transformations
 #'   (FlowJo diagnostics, asinh, biexp, or hyperlog), and concatenates them into
 #'   a unified data matrix with accompanying metadata and history.
-#'   
-#'   For CSV files, the function assumes data is already transformed. CSV files should 
-#'   be exported from FlowJo using 'CSV - Channel values' with 'Include header' and 
-#'   'Stain' selected after all transforms have been applied. Ensure a run date ($DATE) 
+#'
+#'   For CSV files, the function assumes data is already transformed. CSV files should
+#'   be exported from FlowJo using 'CSV - Channel values' with 'Include header' and
+#'   'Stain' selected after all transforms have been applied. Ensure a run date ($DATE)
 #'   is included in the file names.
 #'
 #' @param files
-#'   Character vector of file paths to .fcs or .csv files. For CSV files, data 
-#'   should be pre-transformed and exported from FlowJo with proper formatting 
+#'   Character vector of file paths to .fcs or .csv files. For CSV files, data
+#'   should be pre-transformed and exported from FlowJo with proper formatting
 #'   (see Details).
 #'
 #' @param flowjo_diagnostics_file
@@ -84,7 +84,7 @@
 #'   1. For FCS files: Reads all files into a `flowSet` via `flowCore::read.flowSet()`.
 #'      For CSV files: Reads using `data.table::fread()` assuming pre-transformed data.
 #'   2. Optionally downsamples each file to `downsample_size`.
-#'   3. Extracts expression matrices with `flowCore::exprs()` (FCS) or directly from 
+#'   3. Extracts expression matrices with `flowCore::exprs()` (FCS) or directly from
 #'      data frames (CSV).
 #'   4. If `transform_per_channel = TRUE` (FCS only), launches the package's
 #'      `transform_app/` Shiny GUI so you can inspect per-channel
@@ -92,7 +92,7 @@
 #'   5. Otherwise, applies the global transform as specified by
 #'      `transform_type` or user's `transform_function` (FCS only).
 #'   6. Concatenates raw and transformed data into `raw` and `data` matrices.
-#'   7. Builds `source` and `run_date` via `flowCore::sampleNames()` or file names 
+#'   7. Builds `source` and `run_date` via `flowCore::sampleNames()` or file names
 #'      and `stringr::str_extract()`.
 #'   8. Creates `metadata` data frame with patient_ID and run_date.
 #'   9. Records `collection_instrument` and appends a timestamp in
@@ -151,8 +151,8 @@ fcs_join <- function(files,
                      hyperlog_transform_M = 5,
                      hyperlog_transform_W = 0.001,
                      hyperlog_transform_A = 2,
-                     transform_per_channel = TRUE,
-                     downsample_size = NA,
+                     transform_per_channel = FALSE,
+                     downsample_size = 25000,
                      batch_pattern = "[0-9]+\\-[A-Za-z]+\\-[0-9]+") {
   # testing
   # files <- list.files(path = "J:/oakes_flow/scenith_full_pilot/box_dl", full.names = TRUE)
@@ -203,10 +203,10 @@ fcs_join <- function(files,
     src <- rep(names(csv_data), rep(sapply(csv_data, nrow)))
     rd <- stringr::str_extract(src, batch_pattern)
     meta <- data.frame(patient_ID = src, run_date = rd); meta <- meta[!duplicated(meta$patient_ID),]
-    
+
     # Auto-detect instrument type based on data
     detected_instrument <- if(min(csv, na.rm = TRUE) >= 0) "cytof" else "flow"
-    
+
     return(list(data = csv_ds,
                 raw = NA,
                 source = src,
@@ -259,10 +259,10 @@ fcs_join <- function(files,
       rd <- rep('placeholder')
     }
     meta <- data.frame(patient_ID = src, run_date = rd); meta <- meta[!duplicated(meta$patient_ID),]
-    
+
     # Auto-detect instrument type based on data
     detected_instrument <- if(min(raw_data, na.rm = TRUE) >= 0) "cytof" else "flow"
-    
+
     return(list(data = raw_data,
                 raw = raw_data,
                 source = src,
@@ -390,10 +390,10 @@ fcs_join <- function(files,
         rd <- rep('placeholder')
       }
       meta <- data.frame(patient_ID = src, run_date = rd); meta <- meta[!duplicated(meta$patient_ID),]
-      
+
       # Auto-detect instrument type based on raw data
       detected_instrument <- if(min(tmp_raw, na.rm = TRUE) >= 0) "cytof" else "flow"
-      
+
       return(list(data = tmp_data,
                   raw = tmp_raw,
                   source = src,
@@ -407,7 +407,7 @@ fcs_join <- function(files,
   if(!transform_per_channel) {
     # Auto-detect instrument type from raw data to choose appropriate transform cofactor
     detected_instrument <- if(min(raw_data, na.rm = TRUE) >= 0) "cytof" else "flow"
-    
+
     if(detected_instrument == "cytof") {
       if(is.null(asinh_transform_cofactor[1])) {
         asinh_transform_cofactor <- 5
@@ -437,7 +437,7 @@ fcs_join <- function(files,
         rd <- rep('placeholder')
       }
       meta <- data.frame(patient_ID = src, run_date = rd); meta <- meta[!duplicated(meta$patient_ID),]
-      
+
       return(list(data = tmp_data,
                   raw = raw_data,
                   source = src,
@@ -525,10 +525,10 @@ fcs_join <- function(files,
           rd <- rep('placeholder')
         }
         meta <- data.frame(patient_ID = src, run_date = rd); meta <- meta[!duplicated(meta$patient_ID),]
-        
+
         # Auto-detect instrument type based on data
         detected_instrument <- if(min(tmp_data, na.rm = TRUE) >= 0) "cytof" else "flow"
-        
+
         return(list(data = tmp_data,
                     raw = raw_data,
                     source = src,
