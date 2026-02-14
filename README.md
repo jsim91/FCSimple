@@ -10,18 +10,19 @@ note:
 
 # FCSimple
 
-Tools for the analysis of .fcs data sets
+Tools for the analysis of .fcs data sets.
 
+## Installation
 
+Install FCSimple directly from GitHub using devtools:
 
-# Package Install
+```r
+# Install devtools if not already installed
+if (!require("devtools")) install.packages("devtools")
 
-Enter the following command within an R session
-
-```
+# Install FCSimple
 devtools::install_github("jsim91/FCSimple")
 ```
-
 
 # Current dependencies include:
 
