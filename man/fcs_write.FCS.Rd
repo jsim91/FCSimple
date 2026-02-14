@@ -9,7 +9,7 @@ fcs_write.FCS(
   fcs_name = "fcs_out",
   data_format = c("raw", "transformed"),
   include_reductions = c("UMAP", "tSNE"),
-  include_clusterings = c("leiden", "flowsom", "louvain", "phenograph", "git"),
+  include_clusterings = c("leiden", "flowsom", "louvain", "phenograph"),
   subset_rows = "all",
   outdir = getwd(),
   include_timestamp = TRUE
@@ -39,9 +39,8 @@ Each element (e.g. \code{"UMAP"} or \code{"tSNE"}) must match a named list eleme
 in \code{fcs_join_obj} containing \verb{$coordinates}. Defaults to \code{c("UMAP","tSNE")}.}
 
 \item{include_clusterings}{Character vector of clustering results to include. Each element (e.g.
-\code{"leiden"}, \code{"flowsom"}, \code{"louvain"}, \code{"phenograph"}, \code{"git"}) must match
-a list element in \code{fcs_join_obj} with \code{clusters}. Defaults to all five.
-Cluster columns are named \verb{<algorithm>_cluster}.}
+\code{"leiden"}, \code{"flowsom"}, \code{"louvain"}, \code{"phenograph"}) must match
+a list element in \code{fcs_join_obj} with \code{clusters}. Cluster columns are named \verb{<algorithm>_cluster}.}
 
 \item{subset_rows}{Either \code{"all"} (default) to write every event, or an integer vector of
 row indices to subset before writing.}

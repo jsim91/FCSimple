@@ -86,12 +86,12 @@
 #' }  
 #'  
 #' @seealso  
-#'   dbscan::dbscan, FNN::knn,  
+#'   dbscan::dbscan, RANN::nn2,  
 #'   FCSimple::fcs_cluster_heatmap, FCSimple::fcs_plot_heatmap,  
 #'   FCSimple::fcs_plot_reduction  
 #'  
 #' @importFrom dbscan dbscan  
-#' @importFrom FNN knn  
+#' @importFrom RANN nn2  
 #' @export
 fcs_select_islands <- function(fcs_join_obj,
                                reduction_cluster_annotate_algorithm = c("leiden","flowsom","louvain","phenograph"),
@@ -102,7 +102,7 @@ fcs_select_islands <- function(fcs_join_obj,
                                outdir = getwd())
 {
   require(dbscan)
-  require(FNN)
+  require(RANN)
 
   if(!tolower(dbscan_reduction) %in% names(fcs_join_obj)) {
     stop(paste0("Cannot find specified reduction ",dbscan_reduction," to cluster on. Have you run 'fcs_reduce_dimensions' yet?"))
@@ -119,11 +119,17 @@ fcs_select_islands <- function(fcs_join_obj,
     sample_rows <- sample(1:nrow(dbscan_input),size=500000,replace=F)
     scan_out_sampled <- dbscan(x = dbscan_input[sample_rows,], eps = dbscan_eps, minPts = dbscan_minpts)
     time1 <- Sys.time()
-    fnn_classify <- FNN::knn(train = dbscan_input[sample_rows,], test = dbscan_input[-sample_rows,],
-                             cl = factor(scan_out_sampled$cluster), k = 5, prob = FALSE, algorithm = "kd_tree")
+    # Use RANN::nn2 to find nearest neighbors and classify based on majority vote
+    nn_result <- RANN::nn2(data = dbscan_input[sample_rows,], query = dbscan_input[-sample_rows,], k = 5)
+    nn_idx <- nn_result$nn.idx
+    # Classify each test point by majority vote of its k nearest neighbors
+    fnn_classify <- apply(nn_idx, 1, function(neighbors) {
+      votes <- scan_out_sampled$cluster[neighbors]
+      names(sort(table(votes), decreasing=TRUE))[1]
+    })
     # difftime(Sys.time(),time1,units="mins") # 6.5mins 0.5M -> 5.5M @ 5
     cluster_numbers <- rep(NA,times=nrow(dbscan_input))
-    cluster_numbers[sample_rows] <- scan_out_sampled$cluster; cluster_numbers[-sample_rows] <- as.numeric(as.character(fnn_classify))
+    cluster_numbers[sample_rows] <- scan_out_sampled$cluster; cluster_numbers[-sample_rows] <- as.numeric(fnn_classify)
   } else {
     scan_out <- dbscan(x = dbscan_input, eps = dbscan_eps, minPts = dbscan_minpts)
     cluster_numbers <- scan_out$cluster

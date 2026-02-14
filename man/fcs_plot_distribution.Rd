@@ -8,7 +8,7 @@ fcs_plot_distribution(
   fcs_join_obj,
   override_correction = TRUE,
   separate_by = c("none", "date", "cluster", "condition"),
-  plot_algorithm = c("leiden", "flowsom", "louvain", "phenograph", "git"),
+  plot_algorithm = c("leiden", "flowsom", "louvain", "phenograph"),
   outdir = getwd(),
   plot_palette = NULL,
   rm_zero = FALSE,
@@ -36,7 +36,7 @@ Default \code{"none"}.
 }}
 
 \item{plot_algorithm}{Character; clustering result to use when \code{separate_by = "cluster"}.
-One of \code{"leiden"}, \code{"flowsom"}, \code{"louvain"}, \code{"phenograph"}, or \code{"git"}.
+One of \code{"leiden"}, \code{"flowsom"}, \code{"louvain"}, or \code{"phenograph"}.
 Default \code{"leiden"}.}
 
 \item{outdir}{Character; path to an existing directory for saving the PDF. Default \code{getwd()}.}

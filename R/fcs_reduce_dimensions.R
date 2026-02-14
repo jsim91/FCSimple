@@ -2,6 +2,9 @@
 #'
 #' @description
 #'   Performs UMAP or t‐SNE on a flow cytometry analysis object. By default,
+  #' @param use_rep
+  #'   Character; which representation to reduce.
+  #'   - `"data"` (default): use `fcs_join_obj$data` or batch‐corrected data if present.
 #'   reduces the (batch‐corrected) expression matrix to two dimensions
 #'   using either the R implementation (uwot or Rtsne) or an external
 #'   Python script. The result is stored in your object under “umap” or “tsne”.
@@ -41,6 +44,12 @@
 #'
 #' @param nthread
 #'   Integer; number of CPU threads for Rtsne (default `ceiling(parallel::detectCores()/2)`).
+#'
+#' @param seed
+#'   Integer or NA; random seed for reproducibility (default NA).
+#'   When NA, Python implementations will not set a seed, allowing for faster
+#'   multi-threaded computation. When set to an integer, both R and Python
+#'   implementations will use this seed for reproducible results.
 #'
 #' @details
 #'   1. If `fcs_join_obj$batch_correction$data` exists, that matrix is used
@@ -96,11 +105,12 @@
 fcs_reduce_dimensions <- function(fcs_join_obj,
                                   use_rep = "data",
                                   algorithm = c("tsne","umap"),
-                                  language = c("R","Python"),
+                                  language = "R",
                                   umap_nn = 30,
                                   umap_min_dist = 0.1,
                                   tsne_perplexity = 30,
-                                  nthread = ceiling(parallel::detectCores()/2))
+                                  nthread = ceiling(parallel::detectCores()/2),
+                                  seed = NA)
 {
   use_rep <- tolower(use_rep)
   if('batch_correction' %in% names(fcs_join_obj)) {
@@ -130,14 +140,17 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
     if(tolower(language)=="r") {
       require(uwot)
       require(parallel)
-      set.seed(123)
+      if(!is.na(seed)) {
+        set.seed(seed)
+      }
       map <- uwot::umap(X = red_data, n_neighbors = round(umap_nn,0),
                         init = "spca", min_dist = umap_min_dist,
-                        n_threads = ceiling(detectCores()/2), verbose = TRUE)
+                        n_threads = nthread, verbose = TRUE)
       colnames(map) <- c("UMAP1","UMAP2")
     } else if(tolower(language)=="python") {
       capture_dir <- system.file(package = "FCSimple")
-      write.csv(red_data, file = paste0(capture_dir,"/temp_files/__python_umap_input__.csv"), row.names = FALSE)
+      data.table::fwrite(red_data, file = paste0(capture_dir,"/temp_files/__python_umap_input__.csv"),
+                         nThread = parallel::detectCores(), row.names = FALSE)
       system(command = paste0("python ",paste0(capture_dir,"/python/run_umap.py")," ",
                               paste0(capture_dir,"/temp_files/__python_umap_input__.csv")," ",
                               capture_dir,"/temp_files ",round(umap_nn,0)," ",umap_min_dist))
@@ -153,6 +166,9 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
     if(tolower(language)=="r") {
       require(Rtsne)
       require(parallel)
+      if(!is.na(seed)) {
+        set.seed(seed)
+      }
       map_calculate <- Rtsne::Rtsne(X = red_data, check_duplicates = FALSE,
                                     max_iter = 2000, normalize = FALSE, perplexity = round(tsne_perplexity,0),
                                     stop_lying_iter = 700, mom_switch_iter = 700,
@@ -164,9 +180,10 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
       require(parallel)
       capture_dir <- system.file(package = "FCSimple")
       write.csv(red_data, file = paste0(capture_dir,"/temp_files/__python_tsne_input__.csv"), row.names = FALSE)
+      seed_arg <- ifelse(is.na(seed), "NA", as.character(seed))
       system(command = paste0("python ",paste0(capture_dir,"/python/run_tsne.py")," ",
                               paste0(capture_dir,"/temp_files/__python_tsne_input__.csv")," ",
-                              capture_dir,"/temp_files"," ",floor(parallel::detectCores()/2)," ",round(tsne_perplexity,0)))
+                              capture_dir,"/temp_files"," ",floor(parallel::detectCores()/2)," ",round(tsne_perplexity,0)," ",seed_arg))
       map <- read.csv(paste0(capture_dir,"/temp_files/__tmp_tsne__.csv"), check.names = FALSE)
       temp_files <- list.files(path = paste0(system.file(package = "FCSimple"),"/temp_files/"), full.names = TRUE, recursive = TRUE)
       if(length(temp_files)!=0) {
@@ -181,24 +198,37 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
     if(tolower(language)=="r") {
       settings_list <- list(use_rep = use_rep, language = "R", init = "spca", min_dist = 0.1,
                             n_threads = ceiling(detectCores()/2), num_neighbors = round(umap_nn,0),
-                            min_dist = umap_min_dist, verbose = TRUE)
+                            min_dist = umap_min_dist, verbose = TRUE, seed = seed)
     } else if(tolower(language)=="python") {
-      settings_list <- list(use_rep = use_rep, language = "Python", init = 'spectral', low_memory = 'True',
-                            random_state = 123, num_neighbors = round(umap_nn,0),
-                            min_dist = umap_min_dist, transform_seed = 123, verbose = 'True')
+      if(is.na(seed)) {
+        settings_list <- list(use_rep = use_rep, language = "Python", init = 'spectral', low_memory = 'True',
+                              num_neighbors = round(umap_nn,0),
+                              min_dist = umap_min_dist, n_jobs = nthread, verbose = 'True', seed = NA)
+      } else {
+        settings_list <- list(use_rep = use_rep, language = "Python", init = 'spectral', low_memory = 'True',
+                              random_state = seed, num_neighbors = round(umap_nn,0),
+                              min_dist = umap_min_dist, transform_seed = seed, n_jobs = 1, verbose = 'True', seed = seed)
+      }
     }
   } else if(tolower(algorithm)=="tsne") {
     if(tolower(language)=="r") {
       settings_list <- list(use_rep = use_rep, language = "R", check_duplicates = FALSE, max_iter = 2000,
                             normalize = FALSE, stop_lying_iter = 700, mom_switch_iter = 700,
                             eta = round(nrow(red_data)/12), perplexity = round(tsne_perplexity,0),
-                            num_threads = ceiling(detectCores()/2))
+                            num_threads = ceiling(detectCores()/2), seed = seed)
     }
     if(tolower(language)=="python") {
-      settings_list <- list(use_rep = use_rep, language = "Python", perplexity = 30,
-                            metric = "euclidean", random_state = 123, verbose = "True",
-                            perplexity = round(tsne_perplexity,0),
-                            num_threads = ceiling(detectCores()/2))
+      if(is.na(seed)) {
+        settings_list <- list(use_rep = use_rep, language = "Python", perplexity = 30,
+                              metric = "euclidean", verbose = "True",
+                              perplexity = round(tsne_perplexity,0),
+                              num_threads = ceiling(detectCores()/2), seed = NA)
+      } else {
+        settings_list <- list(use_rep = use_rep, language = "Python", perplexity = 30,
+                              metric = "euclidean", random_state = seed, verbose = "True",
+                              perplexity = round(tsne_perplexity,0),
+                              num_threads = ceiling(detectCores()/2), seed = seed)
+      }
     }
   }
   fcs_join_obj[[length(fcs_join_obj)+1]] <- list(coordinates = coordinates_list,

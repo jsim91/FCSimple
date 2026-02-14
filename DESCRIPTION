@@ -9,7 +9,7 @@ Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 Imports:
-    uwot, Rtsne, FNN, Matrix, igraph, circlize, 
+    uwot, Rtsne, Matrix, igraph, circlize, 
     grid, ggplot2, ggpubr, ggrastr, ggridges, dbscan, 
     ggrepel, viridis, gridExtra, RColorBrewer, shiny, 
     shinythemes, metR, harmony, outliers, future.apply, 

@@ -103,7 +103,7 @@ the selected events on the original embedding, colored by
  
 }
 \seealso{
-dbscan::dbscan, FNN::knn,
+dbscan::dbscan, RANN::nn2,
 FCSimple::fcs_cluster_heatmap, FCSimple::fcs_plot_heatmap,
 FCSimple::fcs_plot_reduction
 }

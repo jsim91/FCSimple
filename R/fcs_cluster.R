@@ -3,8 +3,7 @@
 #'
 #' @description  
 #'   Applies clustering to a joined flow cytometry object using one of several  
-#'   algorithms: Leiden, Louvain, FlowSOM, PhenoGraph, or a Python‐based “git”  
-#'   method. Can operate on raw expression data or PCA coordinates. Automatically  
+#'   algorithms: Leiden, Louvain, FlowSOM, or PhenoGraph. Can operate on raw expression data or PCA coordinates. Automatically  
 #'   uses batch‐corrected data if available.
 #'
 #' @param fcs_join_obj  
@@ -18,12 +17,12 @@
 #'   values, `"pca"` uses principal‐component coordinates.
 #'
 #' @param language  
-#'   Character; runtime environment for “git” clustering. `"R"` (default) runs  
-#'   algorithms via R packages, `"Python"` calls out to bundled Python scripts.
+#'   Character; runtime environment for Python-backed clustering when applicable. `"R"` (default) runs  
+#'   algorithms via R packages, `"Python"` calls out to bundled Python scripts for Leiden/Louvain.
 #'
 #' @param algorithm  
 #'   Character; clustering algorithm to apply. One of `"leiden"`, `"louvain"`,  
-#'   `"flowsom"`, `"phenograph"`, or `"git"`.
+#'   `"flowsom"`, or `"phenograph"`.
 #'
 #' @param leiden_louvain_resolution  
 #'   Numeric; resolution parameter for Leiden and Louvain clustering (default 1).
@@ -37,12 +36,8 @@
 #' @param adjacency_knn  
 #'   Integer; k for nearest‐neighbor graph in Leiden/Louvain (default 30).
 #'
-#' @param git_k  
-#'   Integer; cluster count for Python “git” method (default 30).
 #'
-#' @param search_method  
-#'   Character; neighbor‐search backend: `"FNN"` (default) or `"RANN"`.
-#'
+
 #' @param search_only  
 #'   Logical; if `TRUE`, stops after neighbor search and returns updated  
 #'   `fcs_join_obj` with either `adjacency_matrix` or `search` element  
@@ -58,7 +53,6 @@
 #'
 #' @details  
 #'   * If batch correction is found, clustering runs on `fcs_join_obj$batch_correction$data`.  
-#'   * “git” writes a CSV/MTX, invokes a Python script, then reads back cluster IDs.  
 #'   * Leiden/Louvain builds a sparse k‐NN graph and calls igraph::cluster_*().  
 #'   * FlowSOM transforms data into a flowFrame and calls FlowSOM::FlowSOM().  
 #'   * PhenoGraph invokes Rphenograph::Rphenograph() and extracts membership.  
@@ -99,7 +93,6 @@
 #' @seealso  
 #'   FCSimple::fcs_join, FCSimple::fcs_batch_correction, FCSimple::fcs_pca  
 #'
-#' @importFrom FNN knn.index
 #' @importFrom Matrix sparseMatrix
 #' @importFrom RANN nn2
 #' @importFrom future plan
@@ -111,14 +104,12 @@
 #' @export
 fcs_cluster <- function(fcs_join_obj,
                         use_rep = "data", # 'data' or 'pca'
-                        language = c("R","Python"),
-                        algorithm = c("leiden","flowsom","louvain","phenograph","git"),
+                        language = "R",
+                        algorithm = c("leiden","flowsom","louvain","phenograph"),
                         leiden_louvain_resolution = 1,
                         flowsom_nClus = 15,
                         phenograph_k = 30,
                         adjacency_knn = 30,
-                        git_k = 30,
-                        search_method = c("FNN","RANN"),
                         search_only = FALSE,
                         num_cores = ceiling(parallel::detectCores()/2),
                         output_as = "adjacency")
@@ -145,61 +136,32 @@ fcs_cluster <- function(fcs_join_obj,
   if(any(length(language)!=1, !tolower(language) %in% c("r","python"))) {
     stop("error in argument 'language': use 'R' or 'Python'")
   }
-  if(all(tolower(language)=="r",tolower(algorithm)=="git")) {
-    warning("error in joined arguments 'language' and 'algorithm': git clustering only avaiable for Python. Attempting to git cluster in Python using k = ",round(git_k,0),"..")
-  }
-  if(tolower(algorithm)=="git") {
-    write.csv(x = cl_data, file = paste0(capture_dir,"/temp_files/__python_cl_input__.csv"))
-    system(command = paste0("python ",paste0(capture_dir,"/python/run_cluster_git.py")," ",
-                            paste0(capture_dir,"/temp_files/__python_cl_input__.csv")," ",capture_dir,"/temp_files ",round(git_k,0)))
-    read_clus <- read.csv(paste0(capture_dir,"/temp_files/__tmp_cl__.csv"), check.names = FALSE)
-    if(file.exists(paste0(capture_dir,"/temp_files/__tmp_cl__.csv"))) {
-      file.remove(paste0(capture_dir,"/temp_files/__tmp_cl__.csv"))
-    }
-    if(file.exists(paste0(capture_dir,"/temp_files/__python_cl_input__.mtx"))) {
-      file.remove(paste0(capture_dir,"/temp_files/__python_cl_input__.mtx"))
-    }
-    cluster_numbers <- read_clus[,1]
-    fcs_join_obj[["git"]] <- list(clusters = cluster_numbers,
-                                  settings = list(git_k = git_k))
-    if(!'object_history' %in% names(fcs_join_obj)) {
-      print("Consider running FCSimple::fcs_update() on the object.")
-    }
-    try(expr = fcs_join_obj[['object_history']] <- append(fcs_join_obj[['object_history']], paste0(tolower(algorithm)," on ",use_rep,": ",Sys.time())), silent = TRUE)
-    return(fcs_join_obj)
-  }
+  
   if(tolower(algorithm) %in% c("leiden","louvain")) {
-    Sys.setenv(OMP_NUM_THREADS = "1", MKL_NUM_THREADS = "1", OPENBLAS_NUM_THREADS = "1")
-    require(FNN)
     require(Matrix)
     if("adjacency_matrix" %in% names(fcs_join_obj)) {
       print("Adjacency matrix found, skipping nearest neighbor step.")
       sm <- fcs_join_obj[["adjacency_matrix"]]
     } else {
-      if(tolower(search_method)=="fnn") {
-        adj_search <- FNN::knn.index(data = cl_data, k = adjacency_knn)
-        if(output_as=="adjacency") {
-          i_input <- rep(1:nrow(adj_search),times=ncol(adj_search))
-          j_input <- as.vector(adj_search)
-          sm <- Matrix::sparseMatrix(i=i_input,j=j_input,dims=c(nrow(adj_search),nrow(adj_search)))
-          fcs_join_obj[["adjacency_matrix"]] <- sm
-        } else if(output_as=="search"){
-          fcs_join_obj[["search"]] <- adj_search
-        }
-      } else if(tolower(search_method)=="rann") {
-        require(RANN)
-        require(parallel)
-        require(future)
-        require(future.apply)
+      require(RANN)
+      require(parallel)
+      require(future)
+      require(future.apply)
 
         if(num_cores > parallel::detectCores()) {
           warning(paste0(num_cores," specified but only ",parallel::detectCores()," available. Proceeding with max available cores."))
-        }
-        if(num_cores == 0) {
+          num_core <- parallel::detectCores()
+        } else if(num_cores == 0) {
           num_core <- parallel::detectCores()
         } else {
           num_core <- num_cores
         }
+        
+        # Warn if too many cores specified - diminishing returns and overhead beyond ~16
+        if(num_core > 16) {
+          warning(paste0("Using ", num_core, " cores may cause excessive overhead. Consider using 8-16 cores for optimal performance."))
+        }
+        
         if(num_core > 1) {
           print(paste0("searching with ", num_core, " cores"))
         } else {
@@ -229,12 +191,9 @@ fcs_cluster <- function(fcs_join_obj,
                       treetype = "kd", searchtype = "standard")
           })
         }, error = function(e) {
-          parallel_error <- paste("multisession future_lapply failed:", conditionMessage(e))
+          parallel_error <<- paste("multisession future_lapply failed:", conditionMessage(e))
           warning(parallel_error)
           NULL
-        }, finally = {
-          tryCatch(future::plan(future::sequential), error = function(e) {})
-          gc()
         })
         
         if (is.null(search_out)) {
@@ -249,8 +208,10 @@ fcs_cluster <- function(fcs_join_obj,
                       treetype = "kd", searchtype = "standard")
           })
         }
-        # conservatively reset to sequential
+        
+        # Reset to sequential only after all work is complete
         future::plan(future::sequential)
+        gc()
 
         for(i in 1:length(search_out)) {
           if(i==1) {
@@ -260,17 +221,14 @@ fcs_cluster <- function(fcs_join_obj,
           }
         }
 
-        nn_idx <- search_id
-        if(output_as=="adjacency") {
-          i_input <- rep(1:nrow(nn_idx),times=num_neighbors-1)
-          j_input <- as.vector(nn_idx[,2:num_neighbors])
-          sm <- Matrix::sparseMatrix(i=i_input,j=j_input,dims=c(nrow(nn_idx),nrow(nn_idx)))
-          fcs_join_obj[["adjacency_matrix"]] <- sm
-        } else if(output_as=="search"){
-          fcs_join_obj[["search"]] <- nn_idx
-        }
-      } else {
-        stop("error in argument 'search_method': use either 'RANN' or 'FNN'")
+      nn_idx <- search_id
+      if(output_as=="adjacency") {
+        i_input <- rep(1:nrow(nn_idx),times=num_neighbors-1)
+        j_input <- as.vector(nn_idx[,2:num_neighbors])
+        sm <- Matrix::sparseMatrix(i=i_input,j=j_input,dims=c(nrow(nn_idx),nrow(nn_idx)))
+        fcs_join_obj[["adjacency_matrix"]] <- sm
+      } else if(output_as=="search"){
+        fcs_join_obj[["search"]] <- nn_idx
       }
       if(search_only) {
         if(!'object_history' %in% names(fcs_join_obj)) {
@@ -311,6 +269,8 @@ fcs_cluster <- function(fcs_join_obj,
       return(fcs_join_obj)
     } else if(tolower(language)=="r") {
       require(igraph)
+      # Symmetrize the sparse matrix for undirected graph
+      sm <- sm + Matrix::t(sm)
       G <- igraph::graph.adjacency(adjmatrix = sm, mode = "undirected")
       if(tolower(algorithm)=="leiden") {
         set.seed(123)

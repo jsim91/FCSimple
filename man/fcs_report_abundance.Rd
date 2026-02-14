@@ -6,7 +6,7 @@
 \usage{
 fcs_report_abundance(
   fcs_join_obj,
-  report_algorithm = c("leiden", "flowsom", "louvain", "phenograph", "git"),
+  report_algorithm = c("leiden", "flowsom", "louvain", "phenograph"),
   outdir = getwd(),
   add_timestamp = TRUE,
   append_file_string = NA
@@ -18,7 +18,7 @@ numeric matrix, as produced by \code{FCSimple::fcs_calculate_abundance()}.}
 
 \item{report_algorithm}{Character scalar. Name of the abundance matrix to
 export; must be one of \code{"leiden"}, \code{"flowsom"}, \code{"louvain"},
-\code{"phenograph"}, or \code{"git"}. Defaults to \code{"leiden"}.}
+or \code{"phenograph"}. Defaults to \code{"leiden"}.}
 
 \item{outdir}{Character scalar. Path to an existing directory where the
 CSV will be written. Trailing slashes are removed internally.

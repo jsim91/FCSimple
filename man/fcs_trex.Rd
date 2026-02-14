@@ -66,7 +66,7 @@ This implementation follows the original T-REX workflow of Barone et al. (2021),
 of Marker Enrichment Modeling (MEM) for hotspot phenotyping per Diggins et al. (2017). Steps:
 \enumerate{
 \item Extract 2D embedding and split cells into reference vs. comparison groups.
-\item For each cell, query its k nearest neighbors (k = \code{k}) via \code{FNN::get.knnx()}.
+\item For each cell, query its k nearest neighbors (k = \code{k}) via \code{RANN::nn2()}.
 \item Compute local fraction of neighbors in each group; flag cells below
 \code{change_thresholds[1]} (contraction) or above \code{change_thresholds[2]}
 (expansion).

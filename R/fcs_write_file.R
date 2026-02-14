@@ -30,9 +30,8 @@
 #'
 #' @param include_clusterings
 #'   Character vector of clustering results to include. Each element (e.g.
-#'   `"leiden"`, `"flowsom"`, `"louvain"`, `"phenograph"`, `"git"`) must match
-#'   a list element in `fcs_join_obj` with `clusters`. Defaults to all five.
-#'   Cluster columns are named `<algorithm>_cluster`.
+#'   `"leiden"`, `"flowsom"`, `"louvain"`, `"phenograph"`) must match
+#'   a list element in `fcs_join_obj` with `clusters`. Cluster columns are named `<algorithm>_cluster`.
 #'
 #' @param subset_rows
 #'   Either `"all"` (default) to write every event, or an integer vector of
@@ -94,7 +93,7 @@ fcs_write.FCS <- function(fcs_join_obj,
                           fcs_name = "fcs_out",
                           data_format = c("raw","transformed"),
                           include_reductions = c("UMAP","tSNE"),
-                          include_clusterings = c("leiden","flowsom","louvain","phenograph","git"),
+                          include_clusterings = c("leiden","flowsom","louvain","phenograph"),
                           subset_rows = "all", # either "all" or a numeric vector of positions to write to file
                           outdir = getwd(),
                           include_timestamp = TRUE)

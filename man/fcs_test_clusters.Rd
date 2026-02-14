@@ -14,7 +14,7 @@ fcs_test_clusters(
   abundance = NA,
   heatmap_matrix = NA,
   force_max = FALSE,
-  algorithm = c("leiden", "flowsom", "louvain", "phenograph", "git"),
+  algorithm = c("leiden", "flowsom", "louvain", "phenograph"),
   Rcolorbrewer_palette = "RdYlBu",
   dot_size = 1,
   overlay_heatmap_numbers = TRUE,

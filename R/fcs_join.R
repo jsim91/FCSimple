@@ -201,6 +201,7 @@ fcs_join <- function(files,
     rm(csv_data); gc()
     csv <- do.call(rbind, csv_data)
     src <- rep(names(csv_data), rep(sapply(csv_data, nrow)))
+    src <- gsub('\\.(csv|fcs)$','',src)
     rd <- stringr::str_extract(src, batch_pattern)
     meta <- data.frame(patient_ID = src, run_date = rd); meta <- meta[!duplicated(meta$patient_ID),]
 
@@ -253,6 +254,7 @@ fcs_join <- function(files,
   }
   if(!apply_transform) {
     src <- rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))
+    src <- gsub('\\.(csv|fcs)$','',src)
     rd <- stringr::str_extract(string = src, pattern = batch_pattern)
     if(sum(is.na(rd))!=0) {
       warning('One or more run_date is NA. Returning placeholder run_date values. Consider adjusting batch_pattern.')
@@ -384,6 +386,7 @@ fcs_join <- function(files,
       }
       print("transformation completed successfully")
       src <- rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))
+      src <- gsub('\\.(csv|fcs)$','',src)
       rd <- stringr::str_extract(string = src, pattern = batch_pattern)
       if(sum(is.na(rd))!=0) {
         warning('One or more run_date is NA. Returning placeholder run_date values. Consider adjusting batch_pattern.')
@@ -431,6 +434,7 @@ fcs_join <- function(files,
         }
       }
       src <- rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))
+      src <- gsub('\\.(csv|fcs)$','',src)
       rd <- stringr::str_extract(string = src, pattern = batch_pattern)
       if(sum(is.na(rd))!=0) {
         warning('One or more run_date is NA. Returning placeholder run_date values. Consider adjusting batch_pattern.')
@@ -519,6 +523,7 @@ fcs_join <- function(files,
       }
       # if(length(grep("DATE|date|Date",names(fs[[1]]@description)))!=0) {
         src <- rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs,nrow)))
+        src <- gsub('\\.(csv|fcs)$','',src)
         rd <- stringr::str_extract(string = src, pattern = batch_pattern)
         if(sum(is.na(rd))!=0) {
           warning('One or more run_date is NA. Returning placeholder run_date values. Consider adjusting batch_pattern.')

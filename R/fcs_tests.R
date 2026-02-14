@@ -149,7 +149,7 @@
 #' @export
 fcs_test_clusters <- function(fcs_join_obj, compare_list = NA, color_list = NA, comparisons = NA, denominator_cell_type = NA,
                               x_order = NULL, abundance = NA, heatmap_matrix = NA, force_max = FALSE,
-                              algorithm = c("leiden","flowsom","louvain","phenograph","git"),
+                              algorithm = c("leiden","flowsom","louvain","phenograph"),
                               Rcolorbrewer_palette = "RdYlBu", # must be a colorbrewer palette that's 11 long such as Spectral or RdYlBu
                               dot_size = 1, overlay_heatmap_numbers = TRUE, paired_test = FALSE,
                               p_text_size = 5, paired_line_stroke = 0.1, paired_line_color = "black",

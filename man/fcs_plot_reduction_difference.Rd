@@ -16,7 +16,7 @@ fcs_plot_reduction_difference(
   dbscan_minPts = "auto",
   legend_label_text_size = 12,
   annotate_clusters = TRUE,
-  cluster_algorithm = c("leiden", "flowsom", "louvain", "phenograph", "git"),
+  cluster_algorithm = c("leiden", "flowsom", "louvain", "phenograph"),
   cluster_number_annotation_size = 5,
   contour_bin_width = 0.001,
   legend_orientation = c("horizontal", "vertical"),
@@ -33,7 +33,7 @@ FCSimple::fcs_reduce_dimensions(), containing:
 \itemize{
 \item a named element “umap” or “tsne” with component “coordinates” (cell × 2 matrix)
 \item clustering results under one of “leiden”, “louvain”, “flowsom”,
-“phenograph”, or “git”
+or “phenograph”
 \item a “source” vector of sample identifiers matching rows of “coordinates”
 }}
 
@@ -63,7 +63,7 @@ floor(nrow(background)/100) (default “auto”).}
 median coordinate.}
 
 \item{cluster_algorithm}{Character; which clustering result to annotate. One of
-“leiden”, “louvain”, “flowsom”, “phenograph”, or “git” (default first).}
+“leiden”, “louvain”, “flowsom”, or “phenograph” (default first).}
 
 \item{cluster_number_annotation_size}{Numeric; font size for cluster‐ID annotations (default 5).}
 

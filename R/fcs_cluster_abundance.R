@@ -15,7 +15,7 @@
 #'
 #' @param report_algorithm
 #'   Character; name of the clustering result to summarize. One of
-#'   `"leiden"`, `"flowsom"`, `"louvain"`, `"phenograph"`, or `"git"`.
+#'   `"leiden"`, `"flowsom"`, `"louvain"`, or `"phenograph"`.
 #'
 #' @param report_as
 #'   Character; type of abundance metric. One of
@@ -72,7 +72,7 @@
 #' @importFrom utils write.csv
 #' @export
 fcs_calculate_abundance <- function(fcs_join_obj,
-                                    report_algorithm = c("leiden","flowsom","louvain","phenograph","git"),
+                                    report_algorithm = c("leiden","flowsom","louvain","phenograph"),
                                     report_as = c("frequency", "fraction", "count"), return_abundance = FALSE)
 {
   if(!'object_history' %in% names(fcs_join_obj)) {
@@ -143,7 +143,7 @@ fcs_calculate_abundance <- function(fcs_join_obj,
 #'
 #' @param report_algorithm Character scalar. Name of the abundance matrix to
 #'   export; must be one of `"leiden"`, `"flowsom"`, `"louvain"`,
-#'   `"phenograph"`, or `"git"`. Defaults to `"leiden"`.
+#'   or `"phenograph"`. Defaults to `"leiden"`.
 #'
 #' @param outdir Character scalar. Path to an existing directory where the
 #'   CSV will be written. Trailing slashes are removed internally.
@@ -191,7 +191,7 @@ fcs_calculate_abundance <- function(fcs_join_obj,
 #' @importFrom utils write.csv
 #' @export
 fcs_report_abundance <- function(fcs_join_obj,
-                                 report_algorithm = c("leiden","flowsom","louvain","phenograph","git"),
+                                 report_algorithm = c("leiden","flowsom","louvain","phenograph"),
                                  outdir = getwd(), add_timestamp = TRUE, append_file_string = NA)
 {
   abundance_values <- fcs_join_obj[[tolower(report_algorithm)]][["abundance"]]

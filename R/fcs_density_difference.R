@@ -10,7 +10,7 @@
 #'   FCSimple::fcs_reduce_dimensions(), containing:
 #'   - a named element “umap” or “tsne” with component “coordinates” (cell × 2 matrix)
 #'   - clustering results under one of “leiden”, “louvain”, “flowsom”,
-#'     “phenograph”, or “git”
+#'     or “phenograph”
 #'   - a “source” vector of sample identifiers matching rows of “coordinates”
 #'
 #' @param reduction
@@ -50,7 +50,7 @@
 #'
 #' @param cluster_algorithm
 #'   Character; which clustering result to annotate. One of
-#'   “leiden”, “louvain”, “flowsom”, “phenograph”, or “git” (default first).
+#'   “leiden”, “louvain”, “flowsom”, or “phenograph” (default first).
 #'
 #' @param cluster_number_annotation_size
 #'   Numeric; font size for cluster‐ID annotations (default 5).
@@ -139,7 +139,7 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
                                           outdir = getwd(), axis_title_text_size = 12,
                                           dbscan_eps = "auto", dbscan_minPts = "auto",
                                           legend_label_text_size = 12, annotate_clusters = TRUE,
-                                          cluster_algorithm = c("leiden","flowsom","louvain","phenograph","git"),
+                                          cluster_algorithm = c("leiden","flowsom","louvain","phenograph"),
                                           cluster_number_annotation_size = 5, contour_bin_width = 0.001,
                                           legend_orientation = c("horizontal","vertical"),
                                           figure_width = 8, figure_height = 8, hull_radius = 1.5,

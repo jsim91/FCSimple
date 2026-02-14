@@ -6,7 +6,7 @@
 \usage{
 fcs_calculate_abundance(
   fcs_join_obj,
-  report_algorithm = c("leiden", "flowsom", "louvain", "phenograph", "git"),
+  report_algorithm = c("leiden", "flowsom", "louvain", "phenograph"),
   report_as = c("frequency", "fraction", "count"),
   return_abundance = FALSE
 )
@@ -21,7 +21,7 @@ containing at minimum:
 }}
 
 \item{report_algorithm}{Character; name of the clustering result to summarize. One of
-\code{"leiden"}, \code{"flowsom"}, \code{"louvain"}, \code{"phenograph"}, or \code{"git"}.}
+\code{"leiden"}, \code{"flowsom"}, \code{"louvain"}, or \code{"phenograph"}.}
 
 \item{report_as}{Character; type of abundance metric. One of
 \code{"frequency"} (0–100), \code{"fraction"} (0–1), or \code{"count"} (raw cell counts).

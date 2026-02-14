@@ -22,8 +22,8 @@
 #'
 #' @param clustering_algorithm
 #'   Character or `NULL`; name of the clustering algorithm to use for the
-#'   prepared object (e.g., `"leiden"`, `"flowsom"`, `"louvain"`, `"phenograph"`,
-#'   `"git"`). If `NULL` (default), uses the first detected algorithm. The
+#'   prepared object (e.g., `"leiden"`, `"flowsom"`, `"louvain"`, `"phenograph"`).
+#'   If `NULL` (default), uses the first detected algorithm.
 #'   selected algorithm will be renamed to `"cluster"` for FCView compatibility.
 #'
 #' @param output_dir
@@ -134,7 +134,7 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
     stop("Missing required fields: ", paste(missing_required, collapse = ", "))
   }
 
-  all_cluster_algos <- c("leiden", "flowsom", "louvain", "phenograph", "git", "cluster")
+  all_cluster_algos <- c("leiden", "flowsom", "louvain", "phenograph", "cluster")
   present_algos <- c()
   for (algo in all_cluster_algos) {
     if (algo %in% names(fcs_join_obj)) {

@@ -8,11 +8,12 @@ fcs_reduce_dimensions(
   fcs_join_obj,
   use_rep = "data",
   algorithm = c("tsne", "umap"),
-  language = c("R", "Python"),
+  language = "R",
   umap_nn = 30,
   umap_min_dist = 0.1,
   tsne_perplexity = 30,
-  nthread = ceiling(parallel::detectCores()/2)
+  nthread = ceiling(parallel::detectCores()/2),
+  seed = NA
 )
 }
 \arguments{
@@ -51,6 +52,11 @@ Default is \code{c("tsne","umap")} (selects first).
 \item{tsne_perplexity}{Numeric; perplexity parameter for t‐SNE (default 30).}
 
 \item{nthread}{Integer; number of CPU threads for Rtsne (default \code{ceiling(parallel::detectCores()/2)}).}
+
+\item{seed}{Integer or NA; random seed for reproducibility (default NA).
+When NA, Python implementations will not set a seed, allowing for faster
+multi-threaded computation. When set to an integer, both R and Python
+implementations will use this seed for reproducible results.}
 }
 \value{
 The input \code{fcs_join_obj}, with a new element named by the
@@ -63,9 +69,6 @@ lower‐case \code{algorithm}:
 }
 \description{
 Performs UMAP or t‐SNE on a flow cytometry analysis object. By default,
-reduces the (batch‐corrected) expression matrix to two dimensions
-using either the R implementation (uwot or Rtsne) or an external
-Python script. The result is stored in your object under “umap” or “tsne”.
 }
 \details{
 \enumerate{

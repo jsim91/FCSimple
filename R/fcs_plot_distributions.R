@@ -28,7 +28,7 @@
 #'  
 #' @param plot_algorithm  
 #'   Character; clustering result to use when `separate_by = "cluster"`.  
-#'   One of `"leiden"`, `"flowsom"`, `"louvain"`, `"phenograph"`, or `"git"`.  
+#'   One of `"leiden"`, `"flowsom"`, `"louvain"`, or `"phenograph"`.  
 #'   Default `"leiden"`.  
 #'  
 #' @param outdir  
@@ -99,7 +99,7 @@
 fcs_plot_distribution <- function(fcs_join_obj,
                                   override_correction = TRUE, 
                                   separate_by = c("none", "date", "cluster", "condition"),
-                                  plot_algorithm = c("leiden","flowsom","louvain","phenograph","git"),
+                                  plot_algorithm = c("leiden","flowsom","louvain","phenograph"),
                                   outdir = getwd(),
                                   plot_palette = NULL,
                                   rm_zero = FALSE,

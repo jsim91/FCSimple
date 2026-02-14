@@ -7,14 +7,12 @@
 fcs_cluster(
   fcs_join_obj,
   use_rep = "data",
-  language = c("R", "Python"),
-  algorithm = c("leiden", "flowsom", "louvain", "phenograph", "git"),
+  language = "R",
+  algorithm = c("leiden", "flowsom", "louvain", "phenograph"),
   leiden_louvain_resolution = 1,
   flowsom_nClus = 15,
   phenograph_k = 30,
   adjacency_knn = 30,
-  git_k = 30,
-  search_method = c("FNN", "RANN"),
   search_only = FALSE,
   num_cores = ceiling(parallel::detectCores()/2),
   output_as = "adjacency"
@@ -29,11 +27,11 @@ and use \code{fcs_join_obj$batch_correction$data}.}
 \item{use_rep}{Character; representation to cluster. \code{"data"} (default) uses raw expression
 values, \code{"pca"} uses principal‐component coordinates.}
 
-\item{language}{Character; runtime environment for “git” clustering. \code{"R"} (default) runs
-algorithms via R packages, \code{"Python"} calls out to bundled Python scripts.}
+\item{language}{Character; runtime environment for Python-backed clustering when applicable. \code{"R"} (default) runs
+algorithms via R packages, \code{"Python"} calls out to bundled Python scripts for Leiden/Louvain.}
 
 \item{algorithm}{Character; clustering algorithm to apply. One of \code{"leiden"}, \code{"louvain"},
-\code{"flowsom"}, \code{"phenograph"}, or \code{"git"}.}
+\code{"flowsom"}, or \code{"phenograph"}.}
 
 \item{leiden_louvain_resolution}{Numeric; resolution parameter for Leiden and Louvain clustering (default 1).}
 
@@ -42,10 +40,6 @@ algorithms via R packages, \code{"Python"} calls out to bundled Python scripts.}
 \item{phenograph_k}{Integer; number of nearest neighbors for PhenoGraph (default 30).}
 
 \item{adjacency_knn}{Integer; k for nearest‐neighbor graph in Leiden/Louvain (default 30).}
-
-\item{git_k}{Integer; cluster count for Python “git” method (default 30).}
-
-\item{search_method}{Character; neighbor‐search backend: \code{"FNN"} (default) or \code{"RANN"}.}
 
 \item{search_only}{Logical; if \code{TRUE}, stops after neighbor search and returns updated
 \code{fcs_join_obj} with either \code{adjacency_matrix} or \code{search} element
@@ -68,14 +62,12 @@ The original \code{fcs_join_obj} augmented with:
 }
 \description{
 Applies clustering to a joined flow cytometry object using one of several
-algorithms: Leiden, Louvain, FlowSOM, PhenoGraph, or a Python‐based “git”
-method. Can operate on raw expression data or PCA coordinates. Automatically
+algorithms: Leiden, Louvain, FlowSOM, or PhenoGraph. Can operate on raw expression data or PCA coordinates. Automatically
 uses batch‐corrected data if available.
 }
 \details{
 \itemize{
 \item If batch correction is found, clustering runs on \code{fcs_join_obj$batch_correction$data}.
-\item “git” writes a CSV/MTX, invokes a Python script, then reads back cluster IDs.
 \item Leiden/Louvain builds a sparse k‐NN graph and calls igraph::cluster_*().
 \item FlowSOM transforms data into a flowFrame and calls FlowSOM::FlowSOM().
 \item PhenoGraph invokes Rphenograph::Rphenograph() and extracts membership.

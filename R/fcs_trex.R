@@ -13,7 +13,7 @@
 #'   This implementation follows the original T-REX workflow of Barone et al. (2021), with the addition
 #'   of Marker Enrichment Modeling (MEM) for hotspot phenotyping per Diggins et al. (2017). Steps:
 #'   1. Extract 2D embedding and split cells into reference vs. comparison groups.
-#'   2. For each cell, query its k nearest neighbors (k = `k`) via `FNN::get.knnx()`.
+#'   2. For each cell, query its k nearest neighbors (k = `k`) via `RANN::nn2()`.
 #'   3. Compute local fraction of neighbors in each group; flag cells below
 #'      `change_thresholds[1]` (contraction) or above `change_thresholds[2]`
 #'      (expansion).
@@ -85,7 +85,7 @@
 #'    Characterizing cell subsets using Marker Enrichment Modeling. Nat Methods.
 #'    2017;14(3):275–278. doi:10.1038/nmeth.4149
 #'
-#' @importFrom FNN get.knnx
+#' @importFrom RANN nn2
 #' @importFrom cytoMEM MEM build_heatmaps
 #' @export
 fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), outdir,
@@ -102,7 +102,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   require(dbscan)
   require(ggrepel)
   require(viridis)
-  require(FNN)
+  require(RANN)
   require(grid)
   require(gridExtra)
 
@@ -234,7 +234,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   } else if(tolower(reduction)=="tsne") {
     map <- join_data[,c("tSNE1","tSNE2","set")]
   }
-  search <- knn.index(data = map[,1:2], k = neighborhood_size)
+  search <- RANN::nn2(data = map[,1:2], k = neighborhood_size)$nn.idx
 
   search_copy <- search
   search_copy[search_copy %in% 1:nrow(ds1)] <- 0

@@ -30,8 +30,8 @@ updates all associated fields (data, source, run_date, cluster assignments,
 UMAP/tSNE coordinates) accordingly.}
 
 \item{clustering_algorithm}{Character or \code{NULL}; name of the clustering algorithm to use for the
-prepared object (e.g., \code{"leiden"}, \code{"flowsom"}, \code{"louvain"}, \code{"phenograph"},
-\code{"git"}). If \code{NULL} (default), uses the first detected algorithm. The
+prepared object (e.g., \code{"leiden"}, \code{"flowsom"}, \code{"louvain"}, \code{"phenograph"}).
+If \code{NULL} (default), uses the first detected algorithm.
 selected algorithm will be renamed to \code{"cluster"} for FCView compatibility.}
 
 \item{output_dir}{Character or \code{NULL}; path to directory where the .RData file will be saved.
