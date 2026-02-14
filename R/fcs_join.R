@@ -1,12 +1,19 @@
-#' @title Read and Join Multiple FCS Files into a Single Analysis Object
+#' @title Read and Join Multiple FCS or CSV Files into a Single Analysis Object
 #'
 #' @description
-#'   Reads a set of FCS files, optionally downsamples and applies transformations
+#'   Reads a set of FCS or CSV files, optionally downsamples and applies transformations
 #'   (FlowJo diagnostics, asinh, biexp, or hyperlog), and concatenates them into
 #'   a unified data matrix with accompanying metadata and history.
+#'   
+#'   For CSV files, the function assumes data is already transformed. CSV files should 
+#'   be exported from FlowJo using 'CSV - Channel values' with 'Include header' and 
+#'   'Stain' selected after all transforms have been applied. Ensure a run date ($DATE) 
+#'   is included in the file names.
 #'
 #' @param files
-#'   Character vector of file paths to .fcs files.
+#'   Character vector of file paths to .fcs or .csv files. For CSV files, data 
+#'   should be pre-transformed and exported from FlowJo with proper formatting 
+#'   (see Details).
 #'
 #' @param flowjo_diagnostics_file
 #'   Optional path to a FlowJo diagnostics TXT file (Configure → Diagnostics →
@@ -75,33 +82,36 @@
 #'
 #' @details
 #'   Internally, the function:
-#'   1. Reads all files into a `flowSet` via `flowCore::read.flowSet()`.
+#'   1. For FCS files: Reads all files into a `flowSet` via `flowCore::read.flowSet()`.
+#'      For CSV files: Reads using `data.table::fread()` assuming pre-transformed data.
 #'   2. Optionally downsamples each file to `downsample_size`.
-#'   3. Extracts expression matrices with `flowCore::exprs()`.
-#'   4. If `transform_per_channel = TRUE`, launches the package’s
+#'   3. Extracts expression matrices with `flowCore::exprs()` (FCS) or directly from 
+#'      data frames (CSV).
+#'   4. If `transform_per_channel = TRUE` (FCS only), launches the package's
 #'      `transform_app/` Shiny GUI so you can inspect per-channel
 #'      diagnostics and build a custom `transformList`.
 #'   5. Otherwise, applies the global transform as specified by
-#'      `transform_type` or user’s `transform_function`.
+#'      `transform_type` or user's `transform_function` (FCS only).
 #'   6. Concatenates raw and transformed data into `raw` and `data` matrices.
-#'   7. Builds `source` and `run_date` via `flowCore::sampleNames()` and
-#'      `stringr::str_extract()`.
-#'   8. Records `collection_instrument` and appends a timestamp in
+#'   7. Builds `source` and `run_date` via `flowCore::sampleNames()` or file names 
+#'      and `stringr::str_extract()`.
+#'   8. Creates `metadata` data frame with patient_ID and run_date.
+#'   9. Records `collection_instrument` and appends a timestamp in
 #'      `object_history`.
 #'
 #' @return
 #'   A list with elements:
-#'   - `data`: numeric matrix of transformed events × channels.
-#'   - `raw`: numeric matrix of untransformed events × channels.
+#'   - `data`: numeric matrix of transformed events × channels (or data frame for CSV).
+#'   - `raw`: numeric matrix of untransformed events × channels (or NA for CSV files).
 #'   - `source`: character vector of sample identifiers for each event.
 #'   - `run_date`: character vector parsed from `source` via `batch_pattern`.
-#'   - `transform_list`: per-channel transform parameters (if FlowJo used).
+#'   - `metadata`: data frame with columns `patient_ID` and `run_date` (one row per file).
+#'   - `transform_list`: per-channel transform parameters (if FlowJo diagnostics file used).
 #'   - `collection_instrument`: chosen `instrument_type`.
 #'   - `object_history`: timestamped entry recording the join.
 #'
 #' @examples
-#' \dontrun{
-#' # Basic join with default transforms
+#' \dontrun{ (FCS files)
 #' files <- list.files("data/fcs", pattern = "\\.fcs$", full.names = TRUE)
 #' joined <- FCSimple::fcs_join(files)
 #'
@@ -112,6 +122,11 @@
 #' )
 #'
 #' # Raw join without any transforms
+#' joined_raw <- FCSimple::fcs_join(files, apply_transform = FALSE)
+#'
+#' # Join pre-transformed CSV files exported from FlowJo
+#' csv_files <- list.files("data/flowjo_export", pattern = "\\.csv$", full.names = TRUE)
+#' joined_csv <- FCSimple::fcs_join(csv_files
 #' joined_raw <- FCSimple::fcs_join(files, apply_transform = FALSE)
 #' }
 #'
@@ -170,7 +185,36 @@ fcs_join <- function(files,
     stop("'instrument_type' must be one of: 'cytof' for mass cytometry or 'flow' for fluorescence cytometry")
   }
   if(any(length(files)==0,class(files[1])!="character")) {
-    stop("'files' should be a vector of file names of .fcs files to be used in the analysis")
+    stop("'files' should be a vector of file names of .fcs or .csv files to be used in the analysis")
+  }
+  if(mean(grepl(pattern = '\\.csv$', x = files))==1) { # csv case
+    warning("'fcs_join with csv files assumes data is already transformed. Export from flowjo using 'CSV - Channel values' with 'Include header' and 'Stain' selected after all transforms have been sent. Ensure a run date ($DATE) is included in the file names. Refer to https://github.com/jsim91/FCSimple 'Data Input Format' section.")
+    csv_data <- lapply(X = files, FUN = data.table::fread, check.names = FALSE,
+                       data.table = FALSE, nThread = parallel::detectCores())
+    names(csv_data) <- gsub(pattern = '^.\\/', replacement = '', x = files)
+    if(!is.na(downsample_size)) {
+      csv_ds <- lapply(X = csv_data, FUN = function(arg) {
+        if(nrow(arg)>downsample_size) {
+          set.seed(123); return(arg[sample(1:nrow(arg), downsample_size, replace = F),])
+        } else {
+          return(arg)
+        }
+      })
+    } else {
+      csv_ds <- csv_data
+    }
+    rm(csv_data); gc()
+    csv <- do.call(rbind, csv_data)
+    src <- rep(names(csv_data), rep(sapply(csv_data, nrow)))
+    rd <- stringr::str_extract(src, batch_pattern)
+    meta <- data.frame(patient_ID = src, run_date = rd); meta <- meta[!duplicated(meta$patient_ID),]
+    return(list(data = csv_ds,
+                raw = NA,
+                source = src,
+                run_date = rd,
+                metadata = meta,
+                collection_instrument = instrument_type,
+                object_history = paste0("joined: ",Sys.time())))
   }
   if(is.null(flowjo_diagnostics_file)) {
     if(!transform_per_channel) {
