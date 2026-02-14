@@ -2,7 +2,7 @@
 % Please edit documentation in R/fcs_join.R
 \name{fcs_join}
 \alias{fcs_join}
-\title{Read and Join Multiple FCS Files into a Single Analysis Object}
+\title{Read and Join Multiple FCS or CSV Files into a Single Analysis Object}
 \usage{
 fcs_join(
   files,
@@ -26,7 +26,9 @@ fcs_join(
 )
 }
 \arguments{
-\item{files}{Character vector of file paths to .fcs files.}
+\item{files}{Character vector of file paths to .fcs or .csv files. For CSV files, data
+should be pre-transformed and exported from FlowJo with proper formatting
+(see Details).}
 
 \item{flowjo_diagnostics_file}{Optional path to a FlowJo diagnostics TXT file (Configure → Diagnostics →
 “Show XML for Workspace”). Provides per-channel transform parameters.
@@ -79,41 +81,49 @@ Default \code{"[0-9]+\\\\-[A-Za-z]+\\\\-[0-9]+"}.}
 \value{
 A list with elements:
 \itemize{
-\item \code{data}: numeric matrix of transformed events × channels.
-\item \code{raw}: numeric matrix of untransformed events × channels.
+\item \code{data}: numeric matrix of transformed events × channels (or data frame for CSV).
+\item \code{raw}: numeric matrix of untransformed events × channels (or NA for CSV files).
 \item \code{source}: character vector of sample identifiers for each event.
 \item \code{run_date}: character vector parsed from \code{source} via \code{batch_pattern}.
-\item \code{transform_list}: per-channel transform parameters (if FlowJo used).
+\item \code{metadata}: data frame with columns \code{patient_ID} and \code{run_date} (one row per file).
+\item \code{transform_list}: per-channel transform parameters (if FlowJo diagnostics file used).
 \item \code{collection_instrument}: chosen \code{instrument_type}.
 \item \code{object_history}: timestamped entry recording the join.
 }
 }
 \description{
-Reads a set of FCS files, optionally downsamples and applies transformations
+Reads a set of FCS or CSV files, optionally downsamples and applies transformations
 (FlowJo diagnostics, asinh, biexp, or hyperlog), and concatenates them into
 a unified data matrix with accompanying metadata and history.
+
+For CSV files, the function assumes data is already transformed. CSV files should
+be exported from FlowJo using 'CSV - Channel values' with 'Include header' and
+'Stain' selected after all transforms have been applied. Ensure a run date ($DATE)
+is included in the file names.
 }
 \details{
 Internally, the function:
 \enumerate{
-\item Reads all files into a \code{flowSet} via \code{flowCore::read.flowSet()}.
+\item For FCS files: Reads all files into a \code{flowSet} via \code{flowCore::read.flowSet()}.
+For CSV files: Reads using \code{data.table::fread()} assuming pre-transformed data.
 \item Optionally downsamples each file to \code{downsample_size}.
-\item Extracts expression matrices with \code{flowCore::exprs()}.
-\item If \code{transform_per_channel = TRUE}, launches the package’s
+\item Extracts expression matrices with \code{flowCore::exprs()} (FCS) or directly from
+data frames (CSV).
+\item If \code{transform_per_channel = TRUE} (FCS only), launches the package's
 \verb{transform_app/} Shiny GUI so you can inspect per-channel
 diagnostics and build a custom \code{transformList}.
 \item Otherwise, applies the global transform as specified by
-\code{transform_type} or user’s \code{transform_function}.
+\code{transform_type} or user's \code{transform_function} (FCS only).
 \item Concatenates raw and transformed data into \code{raw} and \code{data} matrices.
-\item Builds \code{source} and \code{run_date} via \code{flowCore::sampleNames()} and
-\code{stringr::str_extract()}.
+\item Builds \code{source} and \code{run_date} via \code{flowCore::sampleNames()} or file names
+and \code{stringr::str_extract()}.
+\item Creates \code{metadata} data frame with patient_ID and run_date.
 \item Records \code{collection_instrument} and appends a timestamp in
 \code{object_history}.
 }
 }
 \examples{
-\dontrun{
-# Basic join with default transforms
+\dontrun{ (FCS files)
 files <- list.files("data/fcs", pattern = "\\\\.fcs$", full.names = TRUE)
 joined <- FCSimple::fcs_join(files)
 
@@ -124,6 +134,11 @@ joined2 <- FCSimple::fcs_join(
 )
 
 # Raw join without any transforms
+joined_raw <- FCSimple::fcs_join(files, apply_transform = FALSE)
+
+# Join pre-transformed CSV files exported from FlowJo
+csv_files <- list.files("data/flowjo_export", pattern = "\\\\.csv$", full.names = TRUE)
+joined_csv <- FCSimple::fcs_join(csv_files
 joined_raw <- FCSimple::fcs_join(files, apply_transform = FALSE)
 }
 
