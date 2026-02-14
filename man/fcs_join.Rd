@@ -8,10 +8,9 @@ fcs_join(
   files,
   flowjo_diagnostics_file = NULL,
   apply_transform = TRUE,
-  instrument_type = c("cytof", "flow"),
   use_descriptive_column_names = TRUE,
   transform_function = NULL,
-  transform_type = c("asinh", "biexp", "hyperlog"),
+  transform_type = "asinh",
   asinh_transform_cofactor = 5,
   biexp_transform_pos = 4.5,
   biexp_transform_neg = 0,
@@ -21,7 +20,7 @@ fcs_join(
   hyperlog_transform_W = 0.001,
   hyperlog_transform_A = 2,
   transform_per_channel = TRUE,
-  downsample_size = c(NA, 25000),
+  downsample_size = NA,
   batch_pattern = "[0-9]+\\\\-[A-Za-z]+\\\\-[0-9]+"
 )
 }
@@ -37,9 +36,6 @@ Default \code{NULL}.}
 \item{apply_transform}{Logical; if \code{TRUE} (default), applies channel transformations. If \code{FALSE},
 returns raw data only.}
 
-\item{instrument_type}{Character; one of \code{"cytof"} for mass cytometry or \code{"flow"} for fluorescence
-cytometry. Default \code{c("cytof","flow")} (uses first).}
-
 \item{use_descriptive_column_names}{Logical; if \code{TRUE} (default), replaces channel names with descriptive labels
 from FCS metadata.}
 
@@ -48,8 +44,7 @@ from FCS metadata.}
 \code{transform_type} when \code{transform_per_channel = TRUE}.}
 
 \item{transform_type}{Character; global transform to apply when \code{transform_per_channel = FALSE}.
-One of \code{"asinh"}, \code{"biexp"}, or \code{"hyperlog"}. Default
-\code{c("asinh","biexp","hyperlog")}.}
+One of \code{"asinh"}, \code{"biexp"}, or \code{"hyperlog"}. Default \code{"asinh"}.}
 
 \item{asinh_transform_cofactor}{Numeric cofactor for asinh transforms (default 5).}
 
@@ -73,10 +68,13 @@ function will block until you finish and close the app. If \code{FALSE},
 applies the global \code{transform_type}.}
 
 \item{downsample_size}{Integer or \code{NA}; maximum events per file to sample before joining.
-Default \code{c(NA, 25000)}: no sampling if \code{NA}, otherwise samples up to 25K.}
+Default \code{NA} (no downsampling).}
 
 \item{batch_pattern}{Regular expression to extract \code{run_date} from sample names in \code{source}.
 Default \code{"[0-9]+\\\\-[A-Za-z]+\\\\-[0-9]+"}.}
+
+\item{instrument_type}{Deprecated. Instrument type is now auto-detected: if min(data) >= 0, assumes
+'cytof' (mass cytometry); otherwise assumes 'flow' (fluorescence cytometry).}
 }
 \value{
 A list with elements:

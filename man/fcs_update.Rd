@@ -4,20 +4,16 @@
 \alias{fcs_update}
 \title{Update FCSimple Object with Instrument Metadata}
 \usage{
-fcs_update(fcs_join_obj, instrument_type = c("cytof", "flow"))
+fcs_update(fcs_join_obj)
 }
 \arguments{
 \item{fcs_join_obj}{An FCSimple analysis object (list) returned by \code{FCSimple::fcs_join()}.
 May already include \code{collection_instrument} and \code{object_history}.}
-
-\item{instrument_type}{Character of length one; the type of cytometry data. Must be either
-\code{"cytof"} (mass cytometry) or \code{"flow"} (fluorescence cytometry).
-Default is the first element of \code{c("cytof","flow")}.}
 }
 \value{
 The input \code{fcs_join_obj}, with the fields:
 \itemize{
-\item \code{collection_instrument}: set to the specified \code{instrument_type}.
+\item \code{collection_instrument}: auto-detected as 'cytof' or 'flow' based on data.
 \item \code{object_history}: a character string recording the update timestamp.
 }
 }
@@ -32,8 +28,10 @@ unchanged.
 \item If both \code{collection_instrument} and \code{object_history} are present in
 \code{fcs_join_obj}, a warning \code{"object is already up to date"} is issued
 and the original object is returned.
-\item Otherwise, \code{collection_instrument} is set to \code{instrument_type}, and
-\code{object_history} is initialized with \code{"updated: <timestamp>"}.
+\item Otherwise, \code{collection_instrument} is auto-detected based on the data:
+if min(data) >= 0, assumes 'cytof' (mass cytometry); otherwise assumes
+'flow' (fluorescence cytometry). \code{object_history} is initialized with
+\code{"updated: <timestamp>"}.
 }
 }
 \examples{
@@ -41,11 +39,11 @@ and the original object is returned.
   files <- list.files("data/fcs", "\\\\.fcs$", full.names = TRUE)
   joined <- FCSimple::fcs_join(files)
 
-  # First update adds metadata
-  updated <- FCSimple::fcs_update(joined, instrument_type = "flow")
+  # Update adds metadata (instrument_type is auto-detected)
+  updated <- FCSimple::fcs_update(joined)
 
   # Calling again warns and returns unchanged
-  unchanged <- FCSimple::fcs_update(updated, instrument_type = "cytof")
+  unchanged <- FCSimple::fcs_update(updated)
 }
 
 }

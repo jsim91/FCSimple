@@ -25,8 +25,8 @@
 #'   returns raw data only.
 #'
 #' @param instrument_type
-#'   Character; one of `"cytof"` for mass cytometry or `"flow"` for fluorescence
-#'   cytometry. Default `c("cytof","flow")` (uses first).
+#'   Deprecated. Instrument type is now auto-detected: if min(data) >= 0, assumes
+#'   'cytof' (mass cytometry); otherwise assumes 'flow' (fluorescence cytometry).
 #'
 #' @param use_descriptive_column_names
 #'   Logical; if `TRUE` (default), replaces channel names with descriptive labels
@@ -39,8 +39,7 @@
 #'
 #' @param transform_type
 #'   Character; global transform to apply when `transform_per_channel = FALSE`.
-#'   One of `"asinh"`, `"biexp"`, or `"hyperlog"`. Default
-#'   `c("asinh","biexp","hyperlog")`.
+#'   One of `"asinh"`, `"biexp"`, or `"hyperlog"`. Default `"asinh"`.
 #'
 #' @param asinh_transform_cofactor
 #'   Numeric cofactor for asinh transforms (default 5).
@@ -74,7 +73,7 @@
 #'
 #' @param downsample_size
 #'   Integer or `NA`; maximum events per file to sample before joining.
-#'   Default `c(NA, 25000)`: no sampling if `NA`, otherwise samples up to 25K.
+#'   Default `NA` (no downsampling).
 #'
 #' @param batch_pattern
 #'   Regular expression to extract `run_date` from sample names in `source`.
@@ -141,10 +140,9 @@
 fcs_join <- function(files,
                      flowjo_diagnostics_file = NULL,
                      apply_transform = TRUE,
-                     instrument_type = c("cytof","flow"),
                      use_descriptive_column_names = TRUE,
                      transform_function = NULL,
-                     transform_type = c("asinh","biexp","hyperlog"),
+                     transform_type = "asinh",
                      asinh_transform_cofactor = 5,
                      biexp_transform_pos = 4.5,
                      biexp_transform_neg = 0,
@@ -154,7 +152,7 @@ fcs_join <- function(files,
                      hyperlog_transform_W = 0.001,
                      hyperlog_transform_A = 2,
                      transform_per_channel = TRUE,
-                     downsample_size = c(NA,25000),
+                     downsample_size = NA,
                      batch_pattern = "[0-9]+\\-[A-Za-z]+\\-[0-9]+") {
   # testing
   # files <- list.files(path = "J:/oakes_flow/scenith_full_pilot/box_dl", full.names = TRUE)
@@ -181,9 +179,6 @@ fcs_join <- function(files,
   # oo <- options(scipen = 100000000000)
   # on.exit(options(oo))
   options(scipen = 1000000)
-  if(all(length(instrument_type)!=1, instrument_type %in% c("cytof","flow"))) {
-    stop("'instrument_type' must be one of: 'cytof' for mass cytometry or 'flow' for fluorescence cytometry")
-  }
   if(any(length(files)==0,class(files[1])!="character")) {
     stop("'files' should be a vector of file names of .fcs or .csv files to be used in the analysis")
   }
@@ -208,24 +203,21 @@ fcs_join <- function(files,
     src <- rep(names(csv_data), rep(sapply(csv_data, nrow)))
     rd <- stringr::str_extract(src, batch_pattern)
     meta <- data.frame(patient_ID = src, run_date = rd); meta <- meta[!duplicated(meta$patient_ID),]
+    
+    # Auto-detect instrument type based on data
+    detected_instrument <- if(min(csv, na.rm = TRUE) >= 0) "cytof" else "flow"
+    
     return(list(data = csv_ds,
                 raw = NA,
                 source = src,
                 run_date = rd,
                 metadata = meta,
-                collection_instrument = instrument_type,
+                collection_instrument = detected_instrument,
                 object_history = paste0("joined: ",Sys.time())))
   }
   if(is.null(flowjo_diagnostics_file)) {
     if(!transform_per_channel) {
-      if(length(instrument_type)>1) {
-        warning(paste0("Consider specifying 'instrument_type'. Default use is 'cytof'. If inputs are from a flow cytometer, use 'flow'. Using ",instrument_type[1]," for now."))
-        instrument_type <- instrument_type[1]
-      }
-      if(length(transform_type)>1) {
-        warning(paste0("Consider specifying 'transform_type'. Default is 'asinh'. If undesirable, you can specify 'biexp' or 'hyperlog'. Using ",transform_type[1]," for now."))
-        transform_type <- transform_type[1]
-      }
+      # No warnings needed - defaults are now sensible
     }
   }
   if(length(x = grep(pattern = "\\.fcs$", x = files, ignore.case = TRUE))!=length(files)) {
@@ -267,12 +259,16 @@ fcs_join <- function(files,
       rd <- rep('placeholder')
     }
     meta <- data.frame(patient_ID = src, run_date = rd); meta <- meta[!duplicated(meta$patient_ID),]
+    
+    # Auto-detect instrument type based on data
+    detected_instrument <- if(min(raw_data, na.rm = TRUE) >= 0) "cytof" else "flow"
+    
     return(list(data = raw_data,
                 raw = raw_data,
                 source = src,
                 run_date = rd,
                 metadata = meta,
-                collection_instrument = instrument_type,
+                collection_instrument = detected_instrument,
                 object_history = paste0("joined: ",Sys.time())))
   }
   if(!is.null(flowjo_diagnostics_file)) {
@@ -394,18 +390,25 @@ fcs_join <- function(files,
         rd <- rep('placeholder')
       }
       meta <- data.frame(patient_ID = src, run_date = rd); meta <- meta[!duplicated(meta$patient_ID),]
+      
+      # Auto-detect instrument type based on raw data
+      detected_instrument <- if(min(tmp_raw, na.rm = TRUE) >= 0) "cytof" else "flow"
+      
       return(list(data = tmp_data,
                   raw = tmp_raw,
                   source = src,
                   run_date = rd,
                   metadata = meta,
                   transform_list = tf_list,
-                  collection_instrument = instrument_type,
+                  collection_instrument = detected_instrument,
                   object_history = paste0("joined: ",Sys.time())))
     }
   }
   if(!transform_per_channel) {
-    if(tolower(instrument_type)=="cytof") {
+    # Auto-detect instrument type from raw data to choose appropriate transform cofactor
+    detected_instrument <- if(min(raw_data, na.rm = TRUE) >= 0) "cytof" else "flow"
+    
+    if(detected_instrument == "cytof") {
       if(is.null(asinh_transform_cofactor[1])) {
         asinh_transform_cofactor <- 5
       }
@@ -434,14 +437,15 @@ fcs_join <- function(files,
         rd <- rep('placeholder')
       }
       meta <- data.frame(patient_ID = src, run_date = rd); meta <- meta[!duplicated(meta$patient_ID),]
+      
       return(list(data = tmp_data,
                   raw = raw_data,
                   source = src,
                   run_date = rd,
                   metadata = meta,
-                  collection_instrument = instrument_type,
+                  collection_instrument = detected_instrument,
                   object_history = paste0("joined: ",Sys.time())))
-    } else if(tolower(instrument_type)=="flow") {
+    } else if(detected_instrument == "flow") {
       if(transform_type=="asinh") {
         if(is.null(asinh_transform_cofactor[1])) {
           asinh_transform_cofactor <- 200
@@ -521,12 +525,16 @@ fcs_join <- function(files,
           rd <- rep('placeholder')
         }
         meta <- data.frame(patient_ID = src, run_date = rd); meta <- meta[!duplicated(meta$patient_ID),]
+        
+        # Auto-detect instrument type based on data
+        detected_instrument <- if(min(tmp_data, na.rm = TRUE) >= 0) "cytof" else "flow"
+        
         return(list(data = tmp_data,
                     raw = raw_data,
                     source = src,
                     run_date = rd,
                     metadata = meta,
-                    collection_instrument = instrument_type,
+                    collection_instrument = detected_instrument,
                     object_history = paste0("joined: ",Sys.time())))
       # } else {
       #   return(list(data = tmp_data,
