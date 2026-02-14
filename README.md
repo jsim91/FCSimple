@@ -14,14 +14,15 @@ Tools for the analysis of .fcs data sets. Pair with [FCView](https://github.com/
 
 ## Installation
 
-Install FCSimple directly from GitHub using devtools:
+Install FCSimple using BiocManager to ensure all dependencies (including Bioconductor packages) are properly installed:
 
 ```r
-# Install devtools if not already installed
-if (!require("devtools")) install.packages("devtools")
+# Install BiocManager if not already installed
+if (!require("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
 
-# Install FCSimple
-devtools::install_github("jsim91/FCSimple")
+# Install FCSimple with all dependencies
+BiocManager::install("jsim91/FCSimple")
 ```
 
 # Current dependencies include:

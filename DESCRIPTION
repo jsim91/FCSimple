@@ -15,7 +15,8 @@ Imports:
     shinythemes, metR, harmony, outliers, future.apply, 
     RANN, shadowtext, stringr, formattable, ComplexHeatmap, 
     CATALYST, flowWorkspace, cytoMEM, scales, mclust, sp, 
-    rlang, MASS, pracma, mixtools, cyCombine, data.table
+    rlang, MASS, pracma, mixtools, cyCombine, data.table, 
+    Rphenograph
 Suggests:
     roxygen2 (>= 7.3.2),
     devtools,
@@ -23,7 +24,8 @@ Suggests:
     knitr,
     rmarkdown
 Remotes:
-    biosurf/cyCombine
+    biosurf/cyCombine,
+    JinmiaoChenLab/Rphenograph
 RoxygenNote: 7.3.3
 Config:
   roxygen:
