@@ -66,7 +66,7 @@ The dimension reduction and clustering steps do offer methods to run the calcula
 - [igraph](https://pypi.org/project/igraph/) # louvain in Python
 - [openTSNE](https://github.com/pavlin-policar/openTSNE) # tSNE in Python
 
-To ensure all Python dependencies are available (or to install unavailable items), run: ```FCSimple::fcs_install_python_dependencies()``` or use ```?fcs_install_python_dependencies``` for more information.
+To ensure all Python dependencies are available (or to install unavailable items), run: ```FCSimple::fcs_install_python_dependencies()``` or use ```?FCSimple::fcs_install_python_dependencies``` for more information.
 
 # Usage
 
