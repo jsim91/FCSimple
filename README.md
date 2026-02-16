@@ -1,13 +1,3 @@
-todo:
-- allow for downsampling to fit mclust then use in polygon test on full data to increase speed (cell gating)
-- function that plots all gates set with hierachy (tree, parent, and current gate name included in title?) and writes to single multi-panel figure
-- ensure tail gate works when tail < prominent peak
-- test general gating functionality on multiple projects where fluorescence signature may differ
-- resolve function conflicts
-- ensure cells gate works on other flow projects where the distribution may be slightly different
-note:
-- set gate function should store a mask for both directions for later phenotype masking
-
 # FCSimple
 
 Tools for the analysis of .fcs data sets. Pair with [FCView](https://github.com/jsim91/FCView) using ```FCSimple::fcs_prepare_fcview_object``` for an interactive analysis of FCSimple results.
