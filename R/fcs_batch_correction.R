@@ -12,8 +12,8 @@
 #' @param use_rep Character; either "data" (default) to correct raw expression
 #'   values, or "pca" to correct principal‐component coordinates.
 #'
-#' @param correction_method Character vector; one of "cyCombine" (default) or
-#'   "harmony", selecting the algorithm for batch correction.
+#' @param correction_method Character vector; one of "harmony" (default) or
+#'   "cyCombine", selecting the algorithm for batch correction.
 #'
 #' @param correction_markers Character vector of channel names to correct
 #'   (default "all"). Only used with `correction_method = "cyCombine"`.
@@ -83,11 +83,11 @@
 #' @importFrom harmony RunHarmony
 #' @importFrom stringr str_extract
 #' @export
-fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_method = c("cyCombine", "harmony"),
+fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_method = c("harmony", "cyCombine"),
                                  correction_markers = "all", batch_source_regex = "[0-9]+\\-[A-Za-z]+\\-[0-9]+",
                                  cyCombine_SOMx = 8, cyCombine_SOMy = 8, cyCombine_detect_effects = FALSE,
                                  harmony_cores = 1, harmony_iterations = 10, harmony_covars = c("run_date"),
-                                 harmony_lambda = 1, harmony_sample_element = NULL)
+                                 harmony_lambda = 1)
 {
   use_rep <- tolower(use_rep)
   if(!use_rep %in% c("data","pca")) {
@@ -167,9 +167,6 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
     harmony_covars <- unique(harmony_covars)
     harm_in <- as.matrix(rep_data)
     print(paste0("batches found for harmony correction: ", paste0(unique(fcs_join_obj[["run_date"]]), collapse = ", ")))
-    if (!missing(harmony_sample_element)) {
-      warning("'harmony_sample_element' is deprecated. Halting function call; remove 'harmony_sample_element' from function call. 'harmony_covars' must contain all effect names to be treated as noise by Harmony. All listed 'harmoy_covars' must exist as names(fcs_join_obj).", call. = FALSE)
-    }
     if('source' %in% harmony_covars) {
       stop("source should not be included as a covariate.")
     }

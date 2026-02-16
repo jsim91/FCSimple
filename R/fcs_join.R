@@ -152,29 +152,8 @@ fcs_join <- function(files,
                      hyperlog_transform_W = 0.001,
                      hyperlog_transform_A = 2,
                      transform_per_channel = FALSE,
-                     downsample_size = 25000,
+                     downsample_size = NA,
                      batch_pattern = "[0-9]+\\-[A-Za-z]+\\-[0-9]+") {
-  # testing
-  # files <- list.files(path = "J:/oakes_flow/scenith_full_pilot/box_dl", full.names = TRUE)
-  # flowjo_diagnostics_file = "J:/oakes_flow/scenith_full_pilot/josh_transforms/workspace_transforms_2.txt"
-  # apply_transform = TRUE
-  # instrument_type = "flow"
-  # use_descriptive_column_names = TRUE
-  # transform_function = NULL
-  # transform_type = "hyperlog"
-  # asinh_transform_cofactor = 5
-  # biexp_transform_pos = 4.5
-  # biexp_transform_neg = 0
-  # biexp_transform_width = -10
-  # hyperlog_transform_T = 100000
-  # hyperlog_transform_M = 5
-  # hyperlog_transform_W = 0.001
-  # hyperlog_transform_A = 2
-  # transform_per_channel = TRUE
-  # downsample_size = NA
-  # batch_pattern = "[0-9]+\\-[A-Za-z]+\\-[0-9]+"
-
-
   require(flowCore)
   # oo <- options(scipen = 100000000000)
   # on.exit(options(oo))

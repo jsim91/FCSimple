@@ -72,7 +72,7 @@
 #' @examples
 #' \dontrun{
 #'   # Basic preparation without saving (use packaged example files)
-#'   files <- FCSimple::fcs_load_data()
+#'   files <- FCSimple::fcs_example_files()
 #'   joined <- FCSimple::fcs_join(files)
 #'   clustered <- FCSimple::fcs_cluster(joined, algorithm = "leiden")
 #'   reduced <- FCSimple::fcs_reduce_dimensions(clustered, algorithm = "umap")

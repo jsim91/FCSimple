@@ -1,4 +1,4 @@
-fcs_test_file <- FCSimple::fcs_load_data()
+fcs_test_file <- FCSimple::fcs_example_files()
 fcs_obj <- FCSimple::fcs_join(files = fcs_test_file, instrument_type = 'cytof', use_descriptive_column_names = T,
                               transform_type = 'asinh', asinh_transform_cofactor = 5, transform_per_channel = F,
                               downsample_size = 100000)

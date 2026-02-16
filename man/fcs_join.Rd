@@ -20,7 +20,7 @@ fcs_join(
   hyperlog_transform_W = 0.001,
   hyperlog_transform_A = 2,
   transform_per_channel = FALSE,
-  downsample_size = 25000,
+  downsample_size = NA,
   batch_pattern = "[0-9]+\\\\-[A-Za-z]+\\\\-[0-9]+"
 )
 }

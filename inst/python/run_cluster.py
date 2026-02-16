@@ -3,7 +3,7 @@ import importlib
 import subprocess
 import sys
 
-REQUIRED_PACKAGES = ['pandas','igraph','scipy','os','leidenalg']
+REQUIRED_PACKAGES = ['igraph', 'leidenalg']
 for package in REQUIRED_PACKAGES:
     try:
         importlib.import_module(package)

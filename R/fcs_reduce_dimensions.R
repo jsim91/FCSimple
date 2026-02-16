@@ -149,7 +149,7 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
       colnames(map) <- c("UMAP1","UMAP2")
     } else if(tolower(language)=="python") {
       capture_dir <- system.file(package = "FCSimple")
-      data.table::fwrite(red_data, file = paste0(capture_dir,"/temp_files/__python_umap_input__.csv"),
+      data.table::fwrite(data.table::as.data.table(red_data), file = paste0(capture_dir,"/temp_files/__python_umap_input__.csv"),
                          nThread = parallel::detectCores(), row.names = FALSE)
       system(command = paste0("python ",paste0(capture_dir,"/python/run_umap.py")," ",
                               paste0(capture_dir,"/temp_files/__python_umap_input__.csv")," ",

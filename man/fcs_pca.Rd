@@ -7,6 +7,7 @@
 fcs_pca(
   fcs_join_obj,
   pca_method = c("prcomp"),
+  variance_threshold = NULL,
   num_pc = NULL,
   apply_scaling = TRUE
 )
@@ -21,10 +22,19 @@ fcs_batch_correction, containing at minimum:
 
 \item{pca_method}{Character; PCA method to use. Currently only \code{"prcomp"} (default).}
 
+\item{variance_threshold}{Numeric or \code{NULL} (default); threshold for cumulative variance explained
+(range 0–1, inclusive). If specified, the function automatically selects
+the minimum number of PCs needed to reach or exceed this threshold.
+Takes precedence over \code{num_pc} if both are provided. If \code{NULL}, uses \code{num_pc}.}
+
 \item{num_pc}{Integer or \code{NULL} (default); number of principal components to extract.
-If \code{NULL}, the function displays a plot of 1 – cumulative variance vs. PC,
-prompts for input (e.g. a number or \code{"drawN"} to draw a vertical line at
-PC N), and repeats until a valid integer is provided.}
+If both \code{variance_threshold} and \code{num_pc} are \code{NULL}, the function displays
+a plot of 1 – cumulative variance vs. PC, prompts for input (e.g. a number
+or \code{"drawN"} to draw a vertical line at PC N), and repeats until a valid
+integer is provided. Ignored if \code{variance_threshold} is specified.}
+
+\item{apply_scaling}{Logical; if \code{TRUE} (default), centers and scales data before PCA.
+If \code{FALSE}, passes \code{center = FALSE} and \code{scale. = FALSE} to \code{prcomp}.}
 }
 \value{
 The original \code{fcs_join_obj} augmented with a new element \code{pca}, a list with:
@@ -50,9 +60,15 @@ The function:
 \item Detects and uses \code{batch_correction$data} if present.
 \item Runs \code{stats::prcomp} on the selected data with a fixed seed.
 \item Computes cumulative variance explained (\code{cumVar}) and its complement.
-\item If \code{num_pc} is \code{NULL}, displays the inverse‐variance plot, captures
-user input, and highlights the chosen PC on the plot.
-\item Extracts the first \code{num_pc} principal components into \code{pca_data}.
+\item Determines the number of PCs to retain:
+\itemize{
+\item If \code{variance_threshold} is specified, selects the minimum number of PCs
+needed to reach or exceed that proportion of variance (0–1)
+\item Else if \code{num_pc} is specified, uses that exact number
+\item Else displays an interactive inverse‐variance plot, captures user input,
+and highlights the chosen PC on the plot
+}
+\item Extracts the selected principal components into \code{pca_data}.
 \item Builds an elbow plot (\code{ggplot2}) marking the selected PCs.
 \item Appends a message to \code{object_history} noting whether PCA was run on
 corrected or uncorrected data and the timestamp.
@@ -68,6 +84,12 @@ corrected or uncorrected data and the timestamp.
 
   # Run PCA and keep first 5 PCs directly
   pca5 <- FCSimple::fcs_pca(joined, num_pc = 5)
+
+  # Automatically select PCs to explain 95\% of variance
+  pca95 <- FCSimple::fcs_pca(joined, variance_threshold = 0.95)
+
+  # Run PCA without centering/scaling
+  pca_raw <- FCSimple::fcs_pca(joined, num_pc = 10, apply_scaling = FALSE)
 }
 
 }

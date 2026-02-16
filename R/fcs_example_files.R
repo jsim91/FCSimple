@@ -12,7 +12,7 @@
 #' @examples
 #' \dontrun{
 #' # List all example FCS files shipped with FCSimple
-#' files <- FCSimple::fcs_load_data()
+#' files <- FCSimple::fcs_example_files()
 #'
 #' # Use them to join and preprocess
 #' joined <- FCSimple::fcs_join(files)
@@ -22,7 +22,7 @@
 #'   FCSimple::fcs_join, utils::system.file
 #'
 #' @export
-fcs_load_data <- function() {
+fcs_example_files <- function() {
   package_dir <- gsub("\\/$","",system.file(package = "FCSimple"))
   data_loc <- paste0(package_dir,"/data")
   fcs_fil <- list.files(path = data_loc, pattern = "fcs$", full.names = TRUE, include.dirs = TRUE)

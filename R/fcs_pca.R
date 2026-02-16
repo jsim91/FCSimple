@@ -16,20 +16,35 @@
 #' @param pca_method
 #'   Character; PCA method to use. Currently only `"prcomp"` (default).
 #'
+#' @param variance_threshold
+#'   Numeric or `NULL` (default); threshold for cumulative variance explained 
+#'   (range 0–1, inclusive). If specified, the function automatically selects 
+#'   the minimum number of PCs needed to reach or exceed this threshold. 
+#'   Takes precedence over `num_pc` if both are provided. If `NULL`, uses `num_pc`.
+#'
 #' @param num_pc
 #'   Integer or `NULL` (default); number of principal components to extract.
-#'   If `NULL`, the function displays a plot of 1 – cumulative variance vs. PC,
-#'   prompts for input (e.g. a number or `"drawN"` to draw a vertical line at
-#'   PC N), and repeats until a valid integer is provided.
+#'   If both `variance_threshold` and `num_pc` are `NULL`, the function displays 
+#'   a plot of 1 – cumulative variance vs. PC, prompts for input (e.g. a number 
+#'   or `"drawN"` to draw a vertical line at PC N), and repeats until a valid 
+#'   integer is provided. Ignored if `variance_threshold` is specified.
+#'
+#' @param apply_scaling
+#'   Logical; if `TRUE` (default), centers and scales data before PCA. 
+#'   If `FALSE`, passes `center = FALSE` and `scale. = FALSE` to `prcomp`.
 #'
 #' @details
 #'   The function:
 #'   1. Detects and uses `batch_correction$data` if present.
 #'   2. Runs `stats::prcomp` on the selected data with a fixed seed.
 #'   3. Computes cumulative variance explained (`cumVar`) and its complement.
-#'   4. If `num_pc` is `NULL`, displays the inverse‐variance plot, captures
-#'      user input, and highlights the chosen PC on the plot.
-#'   5. Extracts the first `num_pc` principal components into `pca_data`.
+#'   4. Determines the number of PCs to retain:
+#'      - If `variance_threshold` is specified, selects the minimum number of PCs
+#'        needed to reach or exceed that proportion of variance (0–1)
+#'      - Else if `num_pc` is specified, uses that exact number
+#'      - Else displays an interactive inverse‐variance plot, captures user input,
+#'        and highlights the chosen PC on the plot
+#'   5. Extracts the selected principal components into `pca_data`.
 #'   6. Builds an elbow plot (`ggplot2`) marking the selected PCs.
 #'   7. Appends a message to `object_history` noting whether PCA was run on
 #'      corrected or uncorrected data and the timestamp.
@@ -53,6 +68,12 @@
 #'
 #'   # Run PCA and keep first 5 PCs directly
 #'   pca5 <- FCSimple::fcs_pca(joined, num_pc = 5)
+#'
+#'   # Automatically select PCs to explain 95% of variance
+#'   pca95 <- FCSimple::fcs_pca(joined, variance_threshold = 0.95)
+#'
+#'   # Run PCA without centering/scaling
+#'   pca_raw <- FCSimple::fcs_pca(joined, num_pc = 10, apply_scaling = FALSE)
 #' }
 #'
 #' @seealso
@@ -63,7 +84,7 @@
 #' @importFrom stringr str_extract
 #' @importFrom ggplot2 ggplot aes geom_point ggtitle xlab ylab theme_bw theme element_text
 #' @export
-fcs_pca <- function(fcs_join_obj, pca_method = c("prcomp"), num_pc = NULL, apply_scaling = TRUE)
+fcs_pca <- function(fcs_join_obj, pca_method = c("prcomp"), variance_threshold = NULL, num_pc = NULL, apply_scaling = TRUE)
 {
   require(stringr)
   require(ggplot2)
@@ -84,19 +105,29 @@ fcs_pca <- function(fcs_join_obj, pca_method = c("prcomp"), num_pc = NULL, apply
     } else {
       PCA <- prcomp(x = obj_data, center = FALSE, scale. = FALSE)
     }
-    reset_seed <- sample(1:5, size = 1)
-    rm(reset_seed)
-    if(!is.null(num_pc)) {
+    # reset_seed <- sample(1:5, size = 1)
+    # rm(reset_seed)
+    cvar <- cumsum(PCA$sdev^2 / sum(PCA$sdev^2))
+    
+    if(!is.null(variance_threshold)) {
+      # Use variance threshold to determine number of PCs
+      if(min(variance_threshold)>=0 && max(variance_threshold)<=1) {
+        npc <- which(cvar>=variance_threshold)[1]
+      } else {
+        warning("'variance_threshold' must be within the range 0-1, inclusive. Returning all PC.")
+        npc <- length(cvar)
+      }
+    } else if(!is.null(num_pc)) {
+      # Use specified number of PCs
       if(num_pc<1) {
         stop("'num_pc must be either NULL or a whole number greater than 0")
       }
       if(num_pc %% 1 != 0) {
         stop("'num_pc must be either NULL or a whole number greater than 0")
       }
-      cvar <- cumsum(PCA$sdev^2 / sum(PCA$sdev^2))
       npc <- num_pc
     } else {
-      cvar <- cumsum(PCA$sdev^2 / sum(PCA$sdev^2))
+      # Interactive mode
       cvar_inv <- 1 - cvar
       plot(cvar_inv, pch = 19, cex = 1.5)
       npc <- readline(prompt = "How many PCs should be used? Enter either a number or 'drawN' where N is the location on the x-axis where a vertical line will be drawn: ")
@@ -115,7 +146,8 @@ fcs_pca <- function(fcs_join_obj, pca_method = c("prcomp"), num_pc = NULL, apply
     pc_data <- PCA$x[,c(1:npc)]
   }
 
-  cvar_d <- data.frame(PC = 1:length(cvar), cumVar = cvar); cvar_d_npc <- data.frame(PCx = as.numeric(npc), PCy = cvar_d$cumVar[which(cvar_d$PC==npc)])
+  cvar_d <- data.frame(PC = 1:length(cvar), cumVar = cvar)
+  cvar_d_npc <- data.frame(PCx = as.numeric(npc), PCy = cvar_d$cumVar[which(cvar_d$PC==npc)])
   cvar_plt <- ggplot() +
     geom_point(data = cvar_d, mapping = aes(x = PC, y = cumVar), pch = 21, size = 2.25, fill = "white") +
     geom_point(data = cvar_d_npc, mapping = aes(x = PCx, y = PCy), pch = 21, size = 3, fill = "red") +
@@ -127,7 +159,9 @@ fcs_pca <- function(fcs_join_obj, pca_method = c("prcomp"), num_pc = NULL, apply
           axis.text = element_text(size = 14))
 
   print("storing PCA information in $pca")
-  fcs_join_obj[['pca']] <- list(pca_data = pc_data, list(PCs = npc, cumulative_variance = cvar, pca_method = pca_method, elbow_plot = cvar_plt))
+  fcs_join_obj[['pca']] <- list(pca_data = pc_data,
+                                pca_stats = list(PCs = npc, cumulative_variance = cvar,
+                                                 pca_method = pca_method, elbow_plot = cvar_plt))
   if(!'object_history' %in% names(fcs_join_obj)) {
     print("Consider running FCSimple::fcs_update() on the object.")
   } else {

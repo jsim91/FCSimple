@@ -355,8 +355,10 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
                                                   box.padding = 0.01)
         }
       }
+      mypl <- mypl + theme_bw(base_size = title_size) + theme(legend.position = "none")
       if(ftitle) {
-        mypl <- mypl + ggtitle(colnames(plin)[ncol(plin)]) + theme(plot.title = element_text(hjust = 0.5, size = title_size))
+        mypl <- mypl + ggtitle(colnames(plin)[ncol(plin)]) + 
+        theme(plot.title = element_text(hjust = 0.5, size = title_size))
       }
       return(mypl)
     }
@@ -405,7 +407,7 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
                                                                 mapping = aes(x = UMAP1, y = UMAP2, label = cluster), color = "white",
                                                                 size = annotate_text_size, bg.color = "black", bg.r = 0.04, seed = 123)
     }
-      plt_reduction <- theme_bw(base_size = 22) +
+      plt_reduction <- plt_reduction + theme_bw(base_size = 22) +
       theme(legend.position = "none")
     if(add_timestamp) {
       fname <- paste0(outdir,"/islands_selected_for_by_dbscan_",

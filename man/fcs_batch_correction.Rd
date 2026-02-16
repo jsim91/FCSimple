@@ -7,7 +7,7 @@
 fcs_batch_correction(
   fcs_join_obj,
   use_rep = "data",
-  correction_method = c("cyCombine", "harmony"),
+  correction_method = c("harmony", "cyCombine"),
   correction_markers = "all",
   batch_source_regex = "[0-9]+\\\\-[A-Za-z]+\\\\-[0-9]+",
   cyCombine_SOMx = 8,
@@ -16,8 +16,7 @@ fcs_batch_correction(
   harmony_cores = 1,
   harmony_iterations = 10,
   harmony_covars = c("run_date"),
-  harmony_lambda = 1,
-  harmony_sample_element = NULL
+  harmony_lambda = 1
 )
 }
 \arguments{
@@ -28,8 +27,8 @@ it must also contain \code{fcs_join_obj$pca$pca_data}.}
 \item{use_rep}{Character; either "data" (default) to correct raw expression
 values, or "pca" to correct principal‐component coordinates.}
 
-\item{correction_method}{Character vector; one of "cyCombine" (default) or
-"harmony", selecting the algorithm for batch correction.}
+\item{correction_method}{Character vector; one of "harmony" (default) or
+"cyCombine", selecting the algorithm for batch correction.}
 
 \item{correction_markers}{Character vector of channel names to correct
 (default "all"). Only used with \code{correction_method = "cyCombine"}.}

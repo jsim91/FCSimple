@@ -141,7 +141,7 @@
 #'
 #' @importFrom ggplot2 ggplot aes geom_boxplot geom_dotplot geom_line
 #'   scale_fill_manual scale_color_manual scale_y_continuous ylim labs
-#'   theme_minimal theme element_text
+#'   theme_bw theme element_text
 #' @importFrom ggpubr stat_compare_means ggarrange
 #' @importFrom ComplexHeatmap Heatmap
 #' @importFrom circlize colorRamp2
@@ -169,38 +169,6 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list = NA, color_list = NA, 
   # as.formula(object = paste0(" ~ ",primary_term," + ", # primary_term constructor
   #                            paste(fixed_terms, collapse = "+"),# fixed_terms constructor
   #                            glue::glue(" + (1|{mixed_effect_terms})"))) # mixed_effect_terms constructor
-
-  # testing
-  # fcs_join_obj = fcs_obj
-  # compare_list = NA
-  # color_list = NA
-  # comparisons = NA
-  # denominator_cell_type = NA
-  # x_order = NULL
-  # abundance = NA
-  # heatmap_matrix = NA
-  # force_max = FALSE
-  # algorithm = "flowsom"
-  # Rcolorbrewer_palette = "RdYlBu" # must be a colorbrewer palette that's 11 long such as Spectral or RdYlBu
-  # dot_size = 1
-  # overlay_heatmap_numbers = TRUE
-  # paired_test = FALSE
-  # p_text_size = 5
-  # paired_line_stroke = 0.1
-  # paired_line_color = "black"
-  # heatmap_fontsize = 8
-  # relative_heights = c(0.76,0.24)
-  # heatmap_parameters = 'all'
-  # heatmap_clusters = "all"
-  # test_method = 'sccomp'
-  # sccomp_terms = list(primary_term = 'stim',
-  #                     primary_term_reference = 'Media',
-  #                     primary_term_query = 'pp65',
-  #                     sccomp_sample = 'sample_stim', # should default to source
-  #                     fixed_terms = c(),
-  #                     mixed_effect_terms = c('sample_id'),
-  #                     n_cores = floor(parallel::detectCores()/2))
-
   require(ggplot2)
   require(ggpubr)
   require(ggplot2)
@@ -378,7 +346,7 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list = NA, color_list = NA, 
       labs(y = paste0("% of ",cell_type_denom), title = paste0("cluster ",capture_cluster)) +
       scale_fill_manual(values = dplot_col) +
       scale_color_manual(values = dplot_col) +
-      theme_minimal() +
+      theme_bw() +
       theme(axis.title.x = element_blank(),
             legend.position = "none",
             plot.title = element_text(size = 16*bpts, face = "bold", hjust = 0.5),
