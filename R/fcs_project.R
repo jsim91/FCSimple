@@ -193,8 +193,8 @@ fcs_project_parameters <- function(fcs_join_obj,
               plot.title = element_text(hjust = 0.5),
               legend.position = "bottom", 
               legend.spacing = unit(0, "pt"),
-              legend.margin = margin(t = -5, r = 0, b = 20, l = 0),
-              plot.margin = margin(t = 5, r = 5, b = 0, l = 5))
+              legend.margin = ggplot2::margin(t = -5, r = 0, b = 20, l = 0),
+              plot.margin = ggplot2::margin(t = 5, r = 5, b = 0, l = 5))
     } else if(method=="fill") {
       if(regexpr(pattern = 'umap', text = tolower(reduction))!=-1) {
         plt <- ggplot(data = arg1, mapping = aes(x = UMAP1, y = UMAP2, fill = col1))
@@ -219,8 +219,8 @@ fcs_project_parameters <- function(fcs_join_obj,
               plot.title = element_text(hjust = 0.5),
               legend.position = "bottom", 
               legend.spacing = unit(0, "pt"),
-              legend.margin = margin(t = -5, r = 0, b = 20, l = 0),
-              plot.margin = margin(t = 5, r = 5, b = 0, l = 5))
+              legend.margin = ggplot2::margin(t = -5, r = 0, b = 20, l = 0),
+              plot.margin = ggplot2::margin(t = 5, r = 5, b = 0, l = 5))
     }
     if(class(force_xlim)=='numeric') {
       plt <- plt + xlim(force_xlim)
