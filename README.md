@@ -113,39 +113,7 @@ It's highly recommended to set transform parameters for all features in Flowjo t
 
 <img width="1588" alt="readme_flowjo_diagnostics" src="https://github.com/user-attachments/assets/88b137d4-9947-48e1-952f-035646626245">
 
-Tested in and developed with the Windows 10/11 operating system.
-
-# Dependencies
-
-## R packages
-
-- [flowCore](https://www.bioconductor.org/packages/release/bioc/html/flowCore.html)
-- [ncdfFlow](https://www.bioconductor.org/packages/release/bioc/html/ncdfFlow.html)
-- [flowWorkspace](https://www.bioconductor.org/packages/release/bioc/html/flowWorkspace.html)
-- [uwot](https://github.com/jlmelville/uwot)
-- [Rtsne](https://github.com/jkrijthe/Rtsne)
-- [FNN](https://cran.r-project.org/web/packages/FNN/index.html)
-- [Matrix](https://cran.r-project.org/web/packages/Matrix/index.html)
-- [igraph](https://cran.r-project.org/web/packages/igraph/index.html)
-- [FlowSOM](https://bioconductor.org/packages/release/bioc/html/FlowSOM.html)
-- [Rphenograph](https://github.com/JinmiaoChenLab/Rphenograph)
-- [ComplexHeatmap](https://github.com/jokergoo/ComplexHeatmap)
-- [circlize](https://cran.r-project.org/web/packages/circlize/index.html)
-- [CATALYST](https://www.bioconductor.org/packages/release/bioc/html/CATALYST.html)
-- [ggpubr](https://cran.r-project.org/web/packages/ggpubr/index.html)
-- [ggplot2](https://cran.r-project.org/web/packages/ggplot2/index.html)
-- [shadowtext](https://cran.r-project.org/web/packages/shadowtext/index.html)
-- [future](https://cran.r-project.org/web/packages/future/index.html)
-- [future.apply](https://cran.r-project.org/web/packages/future.apply/index.html)
-- [RANN](https://cran.r-project.org/web/packages/RANN/RANN.pdf)
-- [shiny](https://cran.r-project.org/web/packages/shiny/index.html)
-- [shinythemes](https://cran.r-project.org/web/packages/shinythemes/index.html)
-- [scales](https://cran.r-project.org/web/packages/scales/index.html)
-- [cytoMEM](https://bioconductor.org/packages/release/bioc/html/cytoMEM.html)
-- [dbscan](https://cran.r-project.org/web/packages/dbscan/index.html)
-- [cyCombine](https://github.com/biosurf/cyCombine)
-
-## Python (optional)
+# Python Dependencies (optional)
 
 The clustering and dimension reduction steps offer methods to run calculations through Python. No Python knowledge is required — functions call Python in the background and return results to R. The reticulate package is not required. Python scripts are located at `inst/python` and may be edited to alter default behaviour.
 
