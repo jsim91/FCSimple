@@ -30,7 +30,8 @@
 #' @param cyCombine_detect_effects Logical; if `TRUE`, runs cyCombine’s
 #'   detect_batch_effect before and after normalization (default FALSE).
 #'
-#' @param harmony_cores Integer; number of CPU cores for Harmony (default 1).
+#' @param num_cores Integer; number of CPU cores for Harmony
+#'   (default `ceiling(parallel::detectCores()/2)`).
 #'
 #' @param harmony_iterations Integer; maximum number of Harmony iterations
 #'   (default 10).
@@ -86,7 +87,7 @@
 fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_method = c("harmony", "cyCombine"),
                                  correction_markers = "all", batch_source_regex = "[0-9]+\\-[A-Za-z]+\\-[0-9]+",
                                  cyCombine_SOMx = 8, cyCombine_SOMy = 8, cyCombine_detect_effects = FALSE,
-                                 harmony_cores = 1, harmony_iterations = 10, harmony_covars = c("run_date"),
+                                 num_cores = ceiling(parallel::detectCores()/2), harmony_iterations = 10, harmony_covars = c("run_date"),
                                  harmony_lambda = 1)
 {
   use_rep <- tolower(use_rep)
@@ -202,7 +203,7 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
     message('unique values per covariate to be used:')
     print(n_unique)
     harm_meta <- cbind(data.frame(cell_id=fcs_join_obj[['source']]), harm_meta_no_id) # cell_id is specified in the harmony vignette so I add here for consistency, although only harmony_covars will be passed as variables to integrate out
-    harm_out <- harmony::RunHarmony(data_mat = harm_in, meta_data = harm_meta, vars_use = keep_covars, ncores = harmony_cores,
+    harm_out <- harmony::RunHarmony(data_mat = harm_in, meta_data = harm_meta, vars_use = keep_covars, ncores = num_cores,
                                     max_iter = harmony_iterations, lambda = harmony_lambda)
     fcs_join_obj[['batch_correction']] <- list(data = harm_out,
                                                harmony_meta = harm_meta,

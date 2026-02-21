@@ -42,8 +42,8 @@
 #' @param tsne_perplexity
 #'   Numeric; perplexity parameter for t‐SNE (default 30).
 #'
-#' @param nthread
-#'   Integer; number of CPU threads for Rtsne (default `ceiling(parallel::detectCores()/2)`).
+#' @param num_cores
+#'   Integer; number of CPU threads for parallel computation (default `ceiling(parallel::detectCores()/2)`).
 #'
 #' @param seed
 #'   Integer or NA; random seed for reproducibility (default NA).
@@ -58,7 +58,7 @@
 #'      - R: calls `uwot::umap()` with a fixed seed, `umap_nn`, and `umap_min_dist`.
 #'      - Python: writes data to `inst/python`, runs `run_umap.py`, cleans temp files.
 #'   3. For t‐SNE:
-#'      - R: calls `Rtsne::Rtsne()` with `tsne_perplexity`, `nthread`, and fixed settings.
+#'      - R: calls `Rtsne::Rtsne()` with `tsne_perplexity`, `num_cores`, and fixed settings.
 #'      - Python: similar CSV → script → import workflow via `run_tsne.py`.
 #'   4. The resulting 2‐column matrix is stored as
 #'      `fcs_join_obj$umap$coordinates` or `$tsne$coordinates`, and the
@@ -109,7 +109,7 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
                                   umap_nn = 30,
                                   umap_min_dist = 0.1,
                                   tsne_perplexity = 30,
-                                  nthread = ceiling(parallel::detectCores()/2),
+                                  num_cores = ceiling(parallel::detectCores()/2),
                                   seed = NA)
 {
   use_rep <- tolower(use_rep)
@@ -145,7 +145,7 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
       }
       map <- uwot::umap(X = red_data, n_neighbors = round(umap_nn,0),
                         init = "spca", min_dist = umap_min_dist,
-                        n_threads = nthread, verbose = TRUE)
+                        n_threads = num_cores, verbose = TRUE)
       colnames(map) <- c("UMAP1","UMAP2")
     } else if(tolower(language)=="python") {
       capture_dir <- system.file(package = "FCSimple")
@@ -173,7 +173,7 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
                                     max_iter = 2000, normalize = FALSE, perplexity = round(tsne_perplexity,0),
                                     stop_lying_iter = 700, mom_switch_iter = 700,
                                     eta = round(nrow(red_data)/12),
-                                    num_threads = nthread)
+                                    num_threads = num_cores)
       map <- map_calculate[["Y"]]
       colnames(map) <- c("tSNE1","tSNE2")
     } else if(tolower(language)=="python") {
@@ -203,7 +203,7 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
       if(is.na(seed)) {
         settings_list <- list(use_rep = use_rep, language = "Python", init = 'spectral', low_memory = 'True',
                               num_neighbors = round(umap_nn,0),
-                              min_dist = umap_min_dist, n_jobs = nthread, verbose = 'True', seed = NA)
+                              min_dist = umap_min_dist, n_jobs = num_cores, verbose = 'True', seed = NA)
       } else {
         settings_list <- list(use_rep = use_rep, language = "Python", init = 'spectral', low_memory = 'True',
                               random_state = seed, num_neighbors = round(umap_nn,0),

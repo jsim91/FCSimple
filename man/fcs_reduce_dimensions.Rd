@@ -12,7 +12,7 @@ fcs_reduce_dimensions(
   umap_nn = 30,
   umap_min_dist = 0.1,
   tsne_perplexity = 30,
-  nthread = ceiling(parallel::detectCores()/2),
+  num_cores = ceiling(parallel::detectCores()/2),
   seed = NA
 )
 }
@@ -51,7 +51,7 @@ Default is \code{c("tsne","umap")} (selects first).
 
 \item{tsne_perplexity}{Numeric; perplexity parameter for t‐SNE (default 30).}
 
-\item{nthread}{Integer; number of CPU threads for Rtsne (default \code{ceiling(parallel::detectCores()/2)}).}
+\item{num_cores}{Integer; number of CPU threads for parallel computation (default \code{ceiling(parallel::detectCores()/2)}).}
 
 \item{seed}{Integer or NA; random seed for reproducibility (default NA).
 When NA, Python implementations will not set a seed, allowing for faster
@@ -81,7 +81,7 @@ regardless of \code{use_rep}. Otherwise, \code{use_rep} selects raw data or PCA.
 }
 \item For t‐SNE:
 \itemize{
-\item R: calls \code{Rtsne::Rtsne()} with \code{tsne_perplexity}, \code{nthread}, and fixed settings.
+\item R: calls \code{Rtsne::Rtsne()} with \code{tsne_perplexity}, \code{num_cores}, and fixed settings.
 \item Python: similar CSV → script → import workflow via \code{run_tsne.py}.
 }
 \item The resulting 2‐column matrix is stored as

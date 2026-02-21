@@ -13,7 +13,7 @@ fcs_batch_correction(
   cyCombine_SOMx = 8,
   cyCombine_SOMy = 8,
   cyCombine_detect_effects = FALSE,
-  harmony_cores = 1,
+  num_cores = ceiling(parallel::detectCores()/2),
   harmony_iterations = 10,
   harmony_covars = c("run_date"),
   harmony_lambda = 1
@@ -45,7 +45,8 @@ cyCombine (default 8).}
 \item{cyCombine_detect_effects}{Logical; if \code{TRUE}, runs cyCombine’s
 detect_batch_effect before and after normalization (default FALSE).}
 
-\item{harmony_cores}{Integer; number of CPU cores for Harmony (default 1).}
+\item{num_cores}{Integer; number of CPU cores for Harmony
+(default \code{ceiling(parallel::detectCores()/2)}).}
 
 \item{harmony_iterations}{Integer; maximum number of Harmony iterations
 (default 10).}
