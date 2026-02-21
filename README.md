@@ -33,12 +33,15 @@ my_object <- FCSimple::fcs_join(files = include_files)
 
 All subsequent functions take the object returned by `fcs_join()` as their first argument and return the updated object. The recommended minimum analysis order is shown below. Steps marked _optional_ may be skipped if not applicable to your data.
 
-> **Note:** The pattern `my_object <- fcs_somefunction(my_object)` applies to all analysis and data-manipulation functions. **Visualisation functions are an exception** — they return a plot object, not the analysis object, and should not be assigned back to `my_object`. These functions are:
-> - `fcs_plot_distributions()`
-> - `fcs_plot_reduction()`
-> - `fcs_plot_reduction_density()`
-> - `fcs_plot_reduction_difference()`
-> - `fcs_plot_overlays()`
+> **Note:** The pattern `my_object <- fcs_somefunction(my_object)` applies to all analysis and data-manipulation functions. **Visualisation functions are an exception** — they save figures to disk or return a plot object and should not be assigned back to `my_object`. Call them without assignment:
+> ```r
+> fcs_plot_distributions(fcs_join_obj = my_object)
+> fcs_plot_reduction(fcs_join_obj = my_object)
+> fcs_plot_reduction_density(fcs_join_obj = my_object)
+> fcs_plot_reduction_difference(fcs_join_obj = my_object, compare_list = ..., color_list = ...)
+> fcs_plot_overlays(fcs_join_obj = my_object)
+> fcs_plot_trex(fcs_join_obj = my_object, ...)
+> ```
 
 ```r
 library(FCSimple)

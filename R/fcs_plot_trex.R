@@ -101,7 +101,7 @@
 #' joined  <- FCSimple::fcs_join(files)
 #' reduced <- FCSimple::fcs_reduce_dimensions(joined, method = "UMAP")
 #'
-#' FCSimple::fcs_trex(
+#' FCSimple::fcs_plot_trex(
 #'   fcs_join_obj  = reduced,
 #'   compare_list  = list(group1 = c("sample_A"), group2 = c("sample_B")),
 #'   reduction     = "UMAP",
@@ -123,7 +123,7 @@
 #'
 #' @importFrom RANN nn2
 #' @export
-fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), outdir,
+fcs_plot_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), outdir,
                      point_alpha = 0.05, neighborhood_size = 60,
                      percentile_breaks = c(0,5,10,15,85,90,95,100),
                      neighbor_significance_threshold = 0.9, cluster_min_size = 50,
