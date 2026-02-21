@@ -545,20 +545,24 @@ fcs_join <- function(files,
         print("Unable to find descriptive column names. Using original names.")
       }
     }
-    temp_files <- list.files(path = paste0(system.file(package = "FCSimple"),"/temp_files/"), full.names = TRUE, recursive = TRUE)
+    temp_files_dir <- paste0(system.file(package = "FCSimple"),"/temp_files/")
+    if(!dir.exists(temp_files_dir)) {
+      dir.create(temp_files_dir, recursive = TRUE)
+    }
+    temp_files <- list.files(path = temp_files_dir, full.names = TRUE, recursive = TRUE)
     if(length(temp_files)!=0) {
       file.remove(temp_files)
     }
     if(nrow(tmp_data)>50000) {
       set.seed(123)
       write.csv(x = tmp_data[sample(1:nrow(tmp_data),size=50000,replace=F),],
-                file = paste0(system.file(package = "FCSimple"),"/temp_files/tmp_data.csv"), row.names = FALSE)
+                file = paste0(temp_files_dir,"tmp_data.csv"), row.names = FALSE)
     } else {
-      write.csv(x = tmp_data,file = paste0(system.file(package = "FCSimple"),"/temp_files/tmp_data.csv"), row.names = FALSE)
+      write.csv(x = tmp_data,file = paste0(temp_files_dir,"tmp_data.csv"), row.names = FALSE)
     }
     saveRDS(object = list(data = tmp_data,
                           source = rep(x = flowCore::sampleNames(fs),times = as.numeric(flowCore::fsApply(fs,nrow)))),
-            file = paste0(system.file(package = "FCSimple"),"/temp_files/tmp_list_obj.rds"))
+            file = paste0(temp_files_dir,"tmp_list_obj.rds"))
     require(shiny)
     shiny::runApp(appDir = file.path(system.file(package = "FCSimple"), "transform_app"))
   }

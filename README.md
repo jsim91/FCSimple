@@ -113,6 +113,13 @@ It's highly recommended to set transform parameters for all features in Flowjo t
 
 <img width="1588" alt="readme_flowjo_diagnostics" src="https://github.com/user-attachments/assets/88b137d4-9947-48e1-952f-035646626245">
 
+3) If feeding in .fcs files without a diagnostics file, you can set `transform_per_channel = TRUE` in `fcs_join()` to launch an interactive Shiny app for inspecting and assigning transforms per channel. The app lets you preview density and 2D scatter plots under different transform settings (asinh, biexponential, hyperlog, or linear), apply settings to individual channels or all channels at once, and preview a sample UMAP before finalising. The chosen transform settings are stored on the returned object under `$app_transforms` for reproducibility:
+
+```r
+my_object <- fcs_join(files = include_files, transform_per_channel = TRUE)
+my_object$app_transforms  # inspect the applied settings
+```
+
 # Python Dependencies (optional)
 
 The clustering and dimension reduction steps offer methods to run calculations through Python. No Python knowledge is required — functions call Python in the background and return results to R. The reticulate package is not required. Python scripts are located at `inst/python` and may be edited to alter default behaviour.

@@ -286,6 +286,7 @@ function(input,output) {
     return(list(data = Data_full,
                 source = list_obj[["source"]],
                 raw = list_obj[["data"]],
+                app_transforms = param_settings$reactive_data,
                 object_history = paste0("joined: ",Sys.time())))
   }
   finalize <- eventReactive(input$finalize_transform, {
