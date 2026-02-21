@@ -44,7 +44,12 @@ Both \code{output_dir} and \code{file_name} must be specified to enable saving.}
 \item{keep_fields}{Character vector; names of top‐level fields to retain in the prepared
 object. Default includes essential FCView fields: \code{"data"}, \code{"source"},
 \code{"metadata"}, \code{"run_date"}, \code{"cluster"}, \code{"umap"}, \code{"tsne"},
-\code{"cluster_heatmap"}, \code{"cluster_mapping"}, and \code{"metadata_sample"}.}
+\code{"cluster_heatmap"}, \code{"cluster_mapping"}, and \code{"metadata_sample"}.
+When \code{"cluster_mapping"} is included and the object contains a
+\verb{\{clustering_algorithm\}_mapping} element (created by
+\code{FCSimple::fcs_annotate_clusters()}), that element is copied into the
+prepared object as \code{cluster_mapping}. If \code{"cluster_mapping"} is absent
+from \code{keep_fields}, no mapping element is transferred.}
 }
 \value{
 The prepared \code{fcs_join_obj}, with non‐essential fields removed, the
@@ -71,6 +76,9 @@ cluster assignments, and UMAP/tSNE coordinates.
 to \code{"cluster_heatmap"} (required for FCView app compatibility).
 \item Removes all other clustering algorithms and their heatmaps.
 \item Filters the object to retain only fields specified in \code{keep_fields}.
+If \code{"cluster_mapping"} is in \code{keep_fields}, the function additionally
+resolves the corresponding \verb{\{selected_algo\}_mapping} element (if present)
+and includes it as \code{cluster_mapping} in the prepared object.
 \item Cleans up cluster and heatmap structures to keep only essential elements:
 \itemize{
 \item For \code{cluster}: keeps \code{clusters}, \code{settings}, \code{frequency}, \code{fraction}, \code{counts}

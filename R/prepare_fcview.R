@@ -40,6 +40,11 @@
 #'   object. Default includes essential FCView fields: `"data"`, `"source"`,
 #'   `"metadata"`, `"run_date"`, `"cluster"`, `"umap"`, `"tsne"`,
 #'   `"cluster_heatmap"`, `"cluster_mapping"`, and `"metadata_sample"`.
+#'   When `"cluster_mapping"` is included and the object contains a
+#'   `{clustering_algorithm}_mapping` element (created by
+#'   `FCSimple::fcs_annotate_clusters()`), that element is copied into the
+#'   prepared object as `cluster_mapping`. If `"cluster_mapping"` is absent
+#'   from `keep_fields`, no mapping element is transferred.
 #'
 #' @details
 #'   The function performs the following steps:
@@ -53,6 +58,9 @@
 #'      to `"cluster_heatmap"` (required for FCView app compatibility).
 #'   6. Removes all other clustering algorithms and their heatmaps.
 #'   7. Filters the object to retain only fields specified in `keep_fields`.
+#'      If `"cluster_mapping"` is in `keep_fields`, the function additionally
+#'      resolves the corresponding `{selected_algo}_mapping` element (if present)
+#'      and includes it as `cluster_mapping` in the prepared object.
 #'   8. Cleans up cluster and heatmap structures to keep only essential elements:
 #'      - For `cluster`: keeps `clusters`, `settings`, `frequency`, `fraction`, `counts`
 #'      - For `cluster_heatmap`: keeps `heatmap_tile_data`, `population_size`, `rep_used`
@@ -259,6 +267,17 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
     }
   }
 
+  # Resolve {algo}_mapping → cluster_mapping when requested
+  if ("cluster_mapping" %in% keep_fields) {
+    mapping_name <- paste0(selected_algo, "_mapping")
+    if (mapping_name %in% names(fcs_join_obj)) {
+      prepared_obj$cluster_mapping <- fcs_join_obj[[mapping_name]]
+    }
+    # If no {algo}_mapping exists (user never called fcs_annotate_clusters),
+    # cluster_mapping is simply absent from the prepared object — FCView
+    # will behave as if no pre-annotation was provided.
+  }
+
   if (!is.null(prepared_obj$data) && !is.matrix(prepared_obj$data)) {
     prepared_obj$data <- as.matrix(prepared_obj$data)
   }
@@ -319,7 +338,13 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
 
   if ("umap" %in% names(prepared_obj)) message("  UMAP coordinates: present")
   if ("tsne" %in% names(prepared_obj)) message("  tSNE coordinates: present")
-  if ("cluster_heatmap" %in% names(prepared_obj)) message("  Cluster heatmap: present")
+  if ("cluster_heatmap"  %in% names(prepared_obj)) message("  Cluster heatmap: present")
+  if ("cluster_mapping"  %in% names(prepared_obj)) {
+    n_mapped <- sum(!is.na(prepared_obj$cluster_mapping$celltype))
+    n_total_m <- nrow(prepared_obj$cluster_mapping)
+    message(sprintf("  Cluster mapping: present (%d/%d clusters annotated, from '%s')",
+                    n_mapped, n_total_m, paste0(selected_algo, "_mapping")))
+  }
 
   # Save to file if output_dir and file_name are provided
   if (!is.null(output_dir) && !is.null(file_name)) {
