@@ -120,7 +120,7 @@ The clustering and dimension reduction steps offer methods to run calculations t
 To take advantage of Python-supported methods, install the following:
 
 - [Python](https://www.python.org/downloads/) — check "Add to PATH" during installation; pip is included
-- [FlowKit](https://pypi.org/project/FlowKit/) — **required** for hyperlog transformation via `fcs_join()`
+- [FlowKit](https://pypi.org/project/FlowKit/) — **required** for hyperlog transformation when using a FlowJo workspace diagnostics file with `fcs_join()` (not needed for the standard `transform = "hyperlog"` argument)
 - [umap](https://github.com/lmcinnes/umap) — UMAP via Python
 - [pynndescent](https://github.com/lmcinnes/pynndescent) — required for Python UMAP
 - [leidenalg](https://github.com/vtraag/leidenalg) — Leiden clustering via Python
