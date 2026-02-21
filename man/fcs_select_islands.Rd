@@ -6,11 +6,11 @@
 \usage{
 fcs_select_islands(
   fcs_join_obj,
-  reduction_cluster_annotate_algorithm = c("leiden", "flowsom", "louvain", "phenograph"),
-  dbscan_reduction = c("umap", "tsne"),
+  dbscan_lineage,
+  reduction_cluster_annotate_algorithm,
+  dbscan_reduction,
   dbscan_minpts = 50,
   dbscan_eps = 0.5,
-  dbscan_lineage = c("170Yb_CD3", "165Ho_CD19", "145Nd_CD4", "146Nd_CD8"),
   outdir = getwd()
 )
 }
@@ -23,6 +23,10 @@ containing at minimum:
 \item \code{umap} or \code{tsne} element with \verb{$coordinates} (cells × 2)
 }}
 
+\item{dbscan_lineage}{Character vector of channel names to include in the island heatmap (e.g.
+lineage markers). Default \code{c("170Yb_CD3","165Ho_CD19","145Nd_CD4","146Nd_CD8")}.
+If \code{NULL}, uses all channels.}
+
 \item{reduction_cluster_annotate_algorithm}{Character; clustering result to use when highlighting kept islands on the
 embedding. One of \code{"leiden"}, \code{"flowsom"}, \code{"louvain"}, or \code{"phenograph"}.
 Default uses the first value.}
@@ -33,10 +37,6 @@ Default uses the first value.}
 \item{dbscan_minpts}{Integer; minimum points per DBSCAN cluster (\code{minPts}). Default 50.}
 
 \item{dbscan_eps}{Numeric; epsilon neighborhood radius for DBSCAN. Default 0.5.}
-
-\item{dbscan_lineage}{Character vector of channel names to include in the island heatmap (e.g.
-lineage markers). Default \code{c("170Yb_CD3","165Ho_CD19","145Nd_CD4","146Nd_CD8")}.
-If \code{NULL}, uses all channels.}
 
 \item{outdir}{Character; path to an existing directory where intermediate heatmaps and
 plots will be saved. Defaults to the working directory.}

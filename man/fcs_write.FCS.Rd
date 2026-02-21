@@ -62,17 +62,21 @@ data back into flowCore‐compatible format for downstream tools.
 \details{
 The function proceeds as follows:
 \enumerate{
+\item Validates that \code{outdir} exists.
 \item Selects the expression matrix according to \code{data_format}.
-\item Gathers any requested embeddings by extracting
-\code{fcs_join_obj[[ tolower(reduction) ]][["coordinates"]]}.
-\item Gathers any requested cluster assignments by extracting
-\code{fcs_join_obj[[ tolower(algorithm) ]][["clusters"]]}.
-\item Warns about any missing slots and omits them.
-\item Column‐binds the data, embeddings, and clustering vectors into a single
-numeric matrix.
-\item Constructs a new \code{flowFrame} and, if \code{subset_rows != "all"}, subsets
-to those rows.
-\item Writes the \code{flowFrame} to disk via \code{flowCore::write.FCS()}.
+\item Validates \code{subset_rows}: must be \code{"all"} or an integer vector with all
+indices in \verb{[1, nrow(data)]}; an informative error is thrown otherwise.
+\item Gathers any requested embeddings from
+\code{fcs_join_obj[[ tolower(reduction) ]][["coordinates"]]}, skipping any
+that are missing or whose row count does not match the data matrix.
+\item Gathers any requested cluster assignments from
+\code{fcs_join_obj[[ tolower(algorithm) ]][["clusters"]]}, skipping any
+that are missing or whose length does not match the data matrix.
+\item Column‐binds the data, embeddings, and cluster columns into a single
+numeric matrix via \code{do.call(cbind, ...)}.
+\item Constructs a \code{flowFrame} and, if \code{subset_rows != "all"}, subsets it.
+\item Writes to disk via \code{flowCore::write.FCS()} using \code{file.path()} for
+cross‐platform path construction.
 }
 }
 \examples{

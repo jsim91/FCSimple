@@ -73,7 +73,7 @@ to \code{"cluster_heatmap"} (required for FCView app compatibility).
 \item Filters the object to retain only fields specified in \code{keep_fields}.
 \item Cleans up cluster and heatmap structures to keep only essential elements:
 \itemize{
-\item For \code{cluster}: keeps \code{clusters}, \code{settings}, \code{abundance}, \code{counts}
+\item For \code{cluster}: keeps \code{clusters}, \code{settings}, \code{frequency}, \code{fraction}, \code{counts}
 \item For \code{cluster_heatmap}: keeps \code{heatmap_tile_data}, \code{population_size}, \code{rep_used}
 }
 \item Ensures data types match FCView expectations (data as matrix, coordinates

@@ -35,15 +35,17 @@ If \code{return_abundance = TRUE}, a numeric matrix (samples × clusters)
 containing counts, frequencies, or fractions. Otherwise, the input
 \code{fcs_join_obj}, augmented with:
 \itemize{
-\item \verb{<algorithm>$abundance}: a numeric matrix (samples × clusters)
+\item \verb{<algorithm>$frequency}: a numeric matrix (samples × clusters) when \code{report_as = "frequency"}
+\item \verb{<algorithm>$fraction}: a numeric matrix (samples × clusters) when \code{report_as = "fraction"}
+\item \verb{<algorithm>$counts}: a numeric matrix (samples × clusters) when \code{report_as = "count"}
 \item updated \code{object_history}
 }
 }
 \description{
 Computes per‐sample cluster abundances for a previously clustered flow
-cytometry object. Stores a matrix of raw cell counts, frequencies (0–100),
-or fractions (0–1) under the chosen algorithm’s \code{abundance} element, and
-appends a timestamped entry to \code{object_history}.
+cytometry object. Stores the result under the chosen algorithm's
+\code{frequency}, \code{fraction}, or \code{counts} element (matching \code{report_as}),
+and appends a timestamped entry to \code{object_history}.
 }
 \details{
 The function will:
@@ -52,9 +54,9 @@ The function will:
 \item If \code{report_as = "count"}, tabulate raw cell counts per cluster, per sample.
 Otherwise, compute proportions of cells in each cluster per sample.
 \item If \code{report_as = "frequency"}, multiply proportions by 100.
-\item If \code{return_abundance = TRUE}, return the abundance matrix.
-Otherwise, store it in
-\code{fcs_join_obj[[report_algorithm]][["abundance"]]}.
+\item If \code{return_abundance = TRUE}, return the matrix directly.
+Otherwise, store it in \code{fcs_join_obj[[report_algorithm]][[report_as]]}
+(i.e. \verb{[["frequency"]]}, \verb{[["fraction"]]}, or \verb{[["counts"]]}).
 \item If not returning directly, append a timestamped note to
 \code{object_history}.
 }

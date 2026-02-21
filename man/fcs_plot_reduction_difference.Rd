@@ -18,7 +18,7 @@ fcs_plot_reduction_difference(
   annotate_clusters = TRUE,
   cluster_algorithm = c("leiden", "flowsom", "louvain", "phenograph"),
   cluster_number_annotation_size = 5,
-  contour_bin_width = 0.001,
+  contour_bin_width = NULL,
   legend_orientation = c("horizontal", "vertical"),
   figure_width = 8,
   figure_height = 8,
@@ -67,7 +67,8 @@ median coordinate.}
 
 \item{cluster_number_annotation_size}{Numeric; font size for cluster‐ID annotations (default 5).}
 
-\item{contour_bin_width}{Numeric; bin‐width for \code{stat_contour()} (default 0.001).}
+\item{contour_bin_width}{Numeric or \code{NULL}; bin-width for \code{stat_contour()}. If \code{NULL} (default),
+computed automatically as \code{diff(range(density_difference)) / 20}.}
 
 \item{legend_orientation}{Character; “horizontal” or “vertical” (default “horizontal”) orientation
 for the difference–fill legend.}

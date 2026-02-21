@@ -2,51 +2,98 @@
 % Please edit documentation in R/fcs_update.R
 \name{fcs_update}
 \alias{fcs_update}
-\title{Update FCSimple Object with Instrument Metadata}
+\title{Update an FCSimple Object with Metadata, Instrument Type, and Version Info}
 \usage{
 fcs_update(fcs_join_obj)
 }
 \arguments{
 \item{fcs_join_obj}{An FCSimple analysis object (list) returned by \code{FCSimple::fcs_join()}.
-May already include \code{collection_instrument} and \code{object_history}.}
+Must contain the fields \code{data}, \code{source}, and \code{run_date}.}
 }
 \value{
-The input \code{fcs_join_obj}, with the fields:
-\itemize{
-\item \code{collection_instrument}: auto-detected as 'cytof' or 'flow' based on data.
-\item \code{object_history}: a character string recording the update timestamp.
+The input \code{fcs_join_obj} list with the following fields added or
+updated:
+\describe{
+\item{\code{versions}}{A list with elements \code{R} (R version),
+\code{Python} (Python version string or \code{"none"}),
+\code{Rsession} (output of \code{sessionInfo()}), and
+\code{pip_list} (pip package \code{data.frame} or \code{"none"}).}
+\item{\code{metadata}}{A \code{data.frame} with at least columns
+\code{patient_ID} and \code{run_date}, one row per unique sample.
+Preserved from the input if it already satisfies the coverage and
+uniqueness requirements; rebuilt from \code{source} and
+\code{run_date} otherwise.}
+\item{\code{collection_instrument}}{Character string: \code{"cytof"} or
+\code{"flow"}.}
+\item{\code{object_history}}{Character string recording the update
+timestamp, e.g. \code{"updated: 2024-06-01 14:32:07"}.}
 }
 }
 \description{
-Adds or updates the collection instrument type and history in an FCSimple
-analysis object. If the object already contains both \code{collection_instrument}
-and \code{object_history}, the function issues a warning and returns the object
-unchanged.
+Finalises an FCSimple analysis object produced by \code{FCSimple::fcs_join()}
+by performing four tasks:
+\enumerate{
+\item Captures the current R version, R session info, and (if available)
+Python version and installed pip packages, storing them in
+\code{obj$versions}.
+\item Validates that the object contains the required fields
+\code{"data"}, \code{"source"}, and \code{"run_date"}.
+\item Validates or constructs per-sample metadata. If the object already
+contains a \code{metadata} \code{data.frame} with a \code{patient_ID}
+column that fully and exactly covers all unique values in
+\code{source} (no missing, no extra, no duplicates), the existing
+metadata is preserved. If \code{run_date} is absent from the
+existing metadata it is joined in from \code{source}/\code{run_date}.
+If any validation check fails, metadata is rebuilt from scratch as a
+deduplicated \code{data.frame} with columns \code{patient_ID} and
+\code{run_date}.
+\item Auto-detects the collection instrument type: if
+\code{min(obj$data) >= 0} the instrument is assumed to be
+\code{"cytof"} (mass cytometry); otherwise \code{"flow"}
+(fluorescence cytometry). The result is stored in
+\code{obj$collection_instrument}, and an update timestamp is
+stored in \code{obj$object_history}.
+}
 }
 \details{
-\itemize{
-\item If both \code{collection_instrument} and \code{object_history} are present in
-\code{fcs_join_obj}, a warning \code{"object is already up to date"} is issued
-and the original object is returned.
-\item Otherwise, \code{collection_instrument} is auto-detected based on the data:
-if min(data) >= 0, assumes 'cytof' (mass cytometry); otherwise assumes
-'flow' (fluorescence cytometry). \code{object_history} is initialized with
-\code{"updated: <timestamp>"}.
-}
+\strong{Metadata preservation:} Existing metadata is kept intact if all
+four conditions hold: (1) \code{metadata} is a \code{data.frame},
+(2) it contains a \code{patient_ID} column, (3) every value in
+\code{patient_ID} appears in \code{source}, (4) every unique value in
+\code{source} appears in \code{patient_ID}, and (5) the metadata has
+exactly one row per unique \code{patient_ID}. If \code{run_date} is
+missing from the otherwise-valid metadata it is joined from the
+cell-level \code{source}/\code{run_date} vectors. If any condition
+fails, metadata is rebuilt from scratch.
+
+\strong{Version capture:} Python availability is tested with
+\code{system("python --version")}. If Python is found, the installed
+package list is retrieved via \code{pip list} (or \code{pip3 list} as a
+fallback) and stored as a two-column \code{data.frame} (\code{Package},
+\code{Version}). If Python is not available, both \code{Python} and
+\code{pip_list} are set to \code{"none"}.
+
+\strong{Instrument detection:} Because CyTOF/mass-cytometry ion counts are
+non-negative whilst flow-cytometry fluorescence values can be negative
+(after compensation), the sign of \code{min(obj$data)} is used as a
+heuristic: \eqn{\geq 0} → \code{"cytof"}, \eqn{< 0} → \code{"flow"}.
 }
 \examples{
 \dontrun{
   files <- list.files("data/fcs", "\\\\.fcs$", full.names = TRUE)
   joined <- FCSimple::fcs_join(files)
 
-  # Update adds metadata (instrument_type is auto-detected)
+  # Update: patient_ID is taken directly from the source field
   updated <- FCSimple::fcs_update(joined)
 
-  # Calling again warns and returns unchanged
-  unchanged <- FCSimple::fcs_update(updated)
+  # Inspect added fields
+  updated$collection_instrument  # "flow" or "cytof"
+  updated$object_history         # "updated: <timestamp>"
+  head(updated$metadata)         # patient_ID, run_date
+  updated$versions$R             # R version used
 }
 
 }
 \seealso{
-FCSimple::fcs_join, FCSimple::fcs_gating_object
+\code{\link[FCSimple]{fcs_join}}, \code{\link[FCSimple]{fcs_gating_object}}
 }

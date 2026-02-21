@@ -31,31 +31,69 @@
 #' @param reduction
 #'   Character; which embedding to use. `"UMAP"` (default) or `"tSNE"`.
 #'
-#' @param k
-#'   Integer; number of neighbors for KNN (default 60).
+#' @param fcs_join_obj
+#'   A list returned by `FCSimple::fcs_join()` and
+#'   `FCSimple::fcs_reduce_dimensions()`, containing at minimum:
+#'   - `<reduction>$coordinates`: numeric Ncells×2 embedding matrix
+#'   - `source`: character vector labeling each cell's sample of origin
+#'   - `data`: expression matrix (events × channels)
 #'
-#' @param change_thresholds
-#'   Numeric(2); lower and upper fractions (e.g. `c(0.05,0.95)`) for
-#'   contraction/expansion cutoffs (default `c(0.05,0.95)`).
+#' @param compare_list
+#'   A named list of exactly length 2. Each element is a character vector of
+#'   source names belonging to that group. List names become the group labels
+#'   in all outputs.
 #'
-#' @param ref_label
-#'   Character; name of the reference sample/timepoint in `source`.
-#'
-#' @param mem_features
-#'   Character vector of channels to pass to MEM for hotspot annotation
-#'   (default `"all"`).
-#'
-#' @param mem_scale
-#'   Numeric(2); MEM score scale range (default `c(0,10)`).
+#' @param reduction
+#'   Character; which 2D embedding to use. `"UMAP"` (default) or `"tSNE"`.
 #'
 #' @param outdir
-#'   Character; directory where plots and tables are saved (default `getwd()`).
+#'   Character; path to an existing directory where all output files are saved.
+#'
+#' @param point_alpha
+#'   Numeric; point transparency for embedding plots (default `0.05`).
+#'
+#' @param neighborhood_size
+#'   Integer; number of nearest neighbors per cell for the KNN search
+#'   (default `60`).
+#'
+#' @param percentile_breaks
+#'   Numeric vector of percentile boundaries (0–100) used to bin cells by
+#'   their local group fraction. Default `c(0,5,10,15,85,90,95,100)`.
+#'
+#' @param neighbor_significance_threshold
+#'   Fraction (0–1); cells with a local group-2 neighbor fraction above this
+#'   value or below `1 - threshold` are flagged as significant hotspots
+#'   (default `0.9`).
+#'
+#' @param cluster_min_size
+#'   Integer; minimum cell count for a DBSCAN hotspot cluster to be retained
+#'   (default `50`).
+#'
+#' @param relative_cluster_distance
+#'   Numeric divisor applied to the embedding range to derive the DBSCAN
+#'   epsilon radius (default `30`). Larger values → smaller epsilon → tighter
+#'   clusters.
+#'
+#' @param file_output_prefix
+#'   Character or `NULL`; optional string prepended to all output filenames
+#'   (default `NULL`).
+#'
+#' @param use_MEM
+#'   Logical; if `TRUE` (default), run Marker Enrichment Modeling via
+#'   `cytoMEM::MEM()` and save MEM heatmaps to `outdir`.
+#'
+#' @param max_alloc
+#'   Integer; maximum cells per hotspot group passed to DBSCAN. Excess cells
+#'   are randomly sub-sampled (default `200000`).
+#'
+#' @param plot_intensities
+#'   Logical; if `TRUE`, generates per-channel intensity embedding plots
+#'   (default `FALSE`).
 #'
 #' @return
-#'   A list with:
-#'   - `hotspot_labels`: integer vector (–1, 0, +1) per cell for contraction/no-change/expansion
-#'   - `mem_scores`: data.frame of MEM enrichment per hotspot
-#'   - `object_history`: the appended T-REX run record
+#'   Invisibly returns `NULL`. All outputs (PDFs, CSVs) are written to
+#'   `outdir`. Returns `0` with a message if no significant hotspot regions
+#'   are found or all regions fall below `cluster_min_size`.
 #'
 #' @examples
 #' \dontrun{
@@ -63,19 +101,17 @@
 #' joined  <- FCSimple::fcs_join(files)
 #' reduced <- FCSimple::fcs_reduce_dimensions(joined, method = "UMAP")
 #'
-#' res <- FCSimple::fcs_trex(
-#'   reduced,
-#'   reduction         = "UMAP",
-#'   k                 = 60,
-#'   change_thresholds = c(0.05, 0.95),
-#'   ref_label         = "day0",
-#'   mem_features      = c("CD3","CD4","CD8")
+#' FCSimple::fcs_trex(
+#'   fcs_join_obj  = reduced,
+#'   compare_list  = list(group1 = c("sample_A"), group2 = c("sample_B")),
+#'   reduction     = "UMAP",
+#'   outdir        = "/path/to/output"
 #' )
 #' }
 #'
 #' @seealso
-#'   FCSimple::fcs_plot_reduction, FCSimple::fcs_cluster_heatmap,
-#'   MASS::kde2d, dbscan::dbscan, flowCore::flowFrame, MEM::MarkerEnrichment
+#'   [FCSimple::fcs_plot_reduction()], [FCSimple::fcs_cluster_heatmap()],
+#'   [RANN::nn2()], [dbscan::dbscan()], [cytoMEM::MEM()]
 #'
 #' @references
 #' 1. Barone SM, Paul AG, Muehling LM, et al. Unsupervised machine learning
@@ -86,7 +122,6 @@
 #'    2017;14(3):275–278. doi:10.1038/nmeth.4149
 #'
 #' @importFrom RANN nn2
-#' @importFrom cytoMEM MEM build_heatmaps
 #' @export
 fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), outdir,
                      point_alpha = 0.05, neighborhood_size = 60,
@@ -105,26 +140,18 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   require(RANN)
   require(grid)
   require(gridExtra)
+  require(CATALYST)
+  require(ComplexHeatmap)
+  require(circlize)
+  require(RColorBrewer)
+  require(cytoMEM)
+  require(stringr)
 
-  # workflow source: https://github.com/cytolab/T-REX
-  # fcs_join_obj = fcs_2
-  # compare_list = compare_groups[c(2,4)]
-  # reduction = "UMAP"
-  # outdir = paste0("J:/CW_mouse_1/outs/all_by_date/HFD_HIVp_vs_LFD_HIVp_trex_date1",
-  #                 ifelse(sample_equal_tissue,"_equal_tissue"))
-  # point_alpha = 0.25
-  # neighborhood_size = 10
-  # percentile_breaks = c(0,5,10,15,85,90,95,100)
-  # neighbor_significance_threshold = 0.9
-  # cluster_min_size = 20
-  # relative_cluster_distance = 30
-  # file_output_prefix = NULL
-  # use_MEM = TRUE
-  # max_alloc = 200000
-  # plot_intensities = TRUE
-
-  if(!is.null(file_output_prefix)) {
+  if (!is.null(file_output_prefix)) {
     file_output_prefix <- paste0(file_output_prefix,"_")
+  }
+  if (!dir.exists(outdir)) {
+    stop("'outdir' does not exist: ", outdir)
   }
   outdir <- gsub("/$","",outdir)
   if(any(length(compare_list)!=2,class(compare_list)!="list")) {
@@ -419,17 +446,19 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   }
 
   set_ns <- total_data[which(total_data$bin=="not significant"),]
-  if(nrow(set1_spots)>max_alloc) {
+  orig_size1 <- nrow(set1_spots)
+  if(orig_size1 > max_alloc) {
     set.seed(123)
-    set1_spots <- set1_spots[sample(1:nrow(set1_spots),size=max_alloc,replace=FALSE),]
-    cluster_min_size1 <- cluster_min_size * (max_alloc/nrow(set1_spots))
+    set1_spots <- set1_spots[sample(1:orig_size1, size = max_alloc, replace = FALSE), ]
+    cluster_min_size1 <- cluster_min_size * (max_alloc / orig_size1)
   } else {
     cluster_min_size1 <- cluster_min_size
   }
-  if(nrow(set2_spots)>max_alloc) {
+  orig_size2 <- nrow(set2_spots)
+  if(orig_size2 > max_alloc) {
     set.seed(123)
-    set2_spots <- set2_spots[sample(1:nrow(set2_spots),size=max_alloc,replace=FALSE),]
-    cluster_min_size2 <- cluster_min_size * (max_alloc/nrow(set2_spots))
+    set2_spots <- set2_spots[sample(1:orig_size2, size = max_alloc, replace = FALSE), ]
+    cluster_min_size2 <- cluster_min_size * (max_alloc / orig_size2)
   } else {
     cluster_min_size2 <- cluster_min_size
   }
@@ -476,19 +505,20 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   write.csv(x = trex_count_matrix, file = file.path(outdir,paste0(file_output_prefix,"trex_significant_cluster_counts_",
                                                                   strftime(Sys.time(),"%Y-%m-%d_%H%M%S"),".csv")), row.names = TRUE)
 
-  require(CATALYST)
-  require(ComplexHeatmap)
-  require(circlize)
-  require(grid)
-  require(RColorBrewer)
-
   number_of_cols <- ncol(fcs_join_obj[["data"]])
   event_sources = 1:nrow(clustered_data)
   cluster_numbers = clustered_data$cluster
   include_channels = colnames(clustered_data)[1:number_of_cols]
   heatmap_data = clustered_data[,1:number_of_cols]
 
-  scaled.global <- CATALYST:::.scale_exprs(t(heatmap_data[,include_channels]), 1, 0.01)
+  # Winsorized min-max scaling per channel (replaces CATALYST:::.scale_exprs)
+  .trex_scale_exprs <- function(mat, q = 0.01) {
+    qs <- apply(mat, 1, quantile, probs = c(q, 1 - q), na.rm = TRUE)
+    mat <- (mat - qs[1L, ]) / (qs[2L, ] - qs[1L, ])
+    mat[mat < 0] <- 0; mat[mat > 1] <- 1
+    mat
+  }
+  scaled.global <- .trex_scale_exprs(t(heatmap_data[, include_channels]), q = 0.01)
   global.t <- t(scaled.global)
   backend.matrix <- matrix(data=NA,nrow=length(unique(cluster_numbers)),ncol=ncol(global.t))
   cluster_numbers <- as.character(cluster_numbers)
@@ -536,8 +566,6 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
            path = outdir, width = ncol(backend.matrix)/2 + 1,
            height = nrow(backend.matrix)/2 + 1.5, units = "in", dpi = 300, limitsize = FALSE)
     if(use_MEM) {
-      require(cytoMEM)
-      require(stringr)
       mem_input <- cbind(heatmap_data,data.frame(cluster = factor(clustered_data$cluster)))
       mem_input$cluster <- as.numeric(mem_input$cluster)
       match_clusters <- data.frame(descriptive_cluster = clustered_data$cluster,
@@ -559,18 +587,15 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
         }
       }
 
+      # cytoMEM::build_heatmaps writes to file.path(getwd(), "output files").
+      # Temporarily set working directory to outdir so files land there directly.
+      old_wd <- setwd(outdir)
+      on.exit(setwd(old_wd), add = TRUE)
       cytoMEM::build_heatmaps(mcalc, cluster.MEM = "none", cluster.medians = "none",
                           display.thresh = 1,  output.files = TRUE, labels = FALSE,
                           only.MEMheatmap = TRUE)
-      mem_outs <- list.files(path = file.path(getwd(),"output files"), full.names = TRUE)
-      for(i in 1:length(mem_outs)) {
-        old_fil <- mem_outs[i]
-        new_fil <- gsub(pattern = "/ ","/",old_fil)
-        file.rename(from = old_fil, to = new_fil)
-        file.copy(from = new_fil, to = outdir, overwrite = TRUE,
-                  recursive = FALSE, copy.mode = TRUE)
-        file.remove(new_fil)
-      }
+      setwd(old_wd)
+      on.exit(NULL)  # clear the on.exit guard now that we have restored wd
     }
   }
   if(tolower(reduction)=="umap") {
@@ -599,7 +624,10 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
   pl_lab <- pl_lab +
     geom_point_rast(pch = 19, size = 0.5, alpha = 0.1) +
     guides(color = guide_legend(override.aes = list(size = 5, alpha = 1))) +
-    annotate("text_repel", x = xclus, y = yclus, label = names(xclus), size = 5) +
+    ggrepel::geom_text_repel(
+      data = data.frame(x = as.numeric(xclus), y = as.numeric(yclus),
+                        label = names(xclus), stringsAsFactors = FALSE),
+      mapping = aes(x = x, y = y, label = label), size = 5, inherit.aes = FALSE) +
     theme_void() +
     theme(legend.title = element_blank(),
           axis.title = element_blank(),
@@ -618,7 +646,10 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
       xlim(range(plot_data$tSNE1)) + ylim(range(plot_data$tSNE2))
   }
   pl_sig_1 <- pl_sig_lab +
-    annotate("text_repel", x = xclus, y = yclus, label = names(xclus), size = 5) +
+    ggrepel::geom_text_repel(
+      data = data.frame(x = as.numeric(xclus), y = as.numeric(yclus),
+                        label = names(xclus), stringsAsFactors = FALSE),
+      mapping = aes(x = x, y = y, label = label), size = 5, inherit.aes = FALSE) +
     theme_void() +
     theme(legend.title = element_blank(),
           axis.title = element_blank(),
@@ -654,7 +685,7 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
         if(tolower(reduction)=="umap"){
           plt <- ggplot(data = arg1, mapping = aes(x = UMAP1, y = UMAP2, color = col1))
         } else if(tolower(reduction)=="tsne") {
-          plt <- ggplot(data = arg1, mapping = aesg(x = tSNE1, y = tSNE2, color = col1))
+          plt <- ggplot(data = arg1, mapping = aes(x = tSNE1, y = tSNE2, color = col1))
         }
         plt <- plt +
           geom_point_rast(size = 0.8, pch = 19, alpha = 0.1) +
@@ -712,4 +743,5 @@ fcs_trex <- function(fcs_join_obj, compare_list, reduction = c("UMAP","tSNE"), o
            plot = gridExtra::marrangeGrob(grobs = arranged_list, nrow=1, ncol=1, top = ""),
            device = "pdf", path = outdir, width = 12, height = 12, units = "in", dpi = 300)
   }
+  return(invisible(NULL))
 }

@@ -22,36 +22,57 @@ fcs_trex(
 )
 }
 \arguments{
-\item{fcs_join_obj}{A list returned by \code{FCSimple::fcs_join()}, then reduced via
-\code{FCSimple::fcs_reduce_dimensions()}, containing:
+\item{fcs_join_obj}{A list returned by \code{FCSimple::fcs_join()} and
+\code{FCSimple::fcs_reduce_dimensions()}, containing at minimum:
 \itemize{
 \item \verb{<reduction>$coordinates}: numeric Ncells×2 embedding matrix
-\item \code{source}: vector labeling each cell’s sample/timepoint
+\item \code{source}: character vector labeling each cell's sample of origin
+\item \code{data}: expression matrix (events × channels)
 }}
 
-\item{reduction}{Character; which embedding to use. \code{"UMAP"} (default) or \code{"tSNE"}.}
+\item{compare_list}{A named list of exactly length 2. Each element is a character vector of
+source names belonging to that group. List names become the group labels
+in all outputs.}
 
-\item{outdir}{Character; directory where plots and tables are saved (default \code{getwd()}).}
+\item{reduction}{Character; which 2D embedding to use. \code{"UMAP"} (default) or \code{"tSNE"}.}
 
-\item{k}{Integer; number of neighbors for KNN (default 60).}
+\item{outdir}{Character; path to an existing directory where all output files are saved.}
 
-\item{change_thresholds}{Numeric(2); lower and upper fractions (e.g. \code{c(0.05,0.95)}) for
-contraction/expansion cutoffs (default \code{c(0.05,0.95)}).}
+\item{point_alpha}{Numeric; point transparency for embedding plots (default \code{0.05}).}
 
-\item{ref_label}{Character; name of the reference sample/timepoint in \code{source}.}
+\item{neighborhood_size}{Integer; number of nearest neighbors per cell for the KNN search
+(default \code{60}).}
 
-\item{mem_features}{Character vector of channels to pass to MEM for hotspot annotation
-(default \code{"all"}).}
+\item{percentile_breaks}{Numeric vector of percentile boundaries (0–100) used to bin cells by
+their local group fraction. Default \code{c(0,5,10,15,85,90,95,100)}.}
 
-\item{mem_scale}{Numeric(2); MEM score scale range (default \code{c(0,10)}).}
+\item{neighbor_significance_threshold}{Fraction (0–1); cells with a local group-2 neighbor fraction above this
+value or below \code{1 - threshold} are flagged as significant hotspots
+(default \code{0.9}).}
+
+\item{cluster_min_size}{Integer; minimum cell count for a DBSCAN hotspot cluster to be retained
+(default \code{50}).}
+
+\item{relative_cluster_distance}{Numeric divisor applied to the embedding range to derive the DBSCAN
+epsilon radius (default \code{30}). Larger values → smaller epsilon → tighter
+clusters.}
+
+\item{file_output_prefix}{Character or \code{NULL}; optional string prepended to all output filenames
+(default \code{NULL}).}
+
+\item{use_MEM}{Logical; if \code{TRUE} (default), run Marker Enrichment Modeling via
+\code{cytoMEM::MEM()} and save MEM heatmaps to \code{outdir}.}
+
+\item{max_alloc}{Integer; maximum cells per hotspot group passed to DBSCAN. Excess cells
+are randomly sub-sampled (default \code{200000}).}
+
+\item{plot_intensities}{Logical; if \code{TRUE}, generates per-channel intensity embedding plots
+(default \code{FALSE}).}
 }
 \value{
-A list with:
-\itemize{
-\item \code{hotspot_labels}: integer vector (–1, 0, +1) per cell for contraction/no-change/expansion
-\item \code{mem_scores}: data.frame of MEM enrichment per hotspot
-\item \code{object_history}: the appended T-REX run record
-}
+Invisibly returns \code{NULL}. All outputs (PDFs, CSVs) are written to
+\code{outdir}. Returns \code{0} with a message if no significant hotspot regions
+are found or all regions fall below \code{cluster_min_size}.
 }
 \description{
 Applies the Tracking Responders EXpanding (T-REX) algorithm to identify
@@ -82,13 +103,11 @@ files   <- list(ff1, ff2)
 joined  <- FCSimple::fcs_join(files)
 reduced <- FCSimple::fcs_reduce_dimensions(joined, method = "UMAP")
 
-res <- FCSimple::fcs_trex(
-  reduced,
-  reduction         = "UMAP",
-  k                 = 60,
-  change_thresholds = c(0.05, 0.95),
-  ref_label         = "day0",
-  mem_features      = c("CD3","CD4","CD8")
+FCSimple::fcs_trex(
+  fcs_join_obj  = reduced,
+  compare_list  = list(group1 = c("sample_A"), group2 = c("sample_B")),
+  reduction     = "UMAP",
+  outdir        = "/path/to/output"
 )
 }
 
@@ -104,6 +123,6 @@ Characterizing cell subsets using Marker Enrichment Modeling. Nat Methods.
 }
 }
 \seealso{
-FCSimple::fcs_plot_reduction, FCSimple::fcs_cluster_heatmap,
-MASS::kde2d, dbscan::dbscan, flowCore::flowFrame, MEM::MarkerEnrichment
+\code{\link[=fcs_plot_reduction]{fcs_plot_reduction()}}, \code{\link[=fcs_cluster_heatmap]{fcs_cluster_heatmap()}},
+\code{\link[RANN:nn2]{RANN::nn2()}}, \code{\link[dbscan:dbscan]{dbscan::dbscan()}}, \code{\link[cytoMEM:MEM]{cytoMEM::MEM()}}
 }

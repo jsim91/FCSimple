@@ -54,7 +54,7 @@
 #'   6. Removes all other clustering algorithms and their heatmaps.
 #'   7. Filters the object to retain only fields specified in `keep_fields`.
 #'   8. Cleans up cluster and heatmap structures to keep only essential elements:
-#'      - For `cluster`: keeps `clusters`, `settings`, `abundance`, `counts`
+#'      - For `cluster`: keeps `clusters`, `settings`, `frequency`, `fraction`, `counts`
 #'      - For `cluster_heatmap`: keeps `heatmap_tile_data`, `population_size`, `rep_used`
 #'   9. Ensures data types match FCView expectations (data as matrix, coordinates
 #'      as data frames).
@@ -225,7 +225,7 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
   # Rename selected algorithm to cluster
   if (selected_algo != "cluster") {
     fcs_join_obj$cluster <- fcs_join_obj[[selected_algo]]
-    if('abundance' %in% names(fcs_join_obj$cluster)) {
+    if('frequency' %in% names(fcs_join_obj$cluster) || 'fraction' %in% names(fcs_join_obj$cluster)) {
       fcs_join_obj <- FCSimple::fcs_calculate_abundance(fcs_join_obj = fcs_join_obj,
                                                         report_algorithm = 'cluster',
                                                         report_as = 'frequency')
@@ -283,7 +283,7 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
 
   if ("cluster" %in% names(prepared_obj)) {
     if (is.list(prepared_obj$cluster)) {
-      essential_cluster_fields <- c("clusters", "settings", "abundance", "counts")
+      essential_cluster_fields <- c("clusters", "settings", "frequency", "fraction", "counts")
       cluster_fields_present <- intersect(essential_cluster_fields, names(prepared_obj$cluster))
       new_cluster <- list()
       for (cf in cluster_fields_present) {

@@ -36,7 +36,7 @@ fcs_test_clusters(
 \item{fcs_join_obj}{A list returned by FCSimple::fcs_join() and FCSimple::fcs_cluster(),
 containing at minimum:
 \itemize{
-\item \code{fcs_join_obj[[ tolower(algorithm) ]][["abundance"]]}: sample × cluster matrix of abundances
+\item \code{fcs_join_obj[[ tolower(algorithm) ]][["frequency"]]}: sample × cluster matrix of cluster frequencies (0–100)
 \item (optionally) \code{fcs_join_obj[[ paste0(tolower(algorithm), "_heatmap") ]][["heatmap_tile_data"]]}
 }}
 
@@ -56,9 +56,9 @@ Names must match those of \code{compare_list}.}
 \item{x_order}{Optional character vector giving the desired factor levels for the x‐axis.
 If \code{NULL} (default), groups are taken in the order of \code{compare_list}.}
 
-\item{abundance}{Optional numeric matrix of cluster abundances (samples × clusters). If
+\item{abundance}{Optional numeric matrix of cluster frequencies (samples × clusters). If
 \code{NA} (default), pulled from
-\code{fcs_join_obj[[ tolower(algorithm) ]][["abundance"]]}.}
+\code{fcs_join_obj[[ tolower(algorithm) ]][["frequency"]]}.}
 
 \item{heatmap_matrix}{Optional numeric matrix of median expression values (clusters × markers).
 If \code{NA} (default), pulled from the object’s existing heatmap tile data.}
@@ -109,7 +109,7 @@ returned in a list within the input object for easy inspection or saving.
 }
 \details{
 \enumerate{
-\item Retrieve or use the provided \code{abundance} matrix and subset to the samples in \code{compare_list}.
+\item Retrieve or use the provided \code{abundance} matrix (cluster frequencies) and subset to the samples in \code{compare_list}.
 \item For each cluster, construct a data.frame of frequencies with group labels.
 \item Generate a distribution plot per cluster:
 \itemize{

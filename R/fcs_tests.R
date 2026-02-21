@@ -12,7 +12,7 @@
 #'   A list returned by FCSimple::fcs_join() and FCSimple::fcs_cluster(),
 #'   containing at minimum:
 #'   \itemize{
-#'     \item `fcs_join_obj[[ tolower(algorithm) ]][["abundance"]]`: sample × cluster matrix of abundances
+#'     \item `fcs_join_obj[[ tolower(algorithm) ]][["frequency"]]`: sample × cluster matrix of cluster frequencies (0–100)
 #'     \item (optionally) `fcs_join_obj[[ paste0(tolower(algorithm), "_heatmap") ]][["heatmap_tile_data"]]`
 #'   }
 #'
@@ -38,9 +38,9 @@
 #'   If `NULL` (default), groups are taken in the order of `compare_list`.
 #'
 #' @param abundance
-#'   Optional numeric matrix of cluster abundances (samples × clusters). If
+#'   Optional numeric matrix of cluster frequencies (samples × clusters). If
 #'   `NA` (default), pulled from
-#'   `fcs_join_obj[[ tolower(algorithm) ]][["abundance"]]`.
+#'   `fcs_join_obj[[ tolower(algorithm) ]][["frequency"]]`.
 #'
 #' @param heatmap_matrix
 #'   Optional numeric matrix of median expression values (clusters × markers).
@@ -90,7 +90,7 @@
 #'
 #' @details
 #' \enumerate{
-#'   \item Retrieve or use the provided `abundance` matrix and subset to the samples in `compare_list`.
+#'   \item Retrieve or use the provided `abundance` matrix (cluster frequencies) and subset to the samples in `compare_list`.
 #'   \item For each cluster, construct a data.frame of frequencies with group labels.
 #'   \item Generate a distribution plot per cluster:
 #'     \itemize{
@@ -182,11 +182,11 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list = NA, color_list = NA, 
     test_method <- 'wilcox'
   }
   if(test_method=='wilcox') {
-    if(is.null(fcs_join_obj[[tolower(algorithm)]][["abundance"]])) {
+    if(is.null(fcs_join_obj[[tolower(algorithm)]][["frequency"]])) {
       abundance <- FCSimple::fcs_calculate_abundance(fcs_join_obj = fcs_join_obj, report_algorithm = algorithm,
                                                      report_as = 'frequency', return_abundance = TRUE)
     } else {
-      abundance <- fcs_join_obj[[tolower(algorithm)]][["abundance"]]
+      abundance <- fcs_join_obj[[tolower(algorithm)]][["frequency"]]
     }
   }
   if(test_method=='sccomp') {

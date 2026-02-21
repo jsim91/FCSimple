@@ -56,7 +56,8 @@
 #'   Numeric; font size for cluster‐ID annotations (default 5).
 #'
 #' @param contour_bin_width
-#'   Numeric; bin‐width for `stat_contour()` (default 0.001).
+#'   Numeric or `NULL`; bin-width for `stat_contour()`. If `NULL` (default),
+#'   computed automatically as `diff(range(density_difference)) / 20`.
 #'
 #' @param legend_orientation
 #'   Character; “horizontal” or “vertical” (default “horizontal”) orientation
@@ -125,7 +126,6 @@
 #'   ggforce::geom_mark_hull
 #'
 #' @importFrom MASS kde2d
-#' @importFrom reshape2 melt
 #' @importFrom ggplot2 ggplot aes geom_tile stat_contour scale_fill_gradient2 scale_colour_gradient2 coord_cartesian guides labs annotate theme_bw theme ggsave
 #' @importFrom ggforce geom_mark_hull
 #' @importFrom dbscan dbscan
@@ -140,14 +140,13 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
                                           dbscan_eps = "auto", dbscan_minPts = "auto",
                                           legend_label_text_size = 12, annotate_clusters = TRUE,
                                           cluster_algorithm = c("leiden","flowsom","louvain","phenograph"),
-                                          cluster_number_annotation_size = 5, contour_bin_width = 0.001,
+                                          cluster_number_annotation_size = 5, contour_bin_width = NULL,
                                           legend_orientation = c("horizontal","vertical"),
                                           figure_width = 8, figure_height = 8, hull_radius = 1.5,
                                           add_timestamp = TRUE, hull_concavity = 2)
 {
   require(ggplot2)
   require(MASS)
-  require(reshape2)
   require(scales)
   require(ggrastr)
   require(ggforce); require(concaveman)
@@ -156,34 +155,12 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
   require(shadowtext)
   require(ComplexHeatmap)
 
-  # testing
-  # fcs_join_obj = fcs_obj
-  # reduction = "UMAP"
-  # compare_list = compare_hiv
-  # color_list = color_hiv
-  # n_kde = 200
-  # outdir = paste0(getwd(),"/HIV_status_test")
-  # axis_title_text_size = 12
-  # hull_radius = 2
-  # dbscan_eps = "auto"
-  # dbscan_minPts = "auto"
-  # legend_label_text_size = 12
-  # annotate_clusters = TRUE
-  # cluster_algorithm = "flowsom"
-  # cluster_number_annotation_size = 5
-  # contour_bin_width = 0.001
-  # legend_orientation = "vertical"
-  # figure_width = 8
-  # figure_height = 8
-  # add_timestamp = TRUE
-  # hull_concavity = 2
+  reduction        <- match.arg(reduction)
+  legend_orientation <- match.arg(legend_orientation)
+  cluster_algorithm  <- match.arg(cluster_algorithm)
 
-  if(length(reduction)!=1) {
-    stop("error in argument 'reduction': Use either tSNE or UMAP. Reduction must be present in 'fcs_join_obj'.")
-  }
-  if(length(legend_orientation)!=1) {
-    warning("Use either 'horizontal' or 'vertical'. Proceeding with 'legend_orientation' = 'horizontal'")
-    legend_orientation = "horizontal"
+  if (!dir.exists(outdir)) {
+    stop("'outdir' does not exist: ", outdir)
   }
 
   reduction_coords <- fcs_join_obj[[tolower(reduction)]][["coordinates"]]
@@ -191,9 +168,6 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
   colnames(reduction_coords)[1:2] <- c("dimx","dimy")
   dim1_range <- range(reduction_coords[,1]); dim2_range <- range(reduction_coords[,2])
 
-  if(length(cluster_algorithm)!=1) {
-    cluster_algorithm <- cluster_algorithm[1]
-  }
   if(annotate_clusters) {
     obj_clusters <- as.character(fcs_join_obj[[tolower(cluster_algorithm)]][["clusters"]])
     unique_clus <- unique(obj_clusters); unique_clus <- unique_clus[order(as.numeric(unique_clus))]
@@ -215,8 +189,8 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
   }
   grp1_reduction_loc <- which(fcs_join_obj[["source"]] %in% compare_list[[1]])
   grp2_reduction_loc <- which(fcs_join_obj[["source"]] %in% compare_list[[2]])
-  grp1_red <- reduction_coords[grp1_reduction_loc,]#; grp1_red <- rbind(grp1_red, pad_mat)
-  grp2_red <- reduction_coords[grp2_reduction_loc,]#; grp2_red <- rbind(grp2_red, pad_mat)
+  grp1_red <- reduction_coords[grp1_reduction_loc, ]
+  grp2_red <- reduction_coords[grp2_reduction_loc, ]
   ds_to <- min(nrow(grp1_red),nrow(grp2_red))
   if(nrow(grp1_red)>ds_to) {
     set.seed(123)
@@ -234,12 +208,17 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
   if(any(!identical(grp1_kde2d$x, grp2_kde2d$x),!identical(grp1_kde2d$y, grp2_kde2d$y))) {
     stop("kde2d x,y values are not identical")
   }
-  diff12 = grp1_kde2d
-  diff12$z = grp2_kde2d$z - grp1_kde2d$z
-  rownames(diff12$z) = diff12$x
-  colnames(diff12$z) = diff12$y
-  diff12.m = melt(diff12$z, id.var=rownames(diff12))
-  colnames(diff12.m)[3] <- "z"
+  diff12 <- grp1_kde2d
+  diff12$z <- grp2_kde2d$z - grp1_kde2d$z
+  diff12.m <- data.frame(
+    Var1 = rep(diff12$x, times = n_kde),
+    Var2 = rep(diff12$y, each  = n_kde),
+    z    = as.vector(diff12$z)
+  )
+
+  if (is.null(contour_bin_width)) {
+    contour_bin_width <- diff(range(diff12.m$z)) / 20
+  }
 
   minlim <- min(diff12.m$z); maxlim <- max(diff12.m$z)
 
@@ -259,27 +238,18 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
     coord_cartesian(xlim = dim1_range, ylim = dim2_range, expand = FALSE) +
     guides(color = "none", fill = guide_colorbar(ticks.color = NA)) +
     labs(x = reduction_names[1], y = reduction_names[2])
-  if(annotate_clusters) {
+  plt_dens_diff <- plt_dens_diff +
+    theme_bw() +
+    theme(legend.position = "bottom",
+          legend.direction= legend_orientation,
+          legend.title = element_blank(),
+          legend.text = element_text(size = legend_label_text_size, hjust = 0.5, vjust = 1),
+          axis.text = element_blank(),
+          axis.ticks = element_blank(),
+          axis.title = element_text(face = "bold", size = axis_title_text_size))
+  if (annotate_clusters) {
     plt_dens_diff <- plt_dens_diff +
-      annotate("shadowtext", x = clusx, y = clusy, label = names(clusx), size = cluster_number_annotation_size) +
-      theme_bw() +
-      theme(legend.position = "bottom",
-            legend.direction= legend_orientation,
-            legend.title = element_blank(),
-            legend.text = element_text(size = legend_label_text_size, hjust = 0.5, vjust = 1),
-            axis.text = element_blank(),
-            axis.ticks = element_blank(),
-            axis.title = element_text(face = "bold", size = axis_title_text_size))
-  } else {
-    plt_dens_diff <- plt_dens_diff +
-      theme_bw() +
-      theme(legend.position = "bottom",
-            legend.direction= legend_orientation,
-            legend.title = element_blank(),
-            legend.text = element_text(size = legend_label_text_size, hjust = 0.5, vjust = 1),
-            axis.text = element_blank(),
-            axis.ticks = element_blank(),
-            axis.title = element_text(face = "bold", size = axis_title_text_size))
+      annotate("shadowtext", x = clusx, y = clusy, label = names(clusx), size = cluster_number_annotation_size)
   }
 
   col_fun = circlize::colorRamp2(seq(min(diff12.m$z),max(diff12.m$z), l = n <- 100), colorRampPalette(unlist(color_list))(n))
@@ -291,16 +261,8 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
                   at = c(min(diff12.m$z), 0, max(diff12.m$z)), legend_width = unit(1, "cm"), legend_height = unit(6, "cm"),
                   title_position = "topcenter", labels = c(names(color_list)[1], "", names(color_list)[2]),
                   labels_gp = gpar(fontsize = 20), tick_length = unit(0,"npc"))
-  # dev.off() # testing
-  # pushViewport(viewport(width = 0.9, height = 0.9))
-  # draw(lgd_h, x = unit(0.25, "npc"), y = unit(0.5, "npc"))
-  # draw(lgd_v, x = unit(0.7, "npc"), y = unit(0.5, "npc"))
-  # popViewport()
-
-  # plt_leg <- ggpubr::as_ggplot(ggpubr::get_legend(p = plt_dens_diff))
-  lgh_gg <- as_ggplot(grid.grabExpr(expr = draw(lgd_h, x = unit(0.5, "npc"), y = unit(0.5, "npc"))))
-  lgv_gg <- as_ggplot(grid.grabExpr(expr = draw(lgd_v, x = unit(0.5, "npc"), y = unit(0.5, "npc"))))
-  lg_arr <- ggpubr::ggarrange(plotlist = list(lgh_gg, lgv_gg), nrow = 1)
+  lgd_export <- if (legend_orientation == "horizontal") lgd_h else lgd_v
+  lg_arr <- ggpubr::as_ggplot(grid.grabExpr(expr = draw(lgd_export, x = unit(0.5, "npc"), y = unit(0.5, "npc"))))
 
   if(length(dbscan_eps)!=1) {
     dbscan_eps <- "auto"
@@ -324,14 +286,13 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
   override_island_col <- rep(alpha(c("black"), alpha = 1), length(unique(background_data$island)))
   names(override_island_col) <- unique(background_data$island)
 
-  plt_dens_back <- ggplot(background_data, aes(x = dimx, y = dimy, color = island_1)) +
-    geom_point(alpha = 0) +
+  plt_dens_back <- ggplot(background_data, aes(x = dimx, y = dimy)) +
     geom_mark_hull(concavity = hull_concavity, expand = unit(0.25, "mm"),
                    aes(fill = island, filter = island != '0'),
                    color = alpha(colour = "white", alpha = 0), radius = unit(hull_radius, "mm")) +
     scale_fill_manual(values = override_island_col) +
     coord_cartesian(xlim = dim1_range, ylim = dim2_range, expand = FALSE) +
-    guides(fill = "none", color = guide_colorbar(ticks.color = NA)) +
+    guides(fill = "none", color = "none") +
     labs(x = reduction_names[1], y = reduction_names[2]) +
     theme_bw() +
     theme(legend.position = "none",
@@ -346,38 +307,12 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
     plt_dens_back <- plt_dens_back + annotate("shadowtext", x = clusx, y = clusy, label = names(clusx), size = cluster_number_annotation_size)
   }
 
-  timestamp <- strftime(Sys.time(),"%Y-%m-%d_%H%M%S")
-  if(add_timestamp) {
-    fname_top <- paste0(outdir,"/",names(compare_list)[1],"_vs_",
-                        names(compare_list)[2],"_",tolower(reduction),
-                        "_density_difference_over_",
-                        timestamp)
-    fname_bottom <- paste0(outdir,"/",names(compare_list)[1],"_vs_",
-                           names(compare_list)[2],"_",tolower(reduction),
-                           "_density_difference_under_",
-                           timestamp)
-    fname_legend <- paste0(outdir,"/",names(compare_list)[1],"_vs_",
-                           names(compare_list)[2],"_",tolower(reduction),
-                           "_density_difference_legend_",
-                           timestamp)
-    fname <- paste0(outdir,"/",names(compare_list)[1],"_vs_",
-                    names(compare_list)[2],"_",tolower(reduction),
-                    "_density_difference_",
-                    timestamp)
-  } else {
-    fname_top <- paste0(outdir,"/",names(compare_list)[1],"_vs_",
-                        names(compare_list)[2],"_",tolower(reduction),
-                        "_density_difference_over")
-    fname_bottom <- paste0(outdir,"/",names(compare_list)[1],"_vs_",
-                           names(compare_list)[2],"_",tolower(reduction),
-                           "_density_difference_under")
-    fname_legend <- paste0(outdir,"/",names(compare_list)[1],"_vs_",
-                           names(compare_list)[2],"_",tolower(reduction),
-                           "_density_difference_legend")
-    fname <- paste0(outdir,"/",names(compare_list)[1],"_vs_",
-                    names(compare_list)[2],"_",tolower(reduction),
-                    "_density_difference")
-  }
+  ts_suffix <- if (add_timestamp) paste0("_", strftime(Sys.time(), "%Y-%m-%d_%H%M%S")) else ""
+  base <- paste0(names(compare_list)[1], "_vs_", names(compare_list)[2], "_", tolower(reduction))
+  fname_top    <- file.path(outdir, paste0(base, "_density_difference_over",   ts_suffix))
+  fname_bottom <- file.path(outdir, paste0(base, "_density_difference_under",  ts_suffix))
+  fname_legend <- file.path(outdir, paste0(base, "_density_difference_legend", ts_suffix))
+  fname        <- file.path(outdir, paste0(base, "_density_difference",        ts_suffix))
 
   rm_box <- theme(plot.background = element_blank(),
                   panel.grid.major = element_blank(),

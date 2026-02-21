@@ -2,9 +2,9 @@
 #'
 #' @description
 #'   Computes per‐sample cluster abundances for a previously clustered flow
-#'   cytometry object. Stores a matrix of raw cell counts, frequencies (0–100),
-#'   or fractions (0–1) under the chosen algorithm’s `abundance` element, and
-#'   appends a timestamped entry to `object_history`.
+#'   cytometry object. Stores the result under the chosen algorithm's
+#'   `frequency`, `fraction`, or `counts` element (matching `report_as`),
+#'   and appends a timestamped entry to `object_history`.
 #'
 #' @param fcs_join_obj
 #'   A list returned by FCSimple::fcs_join() and FCSimple::fcs_cluster(),
@@ -32,9 +32,9 @@
 #'   2. If `report_as = "count"`, tabulate raw cell counts per cluster, per sample.
 #'      Otherwise, compute proportions of cells in each cluster per sample.
 #'   3. If `report_as = "frequency"`, multiply proportions by 100.
-#'   4. If `return_abundance = TRUE`, return the abundance matrix.
-#'      Otherwise, store it in
-#'      `fcs_join_obj[[report_algorithm]][["abundance"]]`.
+#'   4. If `return_abundance = TRUE`, return the matrix directly.
+#'      Otherwise, store it in `fcs_join_obj[[report_algorithm]][[report_as]]`
+#'      (i.e. `[["frequency"]]`, `[["fraction"]]`, or `[["counts"]]`).
 #'   5. If not returning directly, append a timestamped note to
 #'      `object_history`.
 #'
@@ -42,7 +42,9 @@
 #'   If `return_abundance = TRUE`, a numeric matrix (samples × clusters)
 #'   containing counts, frequencies, or fractions. Otherwise, the input
 #'   `fcs_join_obj`, augmented with:
-#'   - `<algorithm>$abundance`: a numeric matrix (samples × clusters)
+#'   - `<algorithm>$frequency`: a numeric matrix (samples × clusters) when `report_as = "frequency"`
+#'   - `<algorithm>$fraction`: a numeric matrix (samples × clusters) when `report_as = "fraction"`
+#'   - `<algorithm>$counts`: a numeric matrix (samples × clusters) when `report_as = "count"`
 #'   - updated `object_history`
 #'
 #' @examples
@@ -119,31 +121,36 @@ fcs_calculate_abundance <- function(fcs_join_obj,
     if(return_abundance) {
       return(abundance_matrix)
     } else {
-      fcs_join_obj[[report_algorithm]][["abundance"]] <- abundance_matrix
+      fcs_join_obj[[report_algorithm]][[report_as]] <- abundance_matrix
     }
   }
   if(!'object_history' %in% names(fcs_join_obj)) {
     print("Consider running FCSimple::fcs_update() on the object.")
   } else {
-    fcs_join_obj[['object_history']] <- append(fcs_join_obj[['object_history']], paste0(tolower(report_algorithm)," abundance calculated: ",Sys.time()))
+    fcs_join_obj[['object_history']] <- append(fcs_join_obj[['object_history']], paste0(tolower(report_algorithm)," ",report_as," calculated: ",Sys.time()))
   }
   return(fcs_join_obj)
 }
 
-#' @title Report Cluster Abundance to CSV File
+#' @title Report Cluster Frequency or Fraction to CSV File
 #'
 #' @description
-#' Exports the cluster‐abundance matrix (samples × clusters) to a CSV file
-#' in the specified directory and returns the matrix invisibly. By default,
-#' the function prepends one timestamp and can optionally add a second
-#' timestamp or custom string to the filename.
+#' Exports a cluster frequency or fraction matrix (samples × clusters) to a
+#' CSV file in the specified directory and returns the matrix invisibly. By
+#' default, the function prepends one timestamp and can optionally add a
+#' second timestamp or custom string to the filename.
 #'
-#' @param fcs_join_obj A list containing an `[[algorithm]][["abundance"]]`
-#'   numeric matrix, as produced by `FCSimple::fcs_calculate_abundance()`.
+#' @param fcs_join_obj A list containing an `[[algorithm]][[report_as]]`
+#'   numeric matrix (i.e. `[["frequency"]]` or `[["fraction"]]`), as produced
+#'   by `FCSimple::fcs_calculate_abundance()`.
 #'
-#' @param report_algorithm Character scalar. Name of the abundance matrix to
+#' @param report_algorithm Character scalar. Name of the clustering result to
 #'   export; must be one of `"leiden"`, `"flowsom"`, `"louvain"`,
 #'   or `"phenograph"`. Defaults to `"leiden"`.
+#'
+#' @param report_as Character scalar. Which stored matrix to export: either
+#'   `"frequency"` (0–100, the default) or `"fraction"` (0–1). Must match
+#'   what was calculated by `fcs_calculate_abundance()`.
 #'
 #' @param outdir Character scalar. Path to an existing directory where the
 #'   CSV will be written. Trailing slashes are removed internally.
@@ -159,7 +166,7 @@ fcs_calculate_abundance <- function(fcs_join_obj,
 #'
 #' @details
 #' The output filename is built in three parts:
-#'     1. `<report_algorithm>_cluster_abundance_<timestamp1>`
+#'     1. `<report_algorithm>_cluster_frequency_<timestamp1>` (or `fraction`)
 #'     2. `_<timestamp2>` (only if `add_timestamp = TRUE`)
 #'     3. `_<append_file_string>` (only if `append_file_string` is not `NA`)
 #'
@@ -167,18 +174,19 @@ fcs_calculate_abundance <- function(fcs_join_obj,
 #' is then added.
 #'
 #' @return
-#' Invisibly returns the same abundance matrix that was written to disk
-#' (a numeric matrix with sample rows and cluster‐ID columns).
+#' Invisibly returns the same frequency or fraction matrix that was written
+#' to disk (a numeric matrix with sample rows and cluster‐ID columns).
 #'
 #' @examples
 #' \dontrun{
-#' # Assuming 'clustered' has had abundance computed
-#' abundance_mat <- FCSimple::fcs_calculate_abundance(clustered)
+#' # Calculate cluster frequencies first
+#' clustered <- FCSimple::fcs_calculate_abundance(clustered, report_algorithm = "leiden", report_as = "frequency")
 #'
-#' # Write to your working directory, with only one timestamp
+#' # Write frequency matrix to disk
 #' FCSimple::fcs_report_abundance(
 #'   clustered,
 #'   report_algorithm   = "leiden",
+#'   report_as          = "frequency",
 #'   outdir             = "~/my_analysis/results",
 #'   add_timestamp      = FALSE,
 #'   append_file_string = "v1"
@@ -192,12 +200,14 @@ fcs_calculate_abundance <- function(fcs_join_obj,
 #' @export
 fcs_report_abundance <- function(fcs_join_obj,
                                  report_algorithm = c("leiden","flowsom","louvain","phenograph"),
+                                 report_as = c("frequency", "fraction"),
                                  outdir = getwd(), add_timestamp = TRUE, append_file_string = NA)
 {
-  abundance_values <- fcs_join_obj[[tolower(report_algorithm)]][["abundance"]]
+  report_as <- tolower(report_as[1])
+  abundance_values <- fcs_join_obj[[tolower(report_algorithm)]][[report_as]]
   row.names(abundance_values) <- gsub("^.+/|.fcs$","",row.names(abundance_values))
   outdir <- gsub("/$","",outdir)
-  fname <- paste0(report_algorithm,"_cluster_abundance_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"))
+  fname <- paste0(report_algorithm,"_cluster_",report_as,"_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"))
   if(add_timestamp) {
     fname <- paste0(fname,'_',strftime(Sys.time(),"%Y-%m-%d_%H%M%S"))
   }

@@ -151,14 +151,13 @@ fcs_remove_parameters <- function(fcs_join_obj,
                                   remove_parameters)
 {
   rm_param <- which(colnames(fcs_join_obj[["data"]]) %in% remove_parameters)
-  if(length(rm_param)==0) {
-    stop("error in argument 'remove_parameters': none of the requested parameters were found")
-  } else {
-    new_obj <- list(data = fcs_join_obj[["data"]][,-rm_param],
-                    source = fcs_join_obj[["source"]])
-    if("run_date" %in% names(fcs_join_obj)) {
-      new_obj[["run_date"]] <- fcs_join_obj[["run_date"]]
+    if(length(rm_param) > 0) {
+      fcs_join_obj$data <- fcs_join_obj$data[,-rm_param]
+      if('raw' %in% names(fcs_join_obj)) {
+        fcs_join_obj$raw <- fcs_join_obj$raw[,-rm_param]
+      }
+    } else {
+      message("No parameters were removed.")
     }
-    return(new_obj)
-  }
+    return(fcs_join_obj)
 }

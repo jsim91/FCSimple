@@ -2,23 +2,29 @@
 % Please edit documentation in R/fcs_cluster_abundance.R
 \name{fcs_report_abundance}
 \alias{fcs_report_abundance}
-\title{Report Cluster Abundance to CSV File}
+\title{Report Cluster Frequency or Fraction to CSV File}
 \usage{
 fcs_report_abundance(
   fcs_join_obj,
   report_algorithm = c("leiden", "flowsom", "louvain", "phenograph"),
+  report_as = c("frequency", "fraction"),
   outdir = getwd(),
   add_timestamp = TRUE,
   append_file_string = NA
 )
 }
 \arguments{
-\item{fcs_join_obj}{A list containing an \verb{[[algorithm]][["abundance"]]}
-numeric matrix, as produced by \code{FCSimple::fcs_calculate_abundance()}.}
+\item{fcs_join_obj}{A list containing an \verb{[[algorithm]][[report_as]]}
+numeric matrix (i.e. \verb{[["frequency"]]} or \verb{[["fraction"]]}), as produced
+by \code{FCSimple::fcs_calculate_abundance()}.}
 
-\item{report_algorithm}{Character scalar. Name of the abundance matrix to
+\item{report_algorithm}{Character scalar. Name of the clustering result to
 export; must be one of \code{"leiden"}, \code{"flowsom"}, \code{"louvain"},
 or \code{"phenograph"}. Defaults to \code{"leiden"}.}
+
+\item{report_as}{Character scalar. Which stored matrix to export: either
+\code{"frequency"} (0–100, the default) or \code{"fraction"} (0–1). Must match
+what was calculated by \code{fcs_calculate_abundance()}.}
 
 \item{outdir}{Character scalar. Path to an existing directory where the
 CSV will be written. Trailing slashes are removed internally.
@@ -33,18 +39,18 @@ string is appended (after any timestamps) to the filename. Defaults to
 \code{NA}, which means no extra string is added.}
 }
 \value{
-Invisibly returns the same abundance matrix that was written to disk
-(a numeric matrix with sample rows and cluster‐ID columns).
+Invisibly returns the same frequency or fraction matrix that was written
+to disk (a numeric matrix with sample rows and cluster‐ID columns).
 }
 \description{
-Exports the cluster‐abundance matrix (samples × clusters) to a CSV file
-in the specified directory and returns the matrix invisibly. By default,
-the function prepends one timestamp and can optionally add a second
-timestamp or custom string to the filename.
+Exports a cluster frequency or fraction matrix (samples × clusters) to a
+CSV file in the specified directory and returns the matrix invisibly. By
+default, the function prepends one timestamp and can optionally add a
+second timestamp or custom string to the filename.
 }
 \details{
 The output filename is built in three parts:
-1. \verb{<report_algorithm>_cluster_abundance_<timestamp1>}
+1. \verb{<report_algorithm>_cluster_frequency_<timestamp1>} (or \code{fraction})
 2. \verb{_<timestamp2>} (only if \code{add_timestamp = TRUE})
 3. \verb{_<append_file_string>} (only if \code{append_file_string} is not \code{NA})
 
@@ -53,13 +59,14 @@ is then added.
 }
 \examples{
 \dontrun{
-# Assuming 'clustered' has had abundance computed
-abundance_mat <- FCSimple::fcs_calculate_abundance(clustered)
+# Calculate cluster frequencies first
+clustered <- FCSimple::fcs_calculate_abundance(clustered, report_algorithm = "leiden", report_as = "frequency")
 
-# Write to your working directory, with only one timestamp
+# Write frequency matrix to disk
 FCSimple::fcs_report_abundance(
   clustered,
   report_algorithm   = "leiden",
+  report_as          = "frequency",
   outdir             = "~/my_analysis/results",
   add_timestamp      = FALSE,
   append_file_string = "v1"
