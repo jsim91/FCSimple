@@ -119,6 +119,7 @@ It's highly recommended to set transform parameters for all features in Flowjo t
 my_object <- fcs_join(files = include_files, transform_per_channel = TRUE)
 my_object$app_transforms  # inspect the applied settings
 ```
+<img width="1657" height="1487" alt="image" src="https://github.com/user-attachments/assets/168825e3-e195-45ea-b5ed-ce14cc4c6328" />
 
 # Python Dependencies (optional)
 
