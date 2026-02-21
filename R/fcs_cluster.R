@@ -232,7 +232,7 @@ fcs_cluster <- function(fcs_join_obj,
       }
       if(search_only) {
         if(!'object_history' %in% names(fcs_join_obj)) {
-          print("Consider running FCSimple::fcs_update() on the object.")
+          print("Consider running FCSimple::fcs_audit() on the object.")
         }
         try(expr = fcs_join_obj[['object_history']] <- append(fcs_join_obj[['object_history']], paste0("nn search on ",use_rep,": ",Sys.time())), silent = TRUE)
         return(fcs_join_obj)
@@ -263,7 +263,7 @@ fcs_cluster <- function(fcs_join_obj,
                                                           language = language)) # left off here
       }
       if(!'object_history' %in% names(fcs_join_obj)) {
-        print("Consider running FCSimple::fcs_update() on the object.")
+        print("Consider running FCSimple::fcs_audit() on the object.")
       }
       try(expr = fcs_join_obj[['object_history']] <- append(fcs_join_obj[['object_history']], paste0(tolower(algorithm)," on ",use_rep,": ",Sys.time())), silent = TRUE)
       return(fcs_join_obj)
@@ -304,7 +304,7 @@ fcs_cluster <- function(fcs_join_obj,
       }
   }
   if(!'object_history' %in% names(fcs_join_obj)) {
-    print("Consider running FCSimple::fcs_update() on the object.")
+    print("Consider running FCSimple::fcs_audit() on the object.")
   }
   try(expr = fcs_join_obj[['object_history']] <- append(fcs_join_obj[['object_history']], paste0(tolower(algorithm)," on ",use_rep,": ",Sys.time())), silent = TRUE)
   return(fcs_join_obj)

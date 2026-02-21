@@ -27,7 +27,7 @@
 #'
 #' @details
 #'   - If the input object lacks an `object_history` entry, prints a message
-#'     recommending `FCSimple::fcs_update()`.  
+#'     recommending `FCSimple::fcs_audit()`.  
 #'   - When subsetting by `"source"`, all rows where
 #'     `fcs_join_obj$source %in% subset_values` are retained.  
 #'   - When subsetting by `"cluster"`, the function extracts
@@ -67,7 +67,7 @@
 #' }
 #'
 #' @seealso
-#'   FCSimple::fcs_join, FCSimple::fcs_cluster, FCSimple::fcs_update
+#'   FCSimple::fcs_join, FCSimple::fcs_cluster, FCSimple::fcs_audit
 #'
 #' @export
 fcs_subset <- function(fcs_join_obj,
@@ -76,7 +76,7 @@ fcs_subset <- function(fcs_join_obj,
                        subset_values)
 {
   if(!'object_history' %in% names(fcs_join_obj)) {
-    print("Consider running FCSimple::fcs_update() on the object.")
+    print("Consider running FCSimple::fcs_audit() on the object.")
   }
   if(subset_by=="source") {
     get_index <- which(fcs_join_obj[["source"]] %in% subset_values)

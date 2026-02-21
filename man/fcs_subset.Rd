@@ -45,7 +45,7 @@ original indices in a \code{subset_on} element for provenance.
 \details{
 \itemize{
 \item If the input object lacks an \code{object_history} entry, prints a message
-recommending \code{FCSimple::fcs_update()}.
+recommending \code{FCSimple::fcs_audit()}.
 \item When subsetting by \code{"source"}, all rows where
 \code{fcs_join_obj$source \%in\% subset_values} are retained.
 \item When subsetting by \code{"cluster"}, the function extracts
@@ -82,5 +82,5 @@ sel2 <- FCSimple::fcs_subset(
 
 }
 \seealso{
-FCSimple::fcs_join, FCSimple::fcs_cluster, FCSimple::fcs_update
+FCSimple::fcs_join, FCSimple::fcs_cluster, FCSimple::fcs_audit
 }

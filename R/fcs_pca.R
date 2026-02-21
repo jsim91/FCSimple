@@ -17,17 +17,18 @@
 #'   Character; PCA method to use. Currently only `"prcomp"` (default).
 #'
 #' @param variance_threshold
-#'   Numeric or `NULL` (default); threshold for cumulative variance explained 
-#'   (range 0–1, inclusive). If specified, the function automatically selects 
-#'   the minimum number of PCs needed to reach or exceed this threshold. 
-#'   Takes precedence over `num_pc` if both are provided. If `NULL`, uses `num_pc`.
+#'   Numeric or `NULL`; threshold for cumulative variance explained
+#'   (range 0–1, inclusive). When `num_pc` is `NULL` (the default), the
+#'   function automatically selects the minimum number of PCs needed to reach
+#'   or exceed this threshold. Defaults to `0.975`. Ignored when `num_pc` is
+#'   explicitly supplied.
 #'
 #' @param num_pc
-#'   Integer or `NULL` (default); number of principal components to extract.
-#'   If both `variance_threshold` and `num_pc` are `NULL`, the function displays 
-#'   a plot of 1 – cumulative variance vs. PC, prompts for input (e.g. a number 
-#'   or `"drawN"` to draw a vertical line at PC N), and repeats until a valid 
-#'   integer is provided. Ignored if `variance_threshold` is specified.
+#'   Integer or `NULL` (default); number of principal components to retain.
+#'   When provided, overrides `variance_threshold`. If both `variance_threshold`
+#'   and `num_pc` are `NULL`, the function displays a plot of 1 – cumulative
+#'   variance vs. PC, prompts for input (e.g. a number or `"drawN"` to draw a
+#'   vertical line at PC N), and repeats until a valid integer is provided.
 #'
 #' @param apply_scaling
 #'   Logical; if `TRUE` (default), centers and scales data before PCA. 
@@ -39,11 +40,11 @@
 #'   2. Runs `stats::prcomp` on the selected data with a fixed seed.
 #'   3. Computes cumulative variance explained (`cumVar`) and its complement.
 #'   4. Determines the number of PCs to retain:
-#'      - If `variance_threshold` is specified, selects the minimum number of PCs
-#'        needed to reach or exceed that proportion of variance (0–1)
-#'      - Else if `num_pc` is specified, uses that exact number
-#'      - Else displays an interactive inverse‐variance plot, captures user input,
-#'        and highlights the chosen PC on the plot
+#'      - If `num_pc` is specified, uses that exact number (overrides threshold)
+#'      - Else if `variance_threshold` is specified, selects the minimum number
+#'        of PCs needed to reach or exceed that proportion of variance (0–1)
+#'      - Else displays an interactive inverse‐variance plot, captures user
+#'        input, and highlights the chosen PC on the plot
 #'   5. Extracts the selected principal components into `pca_data`.
 #'   6. Builds an elbow plot (`ggplot2`) marking the selected PCs.
 #'   7. Appends a message to `object_history` noting whether PCA was run on
@@ -84,7 +85,7 @@
 #' @importFrom stringr str_extract
 #' @importFrom ggplot2 ggplot aes geom_point ggtitle xlab ylab theme_bw theme element_text
 #' @export
-fcs_pca <- function(fcs_join_obj, pca_method = c("prcomp"), variance_threshold = NULL, num_pc = NULL, apply_scaling = TRUE)
+fcs_pca <- function(fcs_join_obj, pca_method = c("prcomp"), variance_threshold = 0.975, num_pc = NULL, apply_scaling = TRUE)
 {
   require(stringr)
   require(ggplot2)
@@ -109,23 +110,23 @@ fcs_pca <- function(fcs_join_obj, pca_method = c("prcomp"), variance_threshold =
     # rm(reset_seed)
     cvar <- cumsum(PCA$sdev^2 / sum(PCA$sdev^2))
     
-    if(!is.null(variance_threshold)) {
-      # Use variance threshold to determine number of PCs
-      if(min(variance_threshold)>=0 && max(variance_threshold)<=1) {
-        npc <- which(cvar>=variance_threshold)[1]
-      } else {
-        warning("'variance_threshold' must be within the range 0-1, inclusive. Returning all PC.")
-        npc <- length(cvar)
-      }
-    } else if(!is.null(num_pc)) {
-      # Use specified number of PCs
-      if(num_pc<1) {
+    if(!is.null(num_pc)) {
+      # num_pc explicitly supplied — overrides variance_threshold
+      if(num_pc < 1) {
         stop("'num_pc must be either NULL or a whole number greater than 0")
       }
       if(num_pc %% 1 != 0) {
         stop("'num_pc must be either NULL or a whole number greater than 0")
       }
       npc <- num_pc
+    } else if(!is.null(variance_threshold)) {
+      # Use variance threshold to determine number of PCs
+      if(min(variance_threshold) >= 0 && max(variance_threshold) <= 1) {
+        npc <- which(cvar >= variance_threshold)[1]
+      } else {
+        warning("'variance_threshold' must be within the range 0-1, inclusive. Returning all PC.")
+        npc <- length(cvar)
+      }
     } else {
       # Interactive mode
       cvar_inv <- 1 - cvar
@@ -163,7 +164,7 @@ fcs_pca <- function(fcs_join_obj, pca_method = c("prcomp"), variance_threshold =
                                 pca_stats = list(PCs = npc, cumulative_variance = cvar,
                                                  pca_method = pca_method, elbow_plot = cvar_plt))
   if(!'object_history' %in% names(fcs_join_obj)) {
-    print("Consider running FCSimple::fcs_update() on the object.")
+    print("Consider running FCSimple::fcs_audit() on the object.")
   } else {
     fcs_join_obj[['object_history']] <- append(fcs_join_obj[['object_history']], paste0("pca on ",ifelse(cordat,'corrected','uncorrected')," data: ",Sys.time()))
   }

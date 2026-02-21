@@ -20,9 +20,8 @@
 #'   - object_history: character vector recording the gating steps
 #'
 #' @seealso
-#'   FCSimple::fcs_join, FCSimple::fcs_update
+#'   FCSimple::fcs_join, FCSimple::fcs_audit
 #'
-#' @importFrom FCSimple fcs_update
 #' @export
 fcs_gating_object <- function(fcs_obj) {
   print(paste0("Initiating an object for gating with the assumption that data to be gated was collected using fluorescence cytometry. Cytof is not supported (currently)."))
@@ -32,7 +31,7 @@ fcs_gating_object <- function(fcs_obj) {
   if('run_date' %in% names(fcs_obj)) {
     list_obj[['run_date']] <- fcs_obj$run_date
   }
-  list_obj <- FCSimple::fcs_update(fcs_join_obj = list_obj, instrument_type = 'flow')
+  list_obj <- FCSimple::fcs_audit(fcs_join_obj = list_obj, instrument_type = 'flow')
   class(list_obj) <- 'fcs_gating_object'
   return(list_obj)
 }

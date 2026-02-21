@@ -78,7 +78,7 @@ fcs_calculate_abundance <- function(fcs_join_obj,
                                     report_as = c("frequency", "fraction", "count"), return_abundance = FALSE)
 {
   if(!'object_history' %in% names(fcs_join_obj)) {
-    print("Consider running FCSimple::fcs_update() on the object.")
+    print("Consider running FCSimple::fcs_audit() on the object.")
   }
   if(!report_algorithm %in% names(fcs_join_obj)) {
     stop("error in names of fcs_join_obj: has data been clustered using a supported algorithm. See ?cluster.")
@@ -125,7 +125,7 @@ fcs_calculate_abundance <- function(fcs_join_obj,
     }
   }
   if(!'object_history' %in% names(fcs_join_obj)) {
-    print("Consider running FCSimple::fcs_update() on the object.")
+    print("Consider running FCSimple::fcs_audit() on the object.")
   } else {
     fcs_join_obj[['object_history']] <- append(fcs_join_obj[['object_history']], paste0(tolower(report_algorithm)," ",report_as," calculated: ",Sys.time()))
   }

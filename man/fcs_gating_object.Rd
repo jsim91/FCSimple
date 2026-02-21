@@ -30,5 +30,5 @@ Records the raw data matrix, sample sources, optional run dates,
 and initializes an empty gating history.
 }
 \seealso{
-FCSimple::fcs_join, FCSimple::fcs_update
+FCSimple::fcs_join, FCSimple::fcs_audit
 }

@@ -64,5 +64,5 @@ and a timestamped entry is appended to \code{object_history}.
 
 }
 \seealso{
-FCSimple::fcs_join, FCSimple::fcs_update, base::merge
+FCSimple::fcs_join, FCSimple::fcs_audit, base::merge
 }

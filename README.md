@@ -36,38 +36,41 @@ All subsequent functions take the object returned by `fcs_join()` as their first
 ```r
 library(FCSimple)
 
-# 1. Load data
+# 1. Get the bundled example FCS files
+include_files <- FCSimple::fcs_example_files()
+
+# 2. Load data
 my_object <- fcs_join(files = include_files)
 
-# 2. Apply package / parameter updates to an existing object (optional)
-my_object <- fcs_update(fcs_join_obj = my_object)
+# 3. Audit version info, validate metadata, and detect instrument type (optional)
+my_object <- fcs_audit(fcs_join_obj = my_object)
 
-# 3. Principal component analysis — used internally by batch correction
+# 4. Principal component analysis (optional) — used internally by batch correction
 #    and as an optional input to clustering / dimension reduction
 my_object <- fcs_pca(fcs_join_obj = my_object)
 
-# 4. Batch correction — correct for acquisition-run effects (optional)
+# 5. Batch correction — correct for acquisition-run effects (optional)
 my_object <- fcs_batch_correction(fcs_join_obj = my_object)
 
-# 5. Cluster cells
+# 6. Cluster cells
 my_object <- fcs_cluster(fcs_join_obj = my_object, algorithm = "leiden")
 
-# 6. Reduce dimensions for visualisation
+# 7. Reduce dimensions for visualisation
 my_object <- fcs_reduce_dimensions(fcs_join_obj = my_object, algorithm = "umap")
 
-# 7. Calculate a cluster expression heatmap (optional)
+# 8. Calculate a cluster expression heatmap — required for the FCView heatmap tab
 my_object <- fcs_cluster_heatmap(fcs_join_obj = my_object)
 
-# 8. Calculate cluster frequencies (proportion of each cluster per sample)
+# 9. Calculate cluster frequencies (proportion of each cluster per sample)
 my_object <- fcs_calculate_abundance(fcs_join_obj = my_object, report_as = "frequency")
 
-# 9. Calculate cluster counts (number of cells per cluster per sample)
+# 10. Calculate cluster counts (number of cells per cluster per sample)
 my_object <- fcs_calculate_abundance(fcs_join_obj = my_object, report_as = "count")
 
-# 10. Attach sample-level metadata (clinical variables, group labels, etc.)
+# 11. Attach sample-level metadata (clinical variables, group labels, etc.)
 my_object <- fcs_add_metadata(fcs_join_obj = my_object, metadata = my_metadata_df)
 
-# 11. (Optional) Pre-annotate clusters with cell type labels before FCView upload
+# 12. (Optional) Pre-annotate clusters with cell type labels before FCView upload
 my_object <- fcs_annotate_clusters(
   fcs_join_obj = my_object,
   annotations  = list(
@@ -76,7 +79,7 @@ my_object <- fcs_annotate_clusters(
   )
 )
 
-# 12. Prepare and export for FCView
+# 13. Prepare and export for FCView
 my_object_fcview <- fcs_prepare_fcview_object(
   fcs_join_obj = my_object,
   output_dir   = "path/to/output",
@@ -85,6 +88,8 @@ my_object_fcview <- fcs_prepare_fcview_object(
 ```
 
 See `?FCSimple::<function_name>` for full argument documentation on any step.
+
+Once the object is exported, load it into **[FCView](https://github.com/jsim91/FCView)** for interactive visualisation, statistical testing, and annotation.
 
 # Data Input Format
 

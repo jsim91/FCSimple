@@ -127,7 +127,7 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
       print("batch_correction found in fcs_join_obj list. Using fcs_join_obj[['batch_correction']][['data']] for heatmap. Set 'override_correction' to TRUE to use uncorrected data.")
       heatmap_data <- fcs_join_obj[['batch_correction']][['data']]
       if(!'object_history' %in% names(fcs_join_obj)) {
-        print("'object_history' not found in fcs_join_obj. Consider running FCSimple::fcs_update() on the object. Trying to use fcs_join_obj[['batch_correction']][['data']] for heatmap.")
+        print("'object_history' not found in fcs_join_obj. Consider running FCSimple::fcs_audit() on the object. Trying to use fcs_join_obj[['batch_correction']][['data']] for heatmap.")
       } else {
         if(sum(grepl(pattern = "pca", x = fcs_join_obj[['object_history']]))!=0) {
           print("It seems pca was run on this object. Using fcs_join_obj[['batch_correction']][['data']] will plot the median scaled expression scores of the corrected PCs.")
@@ -207,7 +207,7 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
                                                                 population_size = pop.freq,
                                                                 rep_used = ifelse(cordat,"with batch correction","without batch correction"))
   if(!'object_history' %in% names(fcs_join_obj)) {
-    print("Consider running FCSimple::fcs_update() on the object.")
+    print("Consider running FCSimple::fcs_audit() on the object.")
   } else {
     fcs_join_obj[['object_history']] <- append(fcs_join_obj[['object_history']],
                                                paste0(tolower(algorithm)," heatmap on ",ifelse(cordat,"corrected","uncorrected")," data: ",Sys.time()))

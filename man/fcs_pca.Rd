@@ -7,7 +7,7 @@
 fcs_pca(
   fcs_join_obj,
   pca_method = c("prcomp"),
-  variance_threshold = NULL,
+  variance_threshold = 0.975,
   num_pc = NULL,
   apply_scaling = TRUE
 )
@@ -22,16 +22,17 @@ fcs_batch_correction, containing at minimum:
 
 \item{pca_method}{Character; PCA method to use. Currently only \code{"prcomp"} (default).}
 
-\item{variance_threshold}{Numeric or \code{NULL} (default); threshold for cumulative variance explained
-(range 0–1, inclusive). If specified, the function automatically selects
-the minimum number of PCs needed to reach or exceed this threshold.
-Takes precedence over \code{num_pc} if both are provided. If \code{NULL}, uses \code{num_pc}.}
+\item{variance_threshold}{Numeric or \code{NULL}; threshold for cumulative variance explained
+(range 0–1, inclusive). When \code{num_pc} is \code{NULL} (the default), the
+function automatically selects the minimum number of PCs needed to reach
+or exceed this threshold. Defaults to \code{0.975}. Ignored when \code{num_pc} is
+explicitly supplied.}
 
-\item{num_pc}{Integer or \code{NULL} (default); number of principal components to extract.
-If both \code{variance_threshold} and \code{num_pc} are \code{NULL}, the function displays
-a plot of 1 – cumulative variance vs. PC, prompts for input (e.g. a number
-or \code{"drawN"} to draw a vertical line at PC N), and repeats until a valid
-integer is provided. Ignored if \code{variance_threshold} is specified.}
+\item{num_pc}{Integer or \code{NULL} (default); number of principal components to retain.
+When provided, overrides \code{variance_threshold}. If both \code{variance_threshold}
+and \code{num_pc} are \code{NULL}, the function displays a plot of 1 – cumulative
+variance vs. PC, prompts for input (e.g. a number or \code{"drawN"} to draw a
+vertical line at PC N), and repeats until a valid integer is provided.}
 
 \item{apply_scaling}{Logical; if \code{TRUE} (default), centers and scales data before PCA.
 If \code{FALSE}, passes \code{center = FALSE} and \code{scale. = FALSE} to \code{prcomp}.}
@@ -62,11 +63,11 @@ The function:
 \item Computes cumulative variance explained (\code{cumVar}) and its complement.
 \item Determines the number of PCs to retain:
 \itemize{
-\item If \code{variance_threshold} is specified, selects the minimum number of PCs
-needed to reach or exceed that proportion of variance (0–1)
-\item Else if \code{num_pc} is specified, uses that exact number
-\item Else displays an interactive inverse‐variance plot, captures user input,
-and highlights the chosen PC on the plot
+\item If \code{num_pc} is specified, uses that exact number (overrides threshold)
+\item Else if \code{variance_threshold} is specified, selects the minimum number
+of PCs needed to reach or exceed that proportion of variance (0–1)
+\item Else displays an interactive inverse‐variance plot, captures user
+input, and highlights the chosen PC on the plot
 }
 \item Extracts the selected principal components into \code{pca_data}.
 \item Builds an elbow plot (\code{ggplot2}) marking the selected PCs.

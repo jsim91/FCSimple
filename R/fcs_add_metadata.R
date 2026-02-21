@@ -57,7 +57,7 @@
 #' }
 #'
 #' @seealso
-#'   FCSimple::fcs_join, FCSimple::fcs_update, base::merge
+#'   FCSimple::fcs_join, FCSimple::fcs_audit, base::merge
 #'
 #' @export
 fcs_add_metadata <- function(fcs_join_obj,

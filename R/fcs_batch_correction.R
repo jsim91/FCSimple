@@ -215,7 +215,7 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
                                                             session_info = sessionInfo()))
   }
   if(!'object_history' %in% names(fcs_join_obj)) {
-    print("Consider running FCSimple::fcs_update() on the object.")
+    print("Consider running FCSimple::fcs_audit() on the object.")
   } else {
     fcs_join_obj[['object_history']] <- append(fcs_join_obj[['object_history']], paste0(cmeth," on ",use_rep,": ",Sys.time()))
   }

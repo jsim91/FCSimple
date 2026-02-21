@@ -235,7 +235,7 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
                                                  settings = settings_list)
   names(fcs_join_obj)[length(fcs_join_obj)] <- ifelse(tolower(algorithm)=="umap","umap","tsne")
   if(!'object_history' %in% names(fcs_join_obj)) {
-    print("Consider running FCSimple::fcs_update() on the object.")
+    print("Consider running FCSimple::fcs_audit() on the object.")
   }
   try(expr = fcs_join_obj[['object_history']] <- append(fcs_join_obj[['object_history']], paste0(tolower(algorithm)," on ",use_rep,": ",Sys.time())), silent = TRUE)
   return(fcs_join_obj)

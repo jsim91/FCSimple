@@ -78,7 +78,7 @@
 #'   joined <- FCSimple::fcs_join(files)
 #'
 #'   # Update: patient_ID is taken directly from the source field
-#'   updated <- FCSimple::fcs_update(joined)
+#'   updated <- FCSimple::fcs_audit(joined)
 #'
 #'   # Inspect added fields
 #'   updated$collection_instrument  # "flow" or "cytof"
@@ -91,7 +91,7 @@
 #'   \code{\link[FCSimple]{fcs_join}}, \code{\link[FCSimple]{fcs_gating_object}}
 #'
 #' @export
-fcs_update <- function(fcs_join_obj)
+fcs_audit <- function(fcs_join_obj)
 {
   if(system(command = 'python --version')==0) {
     pyv <- system(command = 'python --version', intern = TRUE)
