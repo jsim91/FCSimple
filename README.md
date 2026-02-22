@@ -72,10 +72,14 @@ my_object <- fcs_reduce_dimensions(fcs_join_obj = my_object, algorithm = "umap")
 my_object <- fcs_cluster_heatmap(fcs_join_obj = my_object, algorithm = 'leiden')
 
 # 9. Calculate cluster frequencies (proportion of each cluster per sample)
-my_object <- fcs_calculate_abundance(fcs_join_obj = my_object, report_algorithm = 'leiden', report_as = "frequency")
+my_object <- fcs_calculate_abundance(fcs_join_obj = my_object,
+                                     report_algorithm = 'leiden',
+                                     report_as = "frequency")
 
 # 10. Calculate cluster counts (number of cells per cluster per sample)
-my_object <- fcs_calculate_abundance(fcs_join_obj = my_object, report_algorithm = 'leiden', report_as = "count")
+my_object <- fcs_calculate_abundance(fcs_join_obj = my_object,
+                                     report_algorithm = 'leiden',
+                                     report_as = "count")
 
 # 11. Attach sample-level metadata (clinical variables, group labels, etc.)
 my_object <- fcs_add_metadata(fcs_join_obj = my_object, metadata = my_metadata_df)
@@ -83,7 +87,7 @@ my_object <- fcs_add_metadata(fcs_join_obj = my_object, metadata = my_metadata_d
 # 12. (Optional) Pre-annotate clusters with cell type labels before FCView upload
 my_object <- fcs_annotate_clusters(
   fcs_join_obj = my_object,
-  annotations  = list(
+  annotations = list(
     "T cell" = c(1, 3, 5),
     "B cell" = c(2, 4)
   )
@@ -92,8 +96,8 @@ my_object <- fcs_annotate_clusters(
 # 13. Prepare and export for FCView
 my_object_fcview <- fcs_prepare_fcview_object(
   fcs_join_obj = my_object,
-  output_dir   = "path/to/output",
-  file_name    = "my_analysis"
+  output_dir = "path/to/output",
+  file_name = "my_analysis"
 )
 ```
 
