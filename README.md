@@ -82,6 +82,8 @@ my_object <- fcs_calculate_abundance(fcs_join_obj = my_object,
                                      report_as = "count")
 
 # 11. Add sample-level metadata (clinical variables, group labels, etc.)
+#     First column of added metadata must be 'patient_ID' and match
+#     current metadata column 'patient_ID' to allow a proper merge.
 my_metadata_df <- data.frame(patient_ID = my_object$metadata$patient_ID, 
                              visit = stringr::str_extract(my_object$metadata$patient_ID, 'v[1-3]'))
 my_object <- fcs_add_metadata(fcs_join_obj = my_object, custom_metadata = my_metadata_df)
