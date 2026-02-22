@@ -92,6 +92,7 @@ my_object <- fcs_add_metadata(fcs_join_obj = my_object, custom_metadata = my_met
 #     It is perfectly fine to only annotate a subset of the clusters at this point
 my_object <- fcs_annotate_clusters(
   fcs_join_obj = my_object,
+  clustering_algorithm = 'leiden',
   annotations = list(
     "T cell" = c(1, 3, 5),
     "B cell" = c(2, 4)
