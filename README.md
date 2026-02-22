@@ -104,6 +104,7 @@ my_object <- fcs_annotate_clusters(
 #     Both saves to disk and returns to environment a formatted object
 my_object_fcview <- fcs_prepare_fcview_object(
   fcs_join_obj = my_object,
+  clustering_algorithm = 'leiden',
   output_dir = "path/to/output",
   file_name = "my_analysis"
 )
