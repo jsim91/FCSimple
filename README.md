@@ -89,6 +89,7 @@ my_metadata_df <- data.frame(patient_ID = my_object$metadata$patient_ID,
 my_object <- fcs_add_metadata(fcs_join_obj = my_object, custom_metadata = my_metadata_df)
 
 # 12. (Optional) Pre-annotate clusters with cell type labels before FCView upload
+#     It is perfectly fine to only annotate a subset of the clusters at this point
 my_object <- fcs_annotate_clusters(
   fcs_join_obj = my_object,
   annotations = list(
@@ -98,6 +99,8 @@ my_object <- fcs_annotate_clusters(
 )
 
 # 13. Prepare and export for FCView
+#     Note: no file extension on file_name; .RData added internally
+#     Both saves to disk and returns to environment a formatted object
 my_object_fcview <- fcs_prepare_fcview_object(
   fcs_join_obj = my_object,
   output_dir = "path/to/output",
