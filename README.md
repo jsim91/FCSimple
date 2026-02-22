@@ -72,10 +72,10 @@ my_object <- fcs_reduce_dimensions(fcs_join_obj = my_object, algorithm = "umap")
 my_object <- fcs_cluster_heatmap(fcs_join_obj = my_object, algorithm = 'leiden')
 
 # 9. Calculate cluster frequencies (proportion of each cluster per sample)
-my_object <- fcs_calculate_abundance(fcs_join_obj = my_object, report_as = "frequency")
+my_object <- fcs_calculate_abundance(fcs_join_obj = my_object, report_algorithm = 'leiden', report_as = "frequency")
 
 # 10. Calculate cluster counts (number of cells per cluster per sample)
-my_object <- fcs_calculate_abundance(fcs_join_obj = my_object, report_as = "count")
+my_object <- fcs_calculate_abundance(fcs_join_obj = my_object, report_algorithm = 'leiden', report_as = "count")
 
 # 11. Attach sample-level metadata (clinical variables, group labels, etc.)
 my_object <- fcs_add_metadata(fcs_join_obj = my_object, metadata = my_metadata_df)
