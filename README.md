@@ -69,7 +69,7 @@ my_object <- fcs_cluster(fcs_join_obj = my_object, algorithm = "leiden")
 my_object <- fcs_reduce_dimensions(fcs_join_obj = my_object, algorithm = "umap")
 
 # 8. Calculate a cluster expression heatmap — required for the FCView heatmap tab
-my_object <- fcs_cluster_heatmap(fcs_join_obj = my_object)
+my_object <- fcs_cluster_heatmap(fcs_join_obj = my_object, algorithm = 'leiden')
 
 # 9. Calculate cluster frequencies (proportion of each cluster per sample)
 my_object <- fcs_calculate_abundance(fcs_join_obj = my_object, report_as = "frequency")
