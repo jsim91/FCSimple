@@ -81,8 +81,10 @@ my_object <- fcs_calculate_abundance(fcs_join_obj = my_object,
                                      report_algorithm = 'leiden',
                                      report_as = "count")
 
-# 11. Attach sample-level metadata (clinical variables, group labels, etc.)
-my_object <- fcs_add_metadata(fcs_join_obj = my_object, metadata = my_metadata_df)
+# 11. Add sample-level metadata (clinical variables, group labels, etc.)
+my_metadata_df <- data.frame(patient_ID = my_object$metadata$patient_ID, 
+                             visit = stringr::str_extract(my_object$metadata$patient_ID, 'v[0-3]'))
+my_object <- fcs_add_metadata(fcs_join_obj = my_object, custom_metadata = my_metadata_df)
 
 # 12. (Optional) Pre-annotate clusters with cell type labels before FCView upload
 my_object <- fcs_annotate_clusters(
