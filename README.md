@@ -47,6 +47,7 @@ All subsequent functions take the object returned by `fcs_join()` as their first
 library(FCSimple)
 
 # 1. Get the bundled example FCS files
+#    See "Data Input Format" section below if using your own data
 include_files <- FCSimple::fcs_example_files()
 
 # 2. Load data
