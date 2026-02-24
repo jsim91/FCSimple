@@ -90,6 +90,7 @@ my_object <- fcs_add_metadata(fcs_join_obj = my_object, custom_metadata = my_met
 
 # 12. (Optional) Pre-annotate clusters with cell type labels before FCView upload
 #     It is perfectly fine to only annotate a subset of the clusters at this point
+#     The annotations made here are simply a proof of concept
 my_object <- fcs_annotate_clusters(
   fcs_join_obj = my_object,
   clustering_algorithm = 'leiden',
