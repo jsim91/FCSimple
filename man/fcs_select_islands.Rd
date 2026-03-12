@@ -24,7 +24,7 @@ containing at minimum:
 }}
 
 \item{dbscan_lineage}{Character vector of channel names to include in the island heatmap (e.g.
-lineage markers). Default \code{c("170Yb_CD3","165Ho_CD19","145Nd_CD4","146Nd_CD8")}.
+lineage markers). Required; no default.
 If \code{NULL}, uses all channels.}
 
 \item{reduction_cluster_annotate_algorithm}{Character; clustering result to use when highlighting kept islands on the

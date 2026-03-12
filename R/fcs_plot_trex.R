@@ -14,24 +14,16 @@
 #'   of Marker Enrichment Modeling (MEM) for hotspot phenotyping per Diggins et al. (2017). Steps:
 #'   1. Extract 2D embedding and split cells into reference vs. comparison groups.
 #'   2. For each cell, query its k nearest neighbors (k = `k`) via `RANN::nn2()`.
-#'   3. Compute local fraction of neighbors in each group; flag cells below
-#'      `change_thresholds[1]` (contraction) or above `change_thresholds[2]`
-#'      (expansion).
+#'   3. Compute local fraction of neighbors in each group; flag cells where the
+#'      local fraction exceeds `neighbor_significance_threshold` (expansion) or
+#'      falls below `1 - neighbor_significance_threshold` (contraction).
 #'   4. Optionally down-sample if Ncells > 500k for speed.
-#'   5. Run MEM (via `MEM::MarkerEnrichment`) on `mem_features` to derive
+#'   5. Run MEM (via `cytoMEM::MEM()`) on expression data to derive
 #'      enrichment scores for each hotspot region.
 #'   6. Save hotspot assignments, MEM score tables, and diagnostics to `outdir`.
 #'
 #' @param fcs_join_obj
-#'   A list returned by `FCSimple::fcs_join()`, then reduced via
-#'   `FCSimple::fcs_reduce_dimensions()`, containing:
-#'   - `<reduction>$coordinates`: numeric Ncells×2 embedding matrix
-#'   - `source`: vector labeling each cell’s sample/timepoint
-#'
-#' @param reduction
-#'   Character; which embedding to use. `"UMAP"` (default) or `"tSNE"`.
-#'
-#' @param fcs_join_obj
+
 #'   A list returned by `FCSimple::fcs_join()` and
 #'   `FCSimple::fcs_reduce_dimensions()`, containing at minimum:
 #'   - `<reduction>$coordinates`: numeric Ncells×2 embedding matrix
@@ -99,7 +91,7 @@
 #' \dontrun{
 #' files   <- list(ff1, ff2)
 #' joined  <- FCSimple::fcs_join(files)
-#' reduced <- FCSimple::fcs_reduce_dimensions(joined, method = "UMAP")
+#' reduced <- FCSimple::fcs_reduce_dimensions(joined, algorithm = "umap")
 #'
 #' FCSimple::fcs_plot_trex(
 #'   fcs_join_obj  = reduced,

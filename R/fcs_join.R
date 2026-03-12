@@ -24,10 +24,6 @@
 #'   Logical; if `TRUE` (default), applies channel transformations. If `FALSE`,
 #'   returns raw data only.
 #'
-#' @param instrument_type
-#'   Deprecated. Instrument type is now auto-detected: if min(data) >= 0, assumes
-#'   'cytof' (mass cytometry); otherwise assumes 'flow' (fluorescence cytometry).
-#'
 #' @param use_descriptive_column_names
 #'   Logical; if `TRUE` (default), replaces channel names with descriptive labels
 #'   from FCS metadata.
@@ -66,10 +62,10 @@
 #'   Numeric “A” offset for hyperlog transform (default 2).
 #'
 #' @param transform_per_channel
-#'   Logical; if `TRUE` (default), launches an interactive Shiny application
+#'   Logical; if `TRUE`, launches an interactive Shiny application
 #'   (in `transform_app/`) to preview and tweak per-channel transforms. The
-#'   function will block until you finish and close the app. If `FALSE`,
-#'   applies the global `transform_type`.
+#'   function will block until you finish and close the app. If `FALSE`
+#'   (default), applies the global `transform_type`.
 #'
 #' @param downsample_size
 #'   Integer or `NA`; maximum events per file to sample before joining.
@@ -125,8 +121,7 @@
 #'
 #' # Join pre-transformed CSV files exported from FlowJo
 #' csv_files <- list.files("data/flowjo_export", pattern = "\\.csv$", full.names = TRUE)
-#' joined_csv <- FCSimple::fcs_join(csv_files
-#' joined_raw <- FCSimple::fcs_join(files, apply_transform = FALSE)
+#' joined_csv <- FCSimple::fcs_join(csv_files)
 #' }
 #'
 #' @seealso
@@ -178,8 +173,8 @@ fcs_join <- function(files,
       csv_ds <- csv_data
     }
     rm(csv_data); gc()
-    csv <- do.call(rbind, csv_data)
-    src <- rep(names(csv_data), rep(sapply(csv_data, nrow)))
+    csv <- do.call(rbind, csv_ds)
+    src <- rep(names(csv_ds), sapply(csv_ds, nrow))
     src <- gsub('\\.(csv|fcs)$','',src)
     rd <- stringr::str_extract(src, batch_pattern)
     meta <- data.frame(patient_ID = src, run_date = rd); meta <- meta[!duplicated(meta$patient_ID),]

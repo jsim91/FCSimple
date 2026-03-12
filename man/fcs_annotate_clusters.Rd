@@ -44,8 +44,9 @@ element for the selected algorithm. If \code{FALSE} and the mapping already
 exists, an error is raised.}
 }
 \value{
-The input \code{fcs_join_obj} with a \code{cluster_mapping} data frame added (or
-replaced), and an updated \code{object_history} entry.
+The input \code{fcs_join_obj} with a \verb{\{algorithm\}_mapping} data frame added
+(e.g. \code{leiden_mapping}, \code{flowsom_mapping}), and an updated
+\code{object_history} entry.
 }
 \description{
 Assigns cell type names to clusters in an FCSimple analysis object by

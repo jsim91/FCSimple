@@ -86,7 +86,7 @@ fcs_calculate_abundance <- function(fcs_join_obj,
   if(!"source" %in% names(fcs_join_obj)) {
     stop("error in names of fcs_join_obj: could not trace cells back to their origin. See ?fcs_join.")
   }
-  if(length(report_as)>2) {
+  if(length(report_as)>1) {
     report_as <- tolower(report_as[1])
     warning(paste0("more than one 'report_as' specified... continuing with ",report_as[1]))
     if(!report_as %in% c("frequency", "fraction","count")) {

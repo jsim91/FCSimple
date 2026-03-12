@@ -65,8 +65,9 @@
 #'   clusters, allowing the user to assign them interactively in the app.
 #'
 #' @return
-#'   The input `fcs_join_obj` with a `cluster_mapping` data frame added (or
-#'   replaced), and an updated `object_history` entry.
+#'   The input `fcs_join_obj` with a `{algorithm}_mapping` data frame added
+#'   (e.g. `leiden_mapping`, `flowsom_mapping`), and an updated
+#'   `object_history` entry.
 #'
 #' @examples
 #' \dontrun{

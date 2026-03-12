@@ -69,6 +69,9 @@ lower‐case \code{algorithm}:
 }
 \description{
 Performs UMAP or t‐SNE on a flow cytometry analysis object. By default,
+reduces the (batch‐corrected) expression matrix to two dimensions
+using either the R implementation (uwot or Rtsne) or an external
+Python script. The result is stored in your object under “umap” or “tsne”.
 }
 \details{
 \enumerate{
@@ -76,7 +79,7 @@ Performs UMAP or t‐SNE on a flow cytometry analysis object. By default,
 regardless of \code{use_rep}. Otherwise, \code{use_rep} selects raw data or PCA.
 \item For UMAP:
 \itemize{
-\item R: calls \code{uwot::umap()} with a fixed seed, \code{umap_nn}, and \code{umap_min_dist}.
+\item R: calls \code{uwot::umap()} with \code{umap_nn} and \code{umap_min_dist}; uses \code{seed} if provided.
 \item Python: writes data to \code{inst/python}, runs \code{run_umap.py}, cleans temp files.
 }
 \item For t‐SNE:

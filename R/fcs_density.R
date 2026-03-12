@@ -110,10 +110,10 @@ fcs_plot_reduction_density <- function(fcs_join_obj, reduction = "UMAP", n_kde =
   # plot_border_thickness = 1
 
   if(xlimits[1]=="auto") {
-    xlimits = range(fcs_join_obj$umap$coordinates[,1])
+    xlimits = range(fcs_join_obj[[tolower(reduction)]]$coordinates[,1])
   }
   if(ylimits[1]=="auto") {
-    ylimits = range(fcs_join_obj$umap$coordinates[,2])
+    ylimits = range(fcs_join_obj[[tolower(reduction)]]$coordinates[,2])
   }
 
   if(length(reduction)!=1) {

@@ -18,9 +18,6 @@
 #' @param correction_markers Character vector of channel names to correct
 #'   (default "all"). Only used with `correction_method = "cyCombine"`.
 #'
-#' @param batch_source_regex Regular expression (string) to extract batch IDs
-#'   from the "source" element. Default `"[0-9]+\\-[A-Za-z]+\\-[0-9]+"`.
-#'
 #' @param cyCombine_SOMx Integer; number of grid columns for the SOM in
 #'   cyCombine (default 8).
 #'
@@ -28,7 +25,7 @@
 #'   cyCombine (default 8).
 #'
 #' @param cyCombine_detect_effects Logical; if `TRUE`, runs cyCombine’s
-#'   detect_batch_effect before and after normalization (default FALSE).
+#'   detect_batch_effect before and after correction (default FALSE).
 #'
 #' @param num_cores Integer; number of CPU cores for Harmony
 #'   (default `ceiling(parallel::detectCores()/2)`).
@@ -72,7 +69,7 @@
 #'   pca_obj,
 #'   use_rep = "pca",
 #'   correction_method = "harmony",
-#'   harmony_cores = 4,
+#'   num_cores = 4,
 #'   harmony_covars = c("run_date")
 #' )
 #' }
@@ -80,12 +77,11 @@
 #' @seealso
 #' FCSimple::fcs_join, FCSimple::fcs_pca, cyCombine::normalize, harmony::RunHarmony
 #'
-#' @importFrom cyCombine normalize get_markers detect_batch_effect
+#' @importFrom cyCombine normalize get_markers detect_batch_effect create_som correct_data
 #' @importFrom harmony RunHarmony
-#' @importFrom stringr str_extract
 #' @export
 fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_method = c("harmony", "cyCombine"),
-                                 correction_markers = "all", batch_source_regex = "[0-9]+\\-[A-Za-z]+\\-[0-9]+",
+                                 correction_markers = "all",
                                  cyCombine_SOMx = 8, cyCombine_SOMy = 8, cyCombine_detect_effects = FALSE,
                                  num_cores = ceiling(parallel::detectCores()/2), harmony_iterations = 10, harmony_covars = c("run_date"),
                                  harmony_lambda = 1)
@@ -105,7 +101,6 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
   if(correction_method[1]=="cyCombine") {
     cmeth <- "cyCombine"
     require(cyCombine)
-    require(stringr)
     exp_data <- as.data.frame(rep_data)
     if(correction_markers[1]=="all") {
       marks <- cyCombine::get_markers(x = exp_data)
@@ -171,7 +166,7 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
     if('source' %in% harmony_covars) {
       stop("source should not be included as a covariate.")
     }
-    if(mean(harmony_covars %in% names(fcs_join_obj)!=1)) {
+    if(mean(harmony_covars %in% names(fcs_join_obj)) != 1) {
       stop("all 'harmony_covars' must be in names(fcs_join_obj).")
     }
     if(!'run_date' %in% harmony_covars) {

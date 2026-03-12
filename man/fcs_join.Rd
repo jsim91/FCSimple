@@ -62,19 +62,16 @@ One of \code{"asinh"}, \code{"biexp"}, or \code{"hyperlog"}. Default \code{"asin
 
 \item{hyperlog_transform_A}{Numeric “A” offset for hyperlog transform (default 2).}
 
-\item{transform_per_channel}{Logical; if \code{TRUE} (default), launches an interactive Shiny application
+\item{transform_per_channel}{Logical; if \code{TRUE}, launches an interactive Shiny application
 (in \verb{transform_app/}) to preview and tweak per-channel transforms. The
-function will block until you finish and close the app. If \code{FALSE},
-applies the global \code{transform_type}.}
+function will block until you finish and close the app. If \code{FALSE}
+(default), applies the global \code{transform_type}.}
 
 \item{downsample_size}{Integer or \code{NA}; maximum events per file to sample before joining.
 Default \code{NA} (no downsampling).}
 
 \item{batch_pattern}{Regular expression to extract \code{run_date} from sample names in \code{source}.
 Default \code{"[0-9]+\\\\-[A-Za-z]+\\\\-[0-9]+"}.}
-
-\item{instrument_type}{Deprecated. Instrument type is now auto-detected: if min(data) >= 0, assumes
-'cytof' (mass cytometry); otherwise assumes 'flow' (fluorescence cytometry).}
 }
 \value{
 A list with elements:
@@ -136,8 +133,7 @@ joined_raw <- FCSimple::fcs_join(files, apply_transform = FALSE)
 
 # Join pre-transformed CSV files exported from FlowJo
 csv_files <- list.files("data/flowjo_export", pattern = "\\\\.csv$", full.names = TRUE)
-joined_csv <- FCSimple::fcs_join(csv_files
-joined_raw <- FCSimple::fcs_join(files, apply_transform = FALSE)
+joined_csv <- FCSimple::fcs_join(csv_files)
 }
 
 }

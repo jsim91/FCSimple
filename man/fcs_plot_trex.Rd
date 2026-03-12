@@ -88,11 +88,11 @@ of Marker Enrichment Modeling (MEM) for hotspot phenotyping per Diggins et al. (
 \enumerate{
 \item Extract 2D embedding and split cells into reference vs. comparison groups.
 \item For each cell, query its k nearest neighbors (k = \code{k}) via \code{RANN::nn2()}.
-\item Compute local fraction of neighbors in each group; flag cells below
-\code{change_thresholds[1]} (contraction) or above \code{change_thresholds[2]}
-(expansion).
+\item Compute local fraction of neighbors in each group; flag cells where the
+local fraction exceeds \code{neighbor_significance_threshold} (expansion) or
+falls below \code{1 - neighbor_significance_threshold} (contraction).
 \item Optionally down-sample if Ncells > 500k for speed.
-\item Run MEM (via \code{MEM::MarkerEnrichment}) on \code{mem_features} to derive
+\item Run MEM (via \code{cytoMEM::MEM()}) on expression data to derive
 enrichment scores for each hotspot region.
 \item Save hotspot assignments, MEM score tables, and diagnostics to \code{outdir}.
 }
@@ -101,7 +101,7 @@ enrichment scores for each hotspot region.
 \dontrun{
 files   <- list(ff1, ff2)
 joined  <- FCSimple::fcs_join(files)
-reduced <- FCSimple::fcs_reduce_dimensions(joined, method = "UMAP")
+reduced <- FCSimple::fcs_reduce_dimensions(joined, algorithm = "umap")
 
 FCSimple::fcs_plot_trex(
   fcs_join_obj  = reduced,

@@ -32,7 +32,7 @@
 #'
 #' @param dbscan_lineage  
 #'   Character vector of channel names to include in the island heatmap (e.g.  
-#'   lineage markers). Default `c("170Yb_CD3","165Ho_CD19","145Nd_CD4","146Nd_CD8")`.  
+#'   lineage markers). Required; no default.  
 #'   If `NULL`, uses all channels.
 #'
 #' @param outdir  

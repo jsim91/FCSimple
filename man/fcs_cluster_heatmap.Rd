@@ -60,6 +60,15 @@ invisibly instead of adding the heatmap to \code{fcs_join_obj}.
 Default \code{FALSE}.}
 
 \item{heatmap_linewidth}{Numeric; border line width for heatmap cells. Default \code{0.5}.}
+
+\item{row_text_size}{Numeric; font size for row (cluster) labels. Default \code{13}.}
+
+\item{column_text_size}{Numeric; font size for column (parameter) labels. Default \code{12}.}
+
+\item{legend_text_size}{Numeric; font size for legend labels. Default \code{11}.}
+
+\item{scaling_quantile}{Numeric; quantile threshold for expression scaling via
+\code{CATALYST:::.scale_exprs} (default \code{0.01}).}
 }
 \value{
 Invisibly returns the updated \code{fcs_join_obj} with a new element

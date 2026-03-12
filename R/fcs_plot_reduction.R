@@ -137,7 +137,7 @@
 #' \dontrun{
 #'   files   <- list.files("data/", "\\.fcs$", full.names = TRUE)
 #'   joined  <- FCSimple::fcs_join(files)
-#'   reduced <- FCSimple::fcs_reduce_dimensions(joined, method = "UMAP")
+#'   reduced <- FCSimple::fcs_reduce_dimensions(joined, algorithm = "umap")
 #'   clustered <- FCSimple::fcs_cluster(reduced, algorithm = "leiden")
 #'
 #'   # Return the plot object

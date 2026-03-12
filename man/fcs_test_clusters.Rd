@@ -91,6 +91,21 @@ distribution plot vs. heatmap (default \code{c(0.76, 0.24)}).}
 \item{heatmap_parameters}{Character vector of marker names to include in the heatmap (default \code{"all"}).}
 
 \item{heatmap_clusters}{Character vector of cluster IDs to include in the heatmap (default \code{"all"}).}
+
+\item{test_method}{Character; statistical method to use. One of \code{"wilcox"} (Wilcoxon rank-sum,
+default) or \code{"sccomp"} (compositional analysis via sccomp).}
+
+\item{sccomp_terms}{Named list specifying model terms for sccomp (only used when
+\code{test_method = "sccomp"}). Must contain:
+\code{primary_term}, \code{sccomp_sample}, \code{fixed_terms}, \code{mixed_effect_terms},
+\code{primary_term_reference}, \code{primary_term_query}, and \code{n_cores}.
+All names must correspond to elements in \code{fcs_join_obj}.
+Default \code{NULL}.}
+
+\item{boxplot_text_scaling}{Numeric; scaling factor for text elements in the boxplot panel (default \code{1}).}
+
+\item{hm_feature_text_size}{Numeric; font size for feature (marker) labels in the heatmap panel
+(default \code{12}).}
 }
 \value{
 The input \code{fcs_join_obj}, modified by adding:

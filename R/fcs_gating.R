@@ -31,7 +31,7 @@ fcs_gating_object <- function(fcs_obj) {
   if('run_date' %in% names(fcs_obj)) {
     list_obj[['run_date']] <- fcs_obj$run_date
   }
-  list_obj <- FCSimple::fcs_audit(fcs_join_obj = list_obj, instrument_type = 'flow')
+  list_obj <- FCSimple::fcs_audit(fcs_join_obj = list_obj)
   class(list_obj) <- 'fcs_gating_object'
   return(list_obj)
 }
@@ -116,7 +116,7 @@ fcs_gate_cells <- function(object,
     tmpdf <- as.data.frame(object[['data']]); row.names(tmpdf) <- 1:nrow(tmpdf)
     if(parent_name!='none') {
       warning("It's recommended that when using 'fcs_gate_cells' that you start from the root data--no preceeding gates (the 'parent_name' default). Proceed with caution.")
-      if(!parent_name %in% object[['gate_trees']][[tree_name]]) {
+      if(!parent_name %in% names(object[['gate_trees']][[tree_name]])) {
         stop("Could not find 'parent_name' in specified 'tree_name'. If 'parent_name' is not 'none', the specified 'parent_name' must exist in the specified 'tree_name'.")
       } else {
         parent_index <- which(names(object[['gate_trees']][[tree_name]])==parent_name)

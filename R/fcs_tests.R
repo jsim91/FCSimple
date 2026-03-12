@@ -88,6 +88,25 @@
 #' @param heatmap_clusters
 #'   Character vector of cluster IDs to include in the heatmap (default `"all"`).
 #'
+#' @param test_method
+#'   Character; statistical method to use. One of `"wilcox"` (Wilcoxon rank-sum,
+#'   default) or `"sccomp"` (compositional analysis via sccomp).
+#'
+#' @param sccomp_terms
+#'   Named list specifying model terms for sccomp (only used when
+#'   `test_method = "sccomp"`). Must contain:
+#'   `primary_term`, `sccomp_sample`, `fixed_terms`, `mixed_effect_terms`,
+#'   `primary_term_reference`, `primary_term_query`, and `n_cores`.
+#'   All names must correspond to elements in `fcs_join_obj`.
+#'   Default `NULL`.
+#'
+#' @param boxplot_text_scaling
+#'   Numeric; scaling factor for text elements in the boxplot panel (default `1`).
+#'
+#' @param hm_feature_text_size
+#'   Numeric; font size for feature (marker) labels in the heatmap panel
+#'   (default `12`).
+#'
 #' @details
 #' \enumerate{
 #'   \item Retrieve or use the provided `abundance` matrix (cluster frequencies) and subset to the samples in `compare_list`.
@@ -190,8 +209,8 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list = NA, color_list = NA, 
     }
   }
   if(test_method=='sccomp') {
-    if(mean(c('primary_term','sccomp_sample','fixed_terms','mixed_effect_terms') %in% names(sccomp_terms))!=1) {
-      stop("All list terms, 'primary_term','sccomp_sample','fixed_terms','mixed_effect_terms', must be present in 'sccomp_terms', even if empty.")
+    if(mean(c('primary_term','sccomp_sample','fixed_terms','mixed_effect_terms','primary_term_reference','primary_term_query') %in% names(sccomp_terms))!=1) {
+      stop("All list terms, 'primary_term','sccomp_sample','fixed_terms','mixed_effect_terms','primary_term_reference','primary_term_query', must be present in 'sccomp_terms', even if empty.")
     }
     if(any(length(sccomp_terms[['primary_term']])==0,
            length(sccomp_terms[['sccomp_sample']])==0)) {

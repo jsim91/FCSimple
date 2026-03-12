@@ -31,7 +31,8 @@
 #'   vertical line at PC N), and repeats until a valid integer is provided.
 #'
 #' @param apply_scaling
-#'   Logical; if `TRUE` (default), centers and scales data before PCA. 
+#'   Logical; if `TRUE` (default), centers data before PCA (via `prcomp`
+#'   default `center = TRUE`). Note: data is centered but not scaled.
 #'   If `FALSE`, passes `center = FALSE` and `scale. = FALSE` to `prcomp`.
 #'
 #' @details
@@ -52,12 +53,13 @@
 #'
 #' @return
 #'   The original `fcs_join_obj` augmented with a new element `pca`, a list with:
-#'   - `pca_data`: numeric matrix (events × selected PCs)
-#'   - `PCs`: integer number of PCs retained
-#'   - `cumulative_variance`: numeric vector of cumulative variance explained
-#'   - `pca_method`: character string of the method used
-#'   - `elbow_plot`: a ggplot2 object illustrating cumulative variance and
-#'                   highlighting the chosen PC count
+#'   - `pca_data`: numeric matrix (events x selected PCs)
+#'   - `pca_stats`: a list containing:
+#'     - `PCs`: integer number of PCs retained
+#'     - `cumulative_variance`: numeric vector of cumulative variance explained
+#'     - `pca_method`: character string of the method used
+#'     - `elbow_plot`: a ggplot2 object illustrating cumulative variance and
+#'                     highlighting the chosen PC count
 #'
 #' @examples
 #' \dontrun{

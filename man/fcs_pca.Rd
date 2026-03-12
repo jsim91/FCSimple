@@ -34,18 +34,22 @@ and \code{num_pc} are \code{NULL}, the function displays a plot of 1 – cumulat
 variance vs. PC, prompts for input (e.g. a number or \code{"drawN"} to draw a
 vertical line at PC N), and repeats until a valid integer is provided.}
 
-\item{apply_scaling}{Logical; if \code{TRUE} (default), centers and scales data before PCA.
+\item{apply_scaling}{Logical; if \code{TRUE} (default), centers data before PCA (via \code{prcomp}
+default \code{center = TRUE}). Note: data is centered but not scaled.
 If \code{FALSE}, passes \code{center = FALSE} and \code{scale. = FALSE} to \code{prcomp}.}
 }
 \value{
 The original \code{fcs_join_obj} augmented with a new element \code{pca}, a list with:
 \itemize{
-\item \code{pca_data}: numeric matrix (events × selected PCs)
+\item \code{pca_data}: numeric matrix (events x selected PCs)
+\item \code{pca_stats}: a list containing:
+\itemize{
 \item \code{PCs}: integer number of PCs retained
 \item \code{cumulative_variance}: numeric vector of cumulative variance explained
 \item \code{pca_method}: character string of the method used
 \item \code{elbow_plot}: a ggplot2 object illustrating cumulative variance and
 highlighting the chosen PC count
+}
 }
 }
 \description{

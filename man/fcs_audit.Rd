@@ -57,7 +57,7 @@ stored in \code{obj$object_history}.
 }
 \details{
 \strong{Metadata preservation:} Existing metadata is kept intact if all
-four conditions hold: (1) \code{metadata} is a \code{data.frame},
+five conditions hold: (1) \code{metadata} is a \code{data.frame},
 (2) it contains a \code{patient_ID} column, (3) every value in
 \code{patient_ID} appears in \code{source}, (4) every unique value in
 \code{source} appears in \code{patient_ID}, and (5) the metadata has

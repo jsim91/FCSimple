@@ -15,7 +15,7 @@ fcs_as.hyperlog(
 \arguments{
 \item{fcs_join_obj}{A list returned by FCSimple::fcs_join(), containing at minimum:
 \itemize{
-\item raw_data: numeric matrix or data.frame of events × channels
+\item raw: numeric matrix or data.frame of events x channels
 \item source: character vector indicating sample origin for each event
 }}
 
@@ -39,7 +39,7 @@ linear raw data into a hyperlog scale that accommodates both low and high
 intensity signals.
 }
 \details{
-The function splits \code{raw_data} by \code{source}, applies the hyperlogtGml2
+The function splits \code{raw} by \code{source}, applies the hyperlogtGml2
 transformation to each channel within each sample, and then recombines
 the transformed data in the original order. The hyperlog parameters
 (T, M, W, A) control the shape of the scale, with larger T/M extending

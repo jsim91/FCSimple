@@ -45,6 +45,9 @@
 #' @param trim_quantile
 #'   Numeric; quantile threshold for outlier trimming (default 0.01).
 #'
+#' @param point_alpha
+#'   Numeric; point transparency (alpha) for scatter (default 0.1).
+#'
 #' @param force_xlim
 #'   Numeric vector of length 2 to fix the x‐axis limits, or `FALSE`
 #'   (default) to use the data range.
@@ -75,20 +78,20 @@
 #'
 #' @examples
 #' \dontrun{
-#'   # Assume joined, reduced and batch‐corrected object
+#'   # Assume joined, reduced and batch-corrected object
 #'   joined <- FCSimple::fcs_join(files)
-#'   reduced <- FCSimple::fcs_reduce_dimensions(joined, method = "UMAP")
+#'   reduced <- FCSimple::fcs_reduce_dimensions(joined, algorithm = "umap")
 #'   corrected <- FCSimple::fcs_batch_correction(reduced)
 #'
 #'   # Project all channels onto UMAP
-#'   FCSimple::fcs_project_parameters(
+#'   FCSimple::fcs_plot_overlays(
 #'     corrected,
 #'     reduction = "UMAP",
 #'     outdir    = "~/results"
 #'   )
 #'
 #'   # Project only CD3 and CD19
-#'   FCSimple::fcs_project_parameters(
+#'   FCSimple::fcs_plot_overlays(
 #'     corrected,
 #'     parameters = c("CD3","CD19"),
 #'     sample_size = 30000

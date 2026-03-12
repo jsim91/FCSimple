@@ -8,7 +8,7 @@
 #'
 #' @param fcs_join_obj
 #'   A list returned by FCSimple::fcs_join(), containing at minimum:
-#'   - raw_data: numeric matrix or data.frame of events × channels  
+#'   - raw: numeric matrix or data.frame of events x channels  
 #'   - source: character vector indicating sample origin for each event
 #'
 #' @param hyperlog_transform_T
@@ -25,7 +25,7 @@
 #'   Numeric; additional constant to shift the transform (default 2).
 #'
 #' @details
-#'   The function splits `raw_data` by `source`, applies the hyperlogtGml2
+#'   The function splits `raw` by `source`, applies the hyperlogtGml2
 #'   transformation to each channel within each sample, and then recombines
 #'   the transformed data in the original order. The hyperlog parameters
 #'   (T, M, W, A) control the shape of the scale, with larger T/M extending
@@ -59,7 +59,7 @@ fcs_as.hyperlog <- function(fcs_join_obj,
                             hyperlog_transform_A = 2) {
   # Split raw_data by sample
   myfs <- split(
-    x = as.data.frame(fcs_join_obj$raw_data),
+    x = as.data.frame(fcs_join_obj$raw),
     f = fcs_join_obj$source
   )
   

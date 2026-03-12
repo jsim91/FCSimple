@@ -52,6 +52,19 @@
 #' @param heatmap_linewidth
 #'   Numeric; border line width for heatmap cells. Default `0.5`.
 #'
+#' @param row_text_size
+#'   Numeric; font size for row (cluster) labels. Default `13`.
+#'
+#' @param column_text_size
+#'   Numeric; font size for column (parameter) labels. Default `12`.
+#'
+#' @param legend_text_size
+#'   Numeric; font size for legend labels. Default `11`.
+#'
+#' @param scaling_quantile
+#'   Numeric; quantile threshold for expression scaling via
+#'   `CATALYST:::.scale_exprs` (default `0.01`).
+#'
 #' @details
 #' - Chooses raw or batch‐corrected data based on `override_correction` and
 #'   presence of `fcs_join_obj$batch_correction$data`.

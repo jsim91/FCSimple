@@ -2,9 +2,6 @@
 #'
 #' @description
 #'   Performs UMAP or t‐SNE on a flow cytometry analysis object. By default,
-  #' @param use_rep
-  #'   Character; which representation to reduce.
-  #'   - `"data"` (default): use `fcs_join_obj$data` or batch‐corrected data if present.
 #'   reduces the (batch‐corrected) expression matrix to two dimensions
 #'   using either the R implementation (uwot or Rtsne) or an external
 #'   Python script. The result is stored in your object under “umap” or “tsne”.
@@ -55,7 +52,7 @@
 #'   1. If `fcs_join_obj$batch_correction$data` exists, that matrix is used
 #'      regardless of `use_rep`. Otherwise, `use_rep` selects raw data or PCA.
 #'   2. For UMAP:
-#'      - R: calls `uwot::umap()` with a fixed seed, `umap_nn`, and `umap_min_dist`.
+#'      - R: calls `uwot::umap()` with `umap_nn` and `umap_min_dist`; uses `seed` if provided.
 #'      - Python: writes data to `inst/python`, runs `run_umap.py`, cleans temp files.
 #'   3. For t‐SNE:
 #'      - R: calls `Rtsne::Rtsne()` with `tsne_perplexity`, `num_cores`, and fixed settings.
@@ -196,7 +193,7 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
   coordinates_list <- map
   if(tolower(algorithm)=="umap") {
     if(tolower(language)=="r") {
-      settings_list <- list(use_rep = use_rep, language = "R", init = "spca", min_dist = 0.1,
+      settings_list <- list(use_rep = use_rep, language = "R", init = "spca",
                             n_threads = ceiling(detectCores()/2), num_neighbors = round(umap_nn,0),
                             min_dist = umap_min_dist, verbose = TRUE, seed = seed)
     } else if(tolower(language)=="python") {

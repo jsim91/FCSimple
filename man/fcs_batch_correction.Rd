@@ -9,7 +9,6 @@ fcs_batch_correction(
   use_rep = "data",
   correction_method = c("harmony", "cyCombine"),
   correction_markers = "all",
-  batch_source_regex = "[0-9]+\\\\-[A-Za-z]+\\\\-[0-9]+",
   cyCombine_SOMx = 8,
   cyCombine_SOMy = 8,
   cyCombine_detect_effects = FALSE,
@@ -33,9 +32,6 @@ values, or "pca" to correct principal‐component coordinates.}
 \item{correction_markers}{Character vector of channel names to correct
 (default "all"). Only used with \code{correction_method = "cyCombine"}.}
 
-\item{batch_source_regex}{Regular expression (string) to extract batch IDs
-from the "source" element. Default \code{"[0-9]+\\\\-[A-Za-z]+\\\\-[0-9]+"}.}
-
 \item{cyCombine_SOMx}{Integer; number of grid columns for the SOM in
 cyCombine (default 8).}
 
@@ -43,7 +39,7 @@ cyCombine (default 8).}
 cyCombine (default 8).}
 
 \item{cyCombine_detect_effects}{Logical; if \code{TRUE}, runs cyCombine’s
-detect_batch_effect before and after normalization (default FALSE).}
+detect_batch_effect before and after correction (default FALSE).}
 
 \item{num_cores}{Integer; number of CPU cores for Harmony
 (default \code{ceiling(parallel::detectCores()/2)}).}
@@ -96,7 +92,7 @@ corrected2 <- FCSimple::fcs_batch_correction(
   pca_obj,
   use_rep = "pca",
   correction_method = "harmony",
-  harmony_cores = 4,
+  num_cores = 4,
   harmony_covars = c("run_date")
 )
 }
