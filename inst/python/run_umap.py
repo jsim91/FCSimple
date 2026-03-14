@@ -13,6 +13,7 @@ in_file = sys.argv[1]
 out_file = sys.argv[2]
 umap_nn = int(sys.argv[3])
 mdist = float(sys.argv[4])
+n_jobs = int(sys.argv[5]) if len(sys.argv) > 5 else 1
 
 data = pd.read_csv(filepath_or_buffer = in_file)
 try:
@@ -20,8 +21,8 @@ try:
 except OSError:
     pass
 
-map = umap.UMAP(n_neighbors = umap_nn, init = 'spectral', min_dist = mdist, 
-                low_memory = True, n_jobs = 1, verbose = False)
+map = umap.UMAP(n_neighbors = umap_nn, init = 'spectral', min_dist = mdist,
+                low_memory = True, n_jobs = n_jobs, verbose = False)
 map_output = map.fit_transform(data)
 map_df = pd.DataFrame(map_output)
 map_df.columns = ["UMAP1","UMAP2"]

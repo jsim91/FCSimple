@@ -150,7 +150,7 @@ fcs_reduce_dimensions <- function(fcs_join_obj,
                          nThread = parallel::detectCores(), row.names = FALSE)
       system(command = paste0("python ",paste0(capture_dir,"/python/run_umap.py")," ",
                               paste0(capture_dir,"/temp_files/__python_umap_input__.csv")," ",
-                              capture_dir,"/temp_files ",round(umap_nn,0)," ",umap_min_dist))
+                              capture_dir,"/temp_files ",round(umap_nn,0)," ",umap_min_dist," ",num_cores))
       map <- read.csv(paste0(capture_dir,"/temp_files/__tmp_umap__.csv"), check.names = FALSE)
       temp_files <- list.files(path = paste0(system.file(package = "FCSimple"),"/temp_files/"), full.names = TRUE, recursive = TRUE)
       if(length(temp_files)!=0) {
