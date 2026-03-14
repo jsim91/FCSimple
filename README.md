@@ -47,6 +47,7 @@ All subsequent functions take the object returned by `fcs_join()` as their first
 library(FCSimple)
 
 # 1. Get the bundled example FCS files
+#    See "Data Input Format" section below if using your own data
 include_files <- FCSimple::fcs_example_files()
 
 # 2. Load data
@@ -90,6 +91,7 @@ my_object <- fcs_add_metadata(fcs_join_obj = my_object, custom_metadata = my_met
 
 # 12. (Optional) Pre-annotate clusters with cell type labels before FCView upload
 #     It is perfectly fine to only annotate a subset of the clusters at this point
+#     The annotations made here are simply a proof of concept
 my_object <- fcs_annotate_clusters(
   fcs_join_obj = my_object,
   clustering_algorithm = 'leiden',
