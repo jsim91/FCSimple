@@ -7,7 +7,7 @@
 fcs_report_abundance(
   fcs_join_obj,
   report_algorithm = c("leiden", "flowsom", "louvain", "phenograph"),
-  report_as = c("frequency", "fraction"),
+  report_as = c("frequency", "fraction", "count"),
   outdir = getwd(),
   add_timestamp = TRUE,
   append_file_string = NA

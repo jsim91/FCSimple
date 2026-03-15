@@ -20,14 +20,14 @@ BiocManager::install("jsim91/FCSimple")
 This package requires the user to initiate a list object. If using csv file format:
 
 ```r
-include_files <- list.files(path = "csv_file_directory", pattern = ".csv", full.names = TRUE)
+include_files <- list.files(path = "csv_file_directory", pattern = "\\.csv$", full.names = TRUE)
 my_object <- FCSimple::fcs_join(files = include_files)
 ```
 
 or if using fcs format:
 
 ```r
-include_files <- list.files(path = "fcs_file_directory", pattern = ".fcs", full.names = TRUE)
+include_files <- list.files(path = "fcs_file_directory", pattern = "\\.fcs$", full.names = TRUE)
 my_object <- FCSimple::fcs_join(files = include_files)
 ```
 

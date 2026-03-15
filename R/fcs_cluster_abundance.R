@@ -200,12 +200,18 @@ fcs_calculate_abundance <- function(fcs_join_obj,
 #' @export
 fcs_report_abundance <- function(fcs_join_obj,
                                  report_algorithm = c("leiden","flowsom","louvain","phenograph"),
-                                 report_as = c("frequency", "fraction"),
+                                 report_as = c("frequency", "fraction", "count"),
                                  outdir = getwd(), add_timestamp = TRUE, append_file_string = NA)
 {
   report_as <- tolower(report_as[1])
-  abundance_values <- fcs_join_obj[[tolower(report_algorithm)]][[report_as]]
-  row.names(abundance_values) <- gsub("^.+/|.fcs$","",row.names(abundance_values))
+  # fcs_calculate_abundance stores counts under "counts" (plural); map the arg
+  lookup_key <- if (report_as == "count") "counts" else report_as
+  abundance_values <- fcs_join_obj[[tolower(report_algorithm)]][[lookup_key]]
+  if (is.null(abundance_values)) {
+    stop("No '", lookup_key, "' matrix found for algorithm '", report_algorithm,
+         "'. Run fcs_calculate_abundance() with report_as = '", report_as, "' first.")
+  }
+  row.names(abundance_values) <- gsub("^.+/|\\.fcs$|\\.csv$","",row.names(abundance_values))
   outdir <- gsub("/$","",outdir)
   fname <- paste0(report_algorithm,"_cluster_",report_as,"_",strftime(Sys.time(),"%Y-%m-%d_%H%M%S"))
   if(add_timestamp) {
