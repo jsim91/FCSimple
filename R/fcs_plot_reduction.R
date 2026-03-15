@@ -77,7 +77,7 @@
 #'   Numeric; font size for plot title (default 14).
 #'
 #' @param return_plot
-#'   Logical; if `TRUE` (default), returns the ggplot2 object; if `FALSE`,
+#'   Logical; if `TRUE`, returns the ggplot2 object; if `FALSE` (default),
 #'   writes the plot to file and invisibly returns `NULL`.
 #'
 #' @param randomize_colors
@@ -176,7 +176,7 @@
 fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha = 0.1, point_size = 1, outdir = getwd(),
                                split_factor = NA, internal_call = FALSE, anno_indices = NULL, keep_indices = NA,
                                figure_width = 10, figure_height = 10, plotting_device = "pdf", annotate_text_size = 8,
-                               title_size = 14, return_plot = TRUE, randomize_colors = FALSE, color_random_seed = 123,
+                               title_size = 14, return_plot = FALSE, randomize_colors = FALSE, color_random_seed = 123,
                                color_clusters = TRUE, force_title = FALSE, sample_equally = TRUE,
                                cluster_substitute_names = NA, add_timestamp = TRUE, annotation_method = 'shadowtext')
 {
@@ -303,7 +303,7 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
           ggrastr::geom_point_rast(alpha = ptalpha, size = ptsize) +
           labs(x = cnamex, y = cnamey)
       }
-      if(!is.na(sizeanno)) {
+      if(!is.na(sizeanno) && !is.na(ameth)) {
         if(ameth=='shadowtext') {
           mypl <- mypl + annotate("shadowtext", x = xanno, y = yanno, label = names(xval), size = sizeanno)
         } else if(ameth=='repel') {
@@ -358,9 +358,9 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
       ggrastr::geom_point_rast(data = plt_input[keep_indices,], mapping = aes_string(x = colnames(reduction_coords)[1],
                                                                                         y = colnames(reduction_coords)[2]),
                                alpha = point_alpha, color = "red")
-    if(annotation_method=='shadowtext') {
+    if(!is.na(annotation_method) && annotation_method=='shadowtext') {
       plt_reduction <- plt_reduction + annotate("shadowtext", x = xval, y = yval, label = names(xval), size = annotate_text_size)
-    } else if(annotation_method=='repel') {
+    } else if(!is.na(annotation_method) && annotation_method=='repel') {
       require(ggrepel)
       color_text_add <- data.frame(UMAP1 = xval, UMAP2 = yval, cluster = names(xval))
       plt_reduction <- plt_reduction + ggrepel::geom_text_repel(data = color_text_add, force = 0, force_pull = Inf,
@@ -379,14 +379,28 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
   if(return_plot) {
     return(plt_reduction)
   } else {
-    if(plotting_device=="pdf") {
-      ggsave(filename = paste0(fname,".pdf"),
-             plot = plt_reduction, device = "pdf", width = figure_width, height = figure_height,
-             units = "in", dpi = 900, bg = "white")
-    } else if(plotting_device=="png"){
-      ggsave(filename = paste0(fname,".png"),
-             plot = plt_reduction, device = "png", width = figure_width, height = figure_height,
-             units = "in", dpi = 900, bg = "white")
+    # ggsave cannot handle ggarrange objects; use open-device + print for those
+    if(inherits(plt_reduction, "ggarrange")) {
+      if(plotting_device=="pdf") {
+        pdf(file = paste0(fname,".pdf"), width = figure_width, height = figure_height)
+        print(plt_reduction)
+        dev.off()
+      } else if(plotting_device=="png") {
+        png(filename = paste0(fname,".png"), width = figure_width, height = figure_height,
+            units = "in", res = 900)
+        print(plt_reduction)
+        dev.off()
+      }
+    } else {
+      if(plotting_device=="pdf") {
+        ggsave(filename = paste0(fname,".pdf"),
+               plot = plt_reduction, device = "pdf", width = figure_width, height = figure_height,
+               units = "in", dpi = 900, bg = "white")
+      } else if(plotting_device=="png"){
+        ggsave(filename = paste0(fname,".png"),
+               plot = plt_reduction, device = "png", width = figure_width, height = figure_height,
+               units = "in", dpi = 900, bg = "white")
+      }
     }
   }
 }

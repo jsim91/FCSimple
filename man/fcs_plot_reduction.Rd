@@ -20,7 +20,7 @@ fcs_plot_reduction(
   plotting_device = "pdf",
   annotate_text_size = 8,
   title_size = 14,
-  return_plot = TRUE,
+  return_plot = FALSE,
   randomize_colors = FALSE,
   color_random_seed = 123,
   color_clusters = TRUE,
@@ -77,7 +77,7 @@ of events (\code{keep_indices}) and clusters (\code{anno_indices}) rather than f
 
 \item{title_size}{Numeric; font size for plot title (default 14).}
 
-\item{return_plot}{Logical; if \code{TRUE} (default), returns the ggplot2 object; if \code{FALSE},
+\item{return_plot}{Logical; if \code{TRUE}, returns the ggplot2 object; if \code{FALSE} (default),
 writes the plot to file and invisibly returns \code{NULL}.}
 
 \item{randomize_colors}{Logical; if \code{TRUE}, shuffles cluster‐color assignment (default \code{FALSE}).}
