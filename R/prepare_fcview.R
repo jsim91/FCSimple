@@ -230,23 +230,22 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
     }
   }
 
-  # Rename selected algorithm to cluster
+  # Rename selected algorithm to cluster (no recalculation — preserve original
+
+  # full-dataset frequency and counts tables as-is)
   if (selected_algo != "cluster") {
     fcs_join_obj$cluster <- fcs_join_obj[[selected_algo]]
-    if('frequency' %in% names(fcs_join_obj$cluster) || 'fraction' %in% names(fcs_join_obj$cluster)) {
-      fcs_join_obj <- FCSimple::fcs_calculate_abundance(fcs_join_obj = fcs_join_obj,
-                                                        report_algorithm = 'cluster',
-                                                        report_as = 'frequency')
-    }
-    if('counts' %in% names(fcs_join_obj$cluster)) {
-      fcs_join_obj <- FCSimple::fcs_calculate_abundance(fcs_join_obj = fcs_join_obj,
-                                                        report_algorithm = 'cluster',
-                                                        report_as = 'count')
-    }
     selected_heatmap <- paste0(selected_algo, "_heatmap")
     if (selected_heatmap %in% names(fcs_join_obj)) {
       fcs_join_obj$cluster_heatmap <- fcs_join_obj[[selected_heatmap]]
     }
+  }
+
+  if (!"frequency" %in% names(fcs_join_obj$cluster)) {
+    stop("cluster$frequency is missing. Run fcs_calculate_abundance() before preparing the FCView object.")
+  }
+  if (!"counts" %in% names(fcs_join_obj$cluster)) {
+    stop("cluster$counts is missing. Run fcs_calculate_abundance() before preparing the FCView object.")
   }
 
   algos_to_remove <- setdiff(all_cluster_algos, "cluster")
