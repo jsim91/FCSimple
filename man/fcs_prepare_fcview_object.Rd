@@ -22,6 +22,10 @@ fcs_cluster, fcs_reduce_dimensions), containing at minimum:
 \item \code{source}: character vector of sample identifiers
 \item \code{metadata}: data frame with sample‐level metadata
 \item At least one clustering algorithm result (e.g., \code{leiden}, \code{flowsom})
+whose slot contains pre-computed \code{frequency} and \code{counts} tables
+(produced by \code{FCSimple::fcs_calculate_abundance()}). Both tables
+\strong{must} be present; the function will stop with an error if either
+is missing. They are carried through as-is and never recalculated.
 }}
 
 \item{downsample_size}{Integer or \code{NULL}; maximum number of cells to retain. If \code{NULL} (default),
@@ -74,6 +78,10 @@ updating all cell‐level fields: data matrix, source, run_date,
 cluster assignments, and UMAP/tSNE coordinates.
 \item Renames the selected clustering algorithm to \code{"cluster"} and its heatmap
 to \code{"cluster_heatmap"} (required for FCView app compatibility).
+The existing \code{frequency} and \code{counts} tables are preserved as-is from
+the original full-dataset calculation; they are \strong{never} recalculated.
+An error is raised if either table is absent — ensure
+\code{FCSimple::fcs_calculate_abundance()} has been run beforehand.
 \item Removes all other clustering algorithms and their heatmaps.
 \item Filters the object to retain only fields specified in \code{keep_fields}.
 If \code{"cluster_mapping"} is in \code{keep_fields}, the function additionally

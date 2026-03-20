@@ -13,6 +13,10 @@
 #'   - `source`: character vector of sample identifiers
 #'   - `metadata`: data frame with sample‐level metadata
 #'   - At least one clustering algorithm result (e.g., `leiden`, `flowsom`)
+#'     whose slot contains pre-computed `frequency` and `counts` tables
+#'     (produced by `FCSimple::fcs_calculate_abundance()`). Both tables
+#'     **must** be present; the function will stop with an error if either
+#'     is missing. They are carried through as-is and never recalculated.
 #'
 #' @param downsample_size
 #'   Integer or `NULL`; maximum number of cells to retain. If `NULL` (default),
@@ -56,6 +60,10 @@
 #'      cluster assignments, and UMAP/tSNE coordinates.
 #'   5. Renames the selected clustering algorithm to `"cluster"` and its heatmap
 #'      to `"cluster_heatmap"` (required for FCView app compatibility).
+#'      The existing `frequency` and `counts` tables are preserved as-is from
+#'      the original full-dataset calculation; they are **never** recalculated.
+#'      An error is raised if either table is absent — ensure
+#'      `FCSimple::fcs_calculate_abundance()` has been run beforehand.
 #'   6. Removes all other clustering algorithms and their heatmaps.
 #'   7. Filters the object to retain only fields specified in `keep_fields`.
 #'      If `"cluster_mapping"` is in `keep_fields`, the function additionally
