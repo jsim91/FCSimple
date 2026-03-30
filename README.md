@@ -122,7 +122,7 @@ It's highly recommended to set transform parameters for all features in Flowjo t
 
 1) If feeding in .csv files to fcs_join(), you may prepare the .csv files by exporting the transformed data from Flowjo:
 
-<img src="https://raw.githubusercontent.com/jsim91/FCSimple/main/vignette_outs/rmd_img/flowjo_csv_export_method.png" alt="FlowJo CSV export method">
+<img src="https://github.com/user-attachments/assets/0561d4a7-e43f-4456-b4ef-9d10bd0a0bdd" alt="FlowJo CSV export method">
 
 2) If feeding in .fcs files to fcs_join(), you may prepare a workspace diagnostics file (as .txt file) for use with fcs_join() using the flowjo_diagnostics_file argument. To prepare the workspace diagnostics file, in Flowjo:
 
