@@ -182,6 +182,7 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
   }
 
   n_cells <- nrow(fcs_join_obj$data)
+  n_cells_original <- n_cells
 
   if (length(fcs_join_obj$source) != n_cells) {
     stop("source length must equal nrow(data)")
@@ -332,9 +333,9 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
   prepared_obj$fcview_prepared <- TRUE
   prepared_obj$fcview_prep_time <- Sys.time()
   prepared_obj$fcview_clustering_algorithm <- selected_algo
-  if (!is.null(downsample_size) && downsample_size < nrow(fcs_join_obj$data)) {
+  if (!is.null(downsample_size) && downsample_size < n_cells_original) {
     prepared_obj$fcview_downsampled <- TRUE
-    prepared_obj$fcview_original_ncells <- nrow(fcs_join_obj$data)
+    prepared_obj$fcview_original_ncells <- n_cells_original
     prepared_obj$fcview_final_ncells <- n_cells
   }
 
