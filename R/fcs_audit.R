@@ -19,9 +19,10 @@
 #'           deduplicated \code{data.frame} with columns \code{patient_ID} and
 #'           \code{run_date}.
 #'     \item Auto-detects the collection instrument type: if
-#'           \code{min(obj$data) >= 0} the instrument is assumed to be
-#'           \code{"cytof"} (mass cytometry); otherwise \code{"flow"}
-#'           (fluorescence cytometry). The result is stored in
+#'           any feature has more than 10\% of cells with an exact value of
+#'           zero, the instrument is assumed to be \code{"cytof"} (mass
+#'           cytometry); otherwise \code{"flow"} (fluorescence cytometry).
+#'           The result is stored in
 #'           \code{obj$collection_instrument}, and an update timestamp is
 #'           stored in \code{obj$object_history}.
 #'   }
@@ -48,10 +49,14 @@
 #'   \code{Version}). If Python is not available, both \code{Python} and
 #'   \code{pip_list} are set to \code{"none"}.
 #'
-#'   \strong{Instrument detection:} Because CyTOF/mass-cytometry ion counts are
-#'   non-negative whilst flow-cytometry fluorescence values can be negative
-#'   (after compensation), the sign of \code{min(obj$data)} is used as a
-#'   heuristic: \eqn{\geq 0} → \code{"cytof"}, \eqn{< 0} → \code{"flow"}.
+#'   \strong{Instrument detection:} CyTOF/mass-cytometry data commonly contain
+#'   a large proportion of exact zeros (ion counts at or below the detection
+#'   limit are set to zero), whereas flow-cytometry data rarely produce
+#'   structural zeros after compensation.  For each feature (column) in
+#'   \code{obj$data} the fraction of cells with an exact value of
+#'   \code{0} is computed; if any feature exceeds 0.10 (i.e. >10\% zeros)
+#'   the instrument is classified as \code{"cytof"}, otherwise
+#'   \code{"flow"}.
 #'
 #' @return
 #'   The input \code{fcs_join_obj} list with the following fields added or
@@ -150,8 +155,10 @@ fcs_audit <- function(fcs_join_obj)
     fcs_join_obj[['metadata']] <- base_metadata[!duplicated(base_metadata$patient_ID), ]
   }
   
-  # Auto-detect instrument type based on data
-  detected_instrument <- if(min(fcs_join_obj$data, na.rm = TRUE) >= 0) "cytof" else "flow"
+  # Auto-detect instrument type: CyTOF data contain structural zeros
+  # (>10 % of cells == 0 in at least one feature) whereas flow data rarely do.
+  zero_fracs          <- colMeans(fcs_join_obj$data == 0, na.rm = TRUE)
+  detected_instrument <- if (any(zero_fracs > 0.10)) "cytof" else "flow"
   
   fcs_join_obj[['collection_instrument']] <- detected_instrument
   fcs_join_obj[['object_history']] <- paste0("updated: ",Sys.time())

@@ -48,9 +48,10 @@ If any validation check fails, metadata is rebuilt from scratch as a
 deduplicated \code{data.frame} with columns \code{patient_ID} and
 \code{run_date}.
 \item Auto-detects the collection instrument type: if
-\code{min(obj$data) >= 0} the instrument is assumed to be
-\code{"cytof"} (mass cytometry); otherwise \code{"flow"}
-(fluorescence cytometry). The result is stored in
+any feature has more than 10\\% of cells with an exact value of
+zero, the instrument is assumed to be \code{"cytof"} (mass
+cytometry); otherwise \code{"flow"} (fluorescence cytometry).
+The result is stored in
 \code{obj$collection_instrument}, and an update timestamp is
 stored in \code{obj$object_history}.
 }
@@ -73,10 +74,14 @@ fallback) and stored as a two-column \code{data.frame} (\code{Package},
 \code{Version}). If Python is not available, both \code{Python} and
 \code{pip_list} are set to \code{"none"}.
 
-\strong{Instrument detection:} Because CyTOF/mass-cytometry ion counts are
-non-negative whilst flow-cytometry fluorescence values can be negative
-(after compensation), the sign of \code{min(obj$data)} is used as a
-heuristic: \eqn{\geq 0} → \code{"cytof"}, \eqn{< 0} → \code{"flow"}.
+\strong{Instrument detection:} CyTOF/mass-cytometry data commonly contain
+a large proportion of exact zeros (ion counts at or below the detection
+limit are set to zero), whereas flow-cytometry data rarely produce
+structural zeros after compensation.  For each feature (column) in
+\code{obj$data} the fraction of cells with an exact value of
+\code{0} is computed; if any feature exceeds 0.10 (i.e. >10\\% zeros)
+the instrument is classified as \code{"cytof"}, otherwise
+\code{"flow"}.
 }
 \examples{
 \dontrun{
