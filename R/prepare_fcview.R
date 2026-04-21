@@ -50,6 +50,27 @@
 #'   prepared object as `cluster_mapping`. If `"cluster_mapping"` is absent
 #'   from `keep_fields`, no mapping element is transferred.
 #'
+#' @param scenith_compatible
+#'   Logical; defaults to `FALSE`. When `TRUE`, the function expects a
+#'   `puromycin` slot in `fcs_join_obj` containing a data frame with one row
+#'   per cell (in the same row order as `fcs_join_obj$data`), holding per-cell
+#'   puromycin intensity values and associated metadata. This data frame is
+#'   validated, optionally column-trimmed, and enriched with cluster assignments
+#'   **before** any downsampling occurs, ensuring the full-resolution puromycin
+#'   data (all cells) is preserved in the prepared object for use in the FCView
+#'   SCENITH tab.\cr\cr
+#'   **Required columns in `obj$puromycin`:**
+#'   \itemize{
+#'     \item `patient_ID` — sample identifier
+#'     \item a puromycin intensity column named one of: `puromycin`, `PURO`,
+#'       `PUROMYCIN`, `Puromycin`, or `Puro`
+#'     \item `inhibitor` — metabolic inhibitor condition label
+#'   }
+#'   **Optional columns:** any additional columns whose names also appear in
+#'   `obj$metadata` (e.g., `timepoint`, `sample_ID`) are retained; all others
+#'   are dropped. A `cluster` column is appended automatically from the
+#'   selected clustering algorithm before downsampling.
+#'
 #' @details
 #'   The function performs the following steps:
 #'   1. Validates required fields (`data`, `source`, `metadata`) are present.
@@ -129,6 +150,7 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
                                       clustering_algorithm = NULL,
                                       output_dir = NULL,
                                       file_name = NULL,
+                                      scenith_compatible = FALSE,
                                       keep_fields = c("data", "source", "metadata", "run_date",
                                                       "cluster", "umap", "tsne",
                                                       "cluster_heatmap", "cluster_mapping",
@@ -183,6 +205,93 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
 
   n_cells <- nrow(fcs_join_obj$data)
   n_cells_original <- n_cells
+
+  # ---- SCENITH: validate and enrich puromycin data BEFORE downsampling ----
+  if (scenith_compatible) {
+    if (!"puromycin" %in% names(fcs_join_obj)) {
+      stop("scenith_compatible = TRUE but fcs_join_obj$puromycin was not found. ",
+           "Ensure the object contains a 'puromycin' data.frame with one row per cell.")
+    }
+    puro_df <- fcs_join_obj$puromycin
+    if (!is.data.frame(puro_df)) {
+      stop("fcs_join_obj$puromycin must be a data.frame.")
+    }
+    if (nrow(puro_df) != n_cells) {
+      stop("nrow(fcs_join_obj$puromycin) (", nrow(puro_df), ") must equal ",
+           "nrow(fcs_join_obj$data) (", n_cells, "). ",
+           "Ensure the puromycin data.frame has one row per cell in the same order as the data matrix.")
+    }
+
+    # Required column: patient_ID
+    if (!"patient_ID" %in% colnames(puro_df)) {
+      stop("fcs_join_obj$puromycin must contain a 'patient_ID' column.")
+    }
+
+    # Required column: puromycin intensity (flexible naming)
+    puro_col_pattern <- "^(puromycin|PURO|PUROMYCIN|Puromycin|Puro|puro)$"
+    puro_col <- grep(puro_col_pattern, colnames(puro_df), value = TRUE)
+    if (length(puro_col) == 0) {
+      stop("fcs_join_obj$puromycin must contain a puromycin intensity column named one of: ",
+           "puromycin, PURO, PUROMYCIN, Puromycin, Puro, puro")
+    }
+    if (length(puro_col) > 1) {
+      warning("Multiple puromycin intensity columns found; using '", puro_col[1], "'.")
+      puro_col <- puro_col[1]
+    }
+
+    # Required column: inhibitor
+    if (!"inhibitor" %in% colnames(puro_df)) {
+      stop("fcs_join_obj$puromycin must contain an 'inhibitor' column.")
+    }
+
+    # Determine columns to keep: required only.
+    # Additional metadata (timepoint, group, etc.) can be remapped in-app by
+    # joining on patient_ID against obj$metadata — no need to duplicate here.
+    final_puro_cols <- c("patient_ID", puro_col, "inhibitor")
+
+    # Verify that every patient_ID in puromycin exists in metadata$patient_ID
+    # so the in-app join is always safe.
+    if (is.data.frame(fcs_join_obj$metadata) && "patient_ID" %in% colnames(fcs_join_obj$metadata)) {
+      puro_ids <- unique(puro_df$patient_ID)
+      meta_ids <- unique(fcs_join_obj$metadata$patient_ID)
+      missing_ids <- setdiff(puro_ids, meta_ids)
+      if (length(missing_ids) > 0) {
+        stop("The following patient_ID value(s) appear in fcs_join_obj$puromycin but not in ",
+             "fcs_join_obj$metadata: ", paste(missing_ids, collapse = ", "),
+             ". Ensure both data sources share the same patient_ID values.")
+      }
+    } else {
+      warning("fcs_join_obj$metadata does not contain a 'patient_ID' column; ",
+              "cannot verify puromycin / metadata patient_ID alignment.")
+    }
+
+    # Add cluster assignments from the full (pre-downsample) dataset
+    cluster_vec <- fcs_join_obj[[selected_algo]]$clusters
+    if (length(cluster_vec) != n_cells) {
+      stop("Length of cluster assignments (", length(cluster_vec), ") does not match ",
+           "nrow(fcs_join_obj$data) (", n_cells, ").")
+    }
+    puro_df$cluster <- cluster_vec
+    final_puro_cols <- c(final_puro_cols, "cluster")
+
+    fcs_join_obj$puromycin <- puro_df[, final_puro_cols, drop = FALSE]
+
+    # NA check — no NAs are permitted in any column
+    na_counts <- colSums(is.na(fcs_join_obj$puromycin))
+    cols_with_na <- names(na_counts[na_counts > 0])
+    if (length(cols_with_na) > 0) {
+      stop("fcs_join_obj$puromycin contains NA values in the following column(s): ",
+           paste(sprintf("'%s' (%d NA%s)", cols_with_na, na_counts[cols_with_na],
+                         ifelse(na_counts[cols_with_na] == 1, "", "s")), collapse = ", "),
+           ". Remove or impute NA values before preparing the FCView object.")
+    }
+
+    message("SCENITH: puromycin data validated and cluster assignments added (pre-downsample).")
+    message(paste0("  Puromycin rows (all cells, not downsampled): ", nrow(fcs_join_obj$puromycin)))
+    message(paste0("  Puromycin intensity column: '", puro_col, "'"))
+    message("  Columns: patient_ID, ", puro_col, ", inhibitor, cluster")
+  }
+  # ---- end SCENITH block ----
 
   if (length(fcs_join_obj$source) != n_cells) {
     stop("source length must equal nrow(data)")
@@ -266,6 +375,11 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
     if (heatmap_name %in% names(fcs_join_obj)) {
       fcs_join_obj[[heatmap_name]] <- NULL
     }
+  }
+
+  # Ensure puromycin is included when scenith_compatible = TRUE
+  if (scenith_compatible) {
+    keep_fields <- union(keep_fields, "puromycin")
   }
 
   prepared_obj <- list()
@@ -352,6 +466,10 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
     n_total_m <- nrow(prepared_obj$cluster_mapping)
     message(sprintf("  Cluster mapping: present (%d/%d clusters annotated, from '%s')",
                     n_mapped, n_total_m, paste0(selected_algo, "_mapping")))
+  }
+  if (scenith_compatible && "puromycin" %in% names(prepared_obj)) {
+    message(paste0("  SCENITH puromycin data: present (", nrow(prepared_obj$puromycin),
+                   " rows \u00d7 ", ncol(prepared_obj$puromycin), " columns, undownsampled)"))
   }
 
   # Save to file if output_dir and file_name are provided

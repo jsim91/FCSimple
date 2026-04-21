@@ -10,6 +10,7 @@ fcs_prepare_fcview_object(
   clustering_algorithm = NULL,
   output_dir = NULL,
   file_name = NULL,
+  scenith_compatible = FALSE,
   keep_fields = c("data", "source", "metadata", "run_date", "cluster", "umap", "tsne",
     "cluster_heatmap", "cluster_mapping", "metadata_sample")
 )
@@ -44,6 +45,26 @@ Must exist. If \code{NULL} (default), the object is not saved to disk.}
 \item{file_name}{Character or \code{NULL}; name of the .RData file (extension added automatically
 if not provided). If \code{NULL} (default), the object is not saved to disk.
 Both \code{output_dir} and \code{file_name} must be specified to enable saving.}
+
+\item{scenith_compatible}{Logical; defaults to \code{FALSE}. When \code{TRUE}, the function expects a
+\code{puromycin} slot in \code{fcs_join_obj} containing a data frame with one row
+per cell (in the same row order as \code{fcs_join_obj$data}), holding per-cell
+puromycin intensity values and associated metadata. This data frame is
+validated, optionally column-trimmed, and enriched with cluster assignments
+\strong{before} any downsampling occurs, ensuring the full-resolution puromycin
+data (all cells) is preserved in the prepared object for use in the FCView
+SCENITH tab.\cr\cr
+\strong{Required columns in \code{obj$puromycin}:}
+\itemize{
+\item \code{patient_ID} — sample identifier
+\item a puromycin intensity column named one of: \code{puromycin}, \code{PURO},
+\code{PUROMYCIN}, \code{Puromycin}, or \code{Puro}
+\item \code{inhibitor} — metabolic inhibitor condition label
+}
+\strong{Optional columns:} any additional columns whose names also appear in
+\code{obj$metadata} (e.g., \code{timepoint}, \code{sample_ID}) are retained; all others
+are dropped. A \code{cluster} column is appended automatically from the
+selected clustering algorithm before downsampling.}
 
 \item{keep_fields}{Character vector; names of top‐level fields to retain in the prepared
 object. Default includes essential FCView fields: \code{"data"}, \code{"source"},
