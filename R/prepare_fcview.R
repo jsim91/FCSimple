@@ -297,6 +297,16 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
     stop("source length must equal nrow(data)")
   }
 
+  # run_date must be either absent or cell-length — a scalar survives upload
+  # but is rejected by FCView's validateInput.
+  if ("run_date" %in% names(fcs_join_obj) &&
+      !is.null(fcs_join_obj$run_date) &&
+      length(fcs_join_obj$run_date) != n_cells) {
+    stop("run_date length (", length(fcs_join_obj$run_date), ") must equal nrow(data) (", n_cells, "). ",
+         "Ensure run_date is a per-cell vector, not a scalar or per-sample summary.")
+  }
+
+
   if (!is.null(downsample_size)) {
     if (!is.numeric(downsample_size) || downsample_size < 1 || downsample_size %% 1 != 0) {
       stop("downsample_size must be a positive integer")
