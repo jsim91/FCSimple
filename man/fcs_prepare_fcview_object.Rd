@@ -57,8 +57,8 @@ SCENITH tab.\cr\cr
 \strong{Required columns in \code{obj$scenith}:}
 \itemize{
 \item \code{patient_ID} — sample identifier
-\item a puromycin intensity column named one of: \code{puromycin}, \code{PURO},
-\code{PUROMYCIN}, \code{Puromycin}, or \code{Puro}
+\item a puromycin intensity column matching the regex
+\verb{^(puromycin|PURO|PUROMYCIN|Puromycin|Puro|puro)$}
 \item \code{inhibitor} — metabolic inhibitor condition label
 }
 \strong{Optional columns:} any additional columns whose names also appear in

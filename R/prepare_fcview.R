@@ -62,8 +62,8 @@
 #'   **Required columns in `obj$scenith`:**
 #'   \itemize{
 #'     \item `patient_ID` — sample identifier
-#'     \item a puromycin intensity column named one of: `puromycin`, `PURO`,
-#'       `PUROMYCIN`, `Puromycin`, or `Puro`
+#'     \item a puromycin intensity column matching the regex
+#'       `^(puromycin|PURO|PUROMYCIN|Puromycin|Puro|puro)$`
 #'     \item `inhibitor` — metabolic inhibitor condition label
 #'   }
 #'   **Optional columns:** any additional columns whose names also appear in
@@ -231,8 +231,8 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
     puro_col_pattern <- "^(puromycin|PURO|PUROMYCIN|Puromycin|Puro|puro)$"
     puro_col <- grep(puro_col_pattern, colnames(puro_df), value = TRUE)
     if (length(puro_col) == 0) {
-      stop("fcs_join_obj$scenith must contain a puromycin intensity column named one of: ",
-           "puromycin, PURO, PUROMYCIN, Puromycin, Puro, puro")
+      stop("fcs_join_obj$scenith must contain a puromycin intensity column matching ",
+           "the regex ^(puromycin|PURO|PUROMYCIN|Puromycin|Puro|puro)$")
     }
     if (length(puro_col) > 1) {
       warning("Multiple puromycin intensity columns found; using '", puro_col[1], "'.")
