@@ -143,7 +143,7 @@ fcs_plot_reduction_density <- function(fcs_join_obj, reduction = "UMAP", n_kde =
       if (n < 3) {
         pal <- suppressWarnings(RColorBrewer::brewer.pal(n, pal))
       } else if (n > n_max_palette){
-        rlang::warn(paste(n, "colours used, but", palette, "has only",
+        rlang::warn(paste(n, "colors used, but", palette, "has only",
                           n_max_palette, "- New palette created based on all colors of",
                           palette))
         n_palette <- RColorBrewer::brewer.pal(n_max_palette, palette)
@@ -163,14 +163,14 @@ fcs_plot_reduction_density <- function(fcs_join_obj, reduction = "UMAP", n_kde =
     }
   }
 
-  scale_fill_craftfermenter <- function(..., type = "seq", palette = 1, direction = -1, na.value = "white", guide = "coloursteps", aesthetics = "fill", stepnum = n_color_steps) {
+  scale_fill_craftfermenter <- function(..., type = "seq", palette = 1, direction = -1, na.value = "white", guide = "colorsteps", aesthetics = "fill", stepnum = n_color_steps) {
     type <- match.arg(type, c("seq", "div", "qual"))
     if (type == "qual") {
-      warn("Using a discrete colour palette in a binned scale.\n  Consider using type = \"seq\" or type = \"div\" instead")
+      warn("Using a discrete color palette in a binned scale.\n  Consider using type = \"seq\" or type = \"div\" instead")
     }
     fn <- craftbrewer_pal(type = "seq", palette = RColorBrewer_pal, direction = -1)
     colors <- fn(stepnum)
-    ggplot2::scale_fill_gradientn(colours = colors, na.value = na.value, guide = guide, ...)
+    ggplot2::scale_fill_gradientn(colors = colors, na.value = na.value, guide = guide, ...)
   }
 
   diff12.m.copy <- diff12.m

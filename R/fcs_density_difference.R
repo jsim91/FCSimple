@@ -126,7 +126,7 @@
 #'   ggforce::geom_mark_hull
 #'
 #' @importFrom MASS kde2d
-#' @importFrom ggplot2 ggplot aes geom_tile stat_contour scale_fill_gradient2 scale_colour_gradient2 coord_cartesian guides labs annotate theme_bw theme ggsave
+#' @importFrom ggplot2 ggplot aes geom_tile stat_contour scale_fill_gradient2 scale_color_gradient2 coord_cartesian guides labs annotate theme_bw theme ggsave
 #' @importFrom ggforce geom_mark_hull
 #' @importFrom dbscan dbscan
 #' @importFrom ggpubr ggarrange get_legend
@@ -229,12 +229,12 @@ fcs_plot_reduction_difference <- function(fcs_join_obj, reduction = c("UMAP","tS
 
   plt_dens_diff <- ggplot(diff12.m, aes(x = Var1, y = Var2, z=z, fill=z)) +
     geom_tile() +
-    # stat_contour(aes(colour = after_stat(!!str2lang("level"))), binwidth = contour_bin_width) +
-    stat_contour(aes(colour = after_stat(level)), binwidth = contour_bin_width) +
+    # stat_contour(aes(color = after_stat(!!str2lang("level"))), binwidth = contour_bin_width) +
+    stat_contour(aes(color = after_stat(level)), binwidth = contour_bin_width) +
     scale_fill_gradient2(low = color_list[[1]],mid = "white",
                          high = color_list[[2]], midpoint = 0, breaks = c(minlim,maxlim),
                          labels=c(names(compare_list)[1],names(compare_list)[2]),limits=c(minlim,maxlim)) +
-    scale_colour_gradient2(low = muted(color_list[[1]]), mid = "white", high = muted(color_list[[2]]), midpoint = 0) +
+    scale_color_gradient2(low = muted(color_list[[1]]), mid = "white", high = muted(color_list[[2]]), midpoint = 0) +
     coord_cartesian(xlim = dim1_range, ylim = dim2_range, expand = FALSE) +
     guides(color = "none", fill = guide_colorbar(ticks.color = NA)) +
     labs(x = reduction_names[1], y = reduction_names[2])

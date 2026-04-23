@@ -52,14 +52,14 @@
 #'
 #' @param scenith_compatible
 #'   Logical; defaults to `FALSE`. When `TRUE`, the function expects a
-#'   `puromycin` slot in `fcs_join_obj` containing a data frame with one row
+#'   `scenith` slot in `fcs_join_obj` containing a data frame with one row
 #'   per cell (in the same row order as `fcs_join_obj$data`), holding per-cell
 #'   puromycin intensity values and associated metadata. This data frame is
 #'   validated, optionally column-trimmed, and enriched with cluster assignments
-#'   **before** any downsampling occurs, ensuring the full-resolution puromycin
+#'   **before** any downsampling occurs, ensuring the full-resolution SCENITH
 #'   data (all cells) is preserved in the prepared object for use in the FCView
 #'   SCENITH tab.\cr\cr
-#'   **Required columns in `obj$puromycin`:**
+#'   **Required columns in `obj$scenith`:**
 #'   \itemize{
 #'     \item `patient_ID` — sample identifier
 #'     \item a puromycin intensity column named one of: `puromycin`, `PURO`,
@@ -206,32 +206,32 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
   n_cells <- nrow(fcs_join_obj$data)
   n_cells_original <- n_cells
 
-  # ---- SCENITH: validate and enrich puromycin data BEFORE downsampling ----
+  # ---- SCENITH: validate and enrich SCENITH data BEFORE downsampling ----
   if (scenith_compatible) {
-    if (!"puromycin" %in% names(fcs_join_obj)) {
-      stop("scenith_compatible = TRUE but fcs_join_obj$puromycin was not found. ",
-           "Ensure the object contains a 'puromycin' data.frame with one row per cell.")
+    if (!"scenith" %in% names(fcs_join_obj)) {
+      stop("scenith_compatible = TRUE but fcs_join_obj$scenith was not found. ",
+           "Ensure the object contains a 'scenith' data.frame with one row per cell.")
     }
-    puro_df <- fcs_join_obj$puromycin
+    puro_df <- fcs_join_obj$scenith
     if (!is.data.frame(puro_df)) {
-      stop("fcs_join_obj$puromycin must be a data.frame.")
+      stop("fcs_join_obj$scenith must be a data.frame.")
     }
     if (nrow(puro_df) != n_cells) {
-      stop("nrow(fcs_join_obj$puromycin) (", nrow(puro_df), ") must equal ",
+      stop("nrow(fcs_join_obj$scenith) (", nrow(puro_df), ") must equal ",
            "nrow(fcs_join_obj$data) (", n_cells, "). ",
-           "Ensure the puromycin data.frame has one row per cell in the same order as the data matrix.")
+           "Ensure the scenith data.frame has one row per cell in the same order as the data matrix.")
     }
 
     # Required column: patient_ID
     if (!"patient_ID" %in% colnames(puro_df)) {
-      stop("fcs_join_obj$puromycin must contain a 'patient_ID' column.")
+      stop("fcs_join_obj$scenith must contain a 'patient_ID' column.")
     }
 
     # Required column: puromycin intensity (flexible naming)
     puro_col_pattern <- "^(puromycin|PURO|PUROMYCIN|Puromycin|Puro|puro)$"
     puro_col <- grep(puro_col_pattern, colnames(puro_df), value = TRUE)
     if (length(puro_col) == 0) {
-      stop("fcs_join_obj$puromycin must contain a puromycin intensity column named one of: ",
+      stop("fcs_join_obj$scenith must contain a puromycin intensity column named one of: ",
            "puromycin, PURO, PUROMYCIN, Puromycin, Puro, puro")
     }
     if (length(puro_col) > 1) {
@@ -241,7 +241,7 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
 
     # Required column: inhibitor
     if (!"inhibitor" %in% colnames(puro_df)) {
-      stop("fcs_join_obj$puromycin must contain an 'inhibitor' column.")
+      stop("fcs_join_obj$scenith must contain an 'inhibitor' column.")
     }
 
     # Determine columns to keep: required only.
@@ -249,20 +249,20 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
     # joining on patient_ID against obj$metadata — no need to duplicate here.
     final_puro_cols <- c("patient_ID", puro_col, "inhibitor")
 
-    # Verify that every patient_ID in puromycin exists in metadata$patient_ID
+    # Verify that every patient_ID in scenith exists in metadata$patient_ID
     # so the in-app join is always safe.
     if (is.data.frame(fcs_join_obj$metadata) && "patient_ID" %in% colnames(fcs_join_obj$metadata)) {
       puro_ids <- unique(puro_df$patient_ID)
       meta_ids <- unique(fcs_join_obj$metadata$patient_ID)
       missing_ids <- setdiff(puro_ids, meta_ids)
       if (length(missing_ids) > 0) {
-        stop("The following patient_ID value(s) appear in fcs_join_obj$puromycin but not in ",
+        stop("The following patient_ID value(s) appear in fcs_join_obj$scenith but not in ",
              "fcs_join_obj$metadata: ", paste(missing_ids, collapse = ", "),
              ". Ensure both data sources share the same patient_ID values.")
       }
     } else {
       warning("fcs_join_obj$metadata does not contain a 'patient_ID' column; ",
-              "cannot verify puromycin / metadata patient_ID alignment.")
+              "cannot verify scenith / metadata patient_ID alignment.")
     }
 
     # Add cluster assignments from the full (pre-downsample) dataset
@@ -274,20 +274,20 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
     puro_df$cluster <- cluster_vec
     final_puro_cols <- c(final_puro_cols, "cluster")
 
-    fcs_join_obj$puromycin <- puro_df[, final_puro_cols, drop = FALSE]
+    fcs_join_obj$scenith <- puro_df[, final_puro_cols, drop = FALSE]
 
     # NA check — no NAs are permitted in any column
-    na_counts <- colSums(is.na(fcs_join_obj$puromycin))
+    na_counts <- colSums(is.na(fcs_join_obj$scenith))
     cols_with_na <- names(na_counts[na_counts > 0])
     if (length(cols_with_na) > 0) {
-      stop("fcs_join_obj$puromycin contains NA values in the following column(s): ",
+      stop("fcs_join_obj$scenith contains NA values in the following column(s): ",
            paste(sprintf("'%s' (%d NA%s)", cols_with_na, na_counts[cols_with_na],
                          ifelse(na_counts[cols_with_na] == 1, "", "s")), collapse = ", "),
            ". Remove or impute NA values before preparing the FCView object.")
     }
 
-    message("SCENITH: puromycin data validated and cluster assignments added (pre-downsample).")
-    message(paste0("  Puromycin rows (all cells, not downsampled): ", nrow(fcs_join_obj$puromycin)))
+    message("SCENITH: data validated and cluster assignments added (pre-downsample).")
+    message(paste0("  SCENITH rows (all cells, not downsampled): ", nrow(fcs_join_obj$scenith)))
     message(paste0("  Puromycin intensity column: '", puro_col, "'"))
     message("  Columns: patient_ID, ", puro_col, ", inhibitor, cluster")
   }
@@ -387,9 +387,9 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
     }
   }
 
-  # Ensure puromycin is included when scenith_compatible = TRUE
+  # Ensure scenith is included when scenith_compatible = TRUE
   if (scenith_compatible) {
-    keep_fields <- union(keep_fields, "puromycin")
+    keep_fields <- union(keep_fields, "scenith")
   }
 
   prepared_obj <- list()
@@ -477,9 +477,9 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
     message(sprintf("  Cluster mapping: present (%d/%d clusters annotated, from '%s')",
                     n_mapped, n_total_m, paste0(selected_algo, "_mapping")))
   }
-  if (scenith_compatible && "puromycin" %in% names(prepared_obj)) {
-    message(paste0("  SCENITH puromycin data: present (", nrow(prepared_obj$puromycin),
-                   " rows \u00d7 ", ncol(prepared_obj$puromycin), " columns, undownsampled)"))
+  if (scenith_compatible && "scenith" %in% names(prepared_obj)) {
+    message(paste0("  SCENITH data: present (", nrow(prepared_obj$scenith),
+                   " rows \u00d7 ", ncol(prepared_obj$scenith), " columns, undownsampled)"))
   }
 
   # Save to file if output_dir and file_name are provided

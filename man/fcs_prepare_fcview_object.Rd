@@ -47,14 +47,14 @@ if not provided). If \code{NULL} (default), the object is not saved to disk.
 Both \code{output_dir} and \code{file_name} must be specified to enable saving.}
 
 \item{scenith_compatible}{Logical; defaults to \code{FALSE}. When \code{TRUE}, the function expects a
-\code{puromycin} slot in \code{fcs_join_obj} containing a data frame with one row
+\code{scenith} slot in \code{fcs_join_obj} containing a data frame with one row
 per cell (in the same row order as \code{fcs_join_obj$data}), holding per-cell
 puromycin intensity values and associated metadata. This data frame is
 validated, optionally column-trimmed, and enriched with cluster assignments
-\strong{before} any downsampling occurs, ensuring the full-resolution puromycin
+\strong{before} any downsampling occurs, ensuring the full-resolution SCENITH
 data (all cells) is preserved in the prepared object for use in the FCView
 SCENITH tab.\cr\cr
-\strong{Required columns in \code{obj$puromycin}:}
+\strong{Required columns in \code{obj$scenith}:}
 \itemize{
 \item \code{patient_ID} — sample identifier
 \item a puromycin intensity column named one of: \code{puromycin}, \code{PURO},
