@@ -13,6 +13,10 @@ fcs_prepare_fcview_object(
   scenith_compatible = FALSE,
   precalculate_scenith_centers = FALSE,
   scenith_sample_col = "patient_ID",
+  scenith_verbose = TRUE,
+  precalculate_mfi = TRUE,
+  mfi_markers = NULL,
+  mfi_stats = c("mean", "median"),
   keep_fields = c("data", "source", "metadata", "run_date", "cluster", "umap", "tsne",
     "cluster_heatmap", "cluster_mapping", "metadata_sample")
 )
@@ -80,6 +84,27 @@ on-the-fly as before. This parameter is ignored if \code{scenith_compatible = FA
 
 \item{scenith_sample_col}{Character; the sample unit column name for SCENITH precalculation.
 Defaults to "patient_ID".}
+
+\item{scenith_verbose}{Logical; defaults to \code{TRUE}. When \code{TRUE}, the function emits progress
+messages while precalculating SCENITH centers, including inhibitor, sample,
+and cluster-level progress.}
+
+\item{precalculate_mfi}{Logical; defaults to \code{TRUE}. When \code{TRUE}, the function pre-computes
+per-sample, per-cluster marker intensity center matrices for each marker
+in the expression data. Computations run on the full (undownsampled)
+dataset, mirroring how \code{precalculate_scenith_centers} handles SCENITH
+data. The result is stored as \code{obj$mfi}, a nested list with structure
+\code{mfi[[statistic]][[marker]]}, where each element is a samples × clusters
+numeric matrix. Supported statistics are controlled by \code{mfi_stats}.}
+
+\item{mfi_markers}{Character vector or \code{NULL}; which expression matrix columns (markers) to
+precompute MFI matrices for. If \code{NULL} (default), all columns in
+\code{fcs_join_obj$data} are used. Invalid marker names trigger an error.}
+
+\item{mfi_stats}{Character vector; which center statistics to precompute. Must be a subset
+of \code{c("mean", "median")}. Defaults to both. Geometric mean is intentionally
+excluded — it cannot be reliably re‑aggregated from per‑cluster values when
+annotations combine multiple clusters into celltypes.}
 
 \item{keep_fields}{Character vector; names of top‐level fields to retain in the prepared
 object. Default includes essential FCView fields: \code{"data"}, \code{"source"},
