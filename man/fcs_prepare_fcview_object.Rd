@@ -11,6 +11,8 @@ fcs_prepare_fcview_object(
   output_dir = NULL,
   file_name = NULL,
   scenith_compatible = FALSE,
+  precalculate_scenith_centers = FALSE,
+  scenith_sample_col = "patient_ID",
   keep_fields = c("data", "source", "metadata", "run_date", "cluster", "umap", "tsne",
     "cluster_heatmap", "cluster_mapping", "metadata_sample")
 )
@@ -65,6 +67,19 @@ SCENITH tab.\cr\cr
 \code{obj$metadata} (e.g., \code{timepoint}, \code{sample_ID}) are retained; all others
 are dropped. A \code{cluster} column is appended automatically from the
 selected clustering algorithm before downsampling.}
+
+\item{precalculate_scenith_centers}{Logical; defaults to \code{FALSE}. When \code{TRUE} and \code{scenith_compatible = TRUE},
+the function pre-computes all four center estimators (mean, median, geometric mean,
+Hodges-Lehmann) for each inhibitor and stores them in a \code{scenith_centers} slot
+as a nested list: \code{scenith_centers[[inhibitor]][[estimator]]} = sample × cluster matrix.
+This front-loads computational cost at preparation time (typically 5-20 minutes per file,
+depending on cell count) but dramatically speeds up FCView app interactions on low-spec
+hardware, since the app skips center calculations and performs only higher-level
+operations (ratio, subtraction, etc.). If \code{FALSE} (default), the app computes centers
+on-the-fly as before. This parameter is ignored if \code{scenith_compatible = FALSE}.}
+
+\item{scenith_sample_col}{Character; the sample unit column name for SCENITH precalculation.
+Defaults to "patient_ID".}
 
 \item{keep_fields}{Character vector; names of top‐level fields to retain in the prepared
 object. Default includes essential FCView fields: \code{"data"}, \code{"source"},

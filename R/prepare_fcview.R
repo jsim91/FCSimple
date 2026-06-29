@@ -71,6 +71,46 @@
 #'   are dropped. A `cluster` column is appended automatically from the
 #'   selected clustering algorithm before downsampling.
 #'
+#' @param precalculate_scenith_centers
+#'   Logical; defaults to `FALSE`. When `TRUE` and `scenith_compatible = TRUE`,
+#'   the function pre-computes all four center estimators (mean, median, geometric mean,
+#'   Hodges-Lehmann) for each inhibitor and stores them in a `scenith_centers` slot
+#'   as a nested list: `scenith_centers[[inhibitor]][[estimator]]` = sample × cluster matrix.
+#'   This front-loads computational cost at preparation time (typically 5-20 minutes per file,
+#'   depending on cell count) but dramatically speeds up FCView app interactions on low-spec
+#'   hardware, since the app skips center calculations and performs only higher-level
+#'   operations (ratio, subtraction, etc.). If `FALSE` (default), the app computes centers
+#'   on-the-fly as before. This parameter is ignored if `scenith_compatible = FALSE`.
+#'
+#' @param scenith_verbose
+#'   Logical; defaults to `TRUE`. When `TRUE`, the function emits progress
+#'   messages while precalculating SCENITH centers, including inhibitor, sample,
+#'   and cluster-level progress.
+#'
+#' @param scenith_sample_col
+#'   Character; the sample unit column name for SCENITH precalculation.
+#'   Defaults to "patient_ID".
+#'
+#' @param precalculate_mfi
+#'   Logical; defaults to `TRUE`. When `TRUE`, the function pre-computes
+#'   per-sample, per-cluster marker intensity center matrices for each marker
+#'   in the expression data. Computations run on the full (undownsampled)
+#'   dataset, mirroring how `precalculate_scenith_centers` handles SCENITH
+#'   data. The result is stored as `obj$mfi`, a nested list with structure
+#'   `mfi[[statistic]][[marker]]`, where each element is a samples × clusters
+#'   numeric matrix. Supported statistics are controlled by `mfi_stats`.
+#'
+#' @param mfi_markers
+#'   Character vector or `NULL`; which expression matrix columns (markers) to
+#'   precompute MFI matrices for. If `NULL` (default), all columns in
+#'   `fcs_join_obj$data` are used. Invalid marker names trigger an error.
+#'
+#' @param mfi_stats
+#'   Character vector; which center statistics to precompute. Must be a subset
+#'   of `c("mean", "median")`. Defaults to both. Geometric mean is intentionally
+#'   excluded — it cannot be reliably re‑aggregated from per‑cluster values when
+#'   annotations combine multiple clusters into celltypes.
+#'
 #' @details
 #'   The function performs the following steps:
 #'   1. Validates required fields (`data`, `source`, `metadata`) are present.
@@ -151,6 +191,12 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
                                       output_dir = NULL,
                                       file_name = NULL,
                                       scenith_compatible = FALSE,
+                                      precalculate_scenith_centers = FALSE,
+                                      scenith_sample_col = "patient_ID",
+                                      scenith_verbose = TRUE,
+                                      precalculate_mfi = TRUE,
+                                      mfi_markers = NULL,
+                                      mfi_stats = c("mean", "median"),
                                       keep_fields = c("data", "source", "metadata", "run_date",
                                                       "cluster", "umap", "tsne",
                                                       "cluster_heatmap", "cluster_mapping",
@@ -222,9 +268,9 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
            "Ensure the scenith data.frame has one row per cell in the same order as the data matrix.")
     }
 
-    # Required column: patient_ID
-    if (!"patient_ID" %in% colnames(puro_df)) {
-      stop("fcs_join_obj$scenith must contain a 'patient_ID' column.")
+    # Validate `scenith_sample_col`
+    if (!scenith_sample_col %in% colnames(puro_df)) {
+      stop("The specified scenith_sample_col ('", scenith_sample_col, "') does not exist in the scenith data frame.")
     }
 
     # Required column: puromycin intensity (flexible naming)
@@ -245,24 +291,21 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
     }
 
     # Determine columns to keep: required only.
-    # Additional metadata (timepoint, group, etc.) can be remapped in-app by
-    # joining on patient_ID against obj$metadata — no need to duplicate here.
-    final_puro_cols <- c("patient_ID", puro_col, "inhibitor")
+    final_puro_cols <- c(scenith_sample_col, puro_col, "inhibitor")
 
-    # Verify that every patient_ID in scenith exists in metadata$patient_ID
-    # so the in-app join is always safe.
-    if (is.data.frame(fcs_join_obj$metadata) && "patient_ID" %in% colnames(fcs_join_obj$metadata)) {
-      puro_ids <- unique(puro_df$patient_ID)
-      meta_ids <- unique(fcs_join_obj$metadata$patient_ID)
+    # Verify that every sample unit in scenith exists in metadata
+    if (is.data.frame(fcs_join_obj$metadata) && scenith_sample_col %in% colnames(fcs_join_obj$metadata)) {
+      puro_ids <- unique(puro_df[[scenith_sample_col]])
+      meta_ids <- unique(fcs_join_obj$metadata[[scenith_sample_col]])
       missing_ids <- setdiff(puro_ids, meta_ids)
       if (length(missing_ids) > 0) {
-        stop("The following patient_ID value(s) appear in fcs_join_obj$scenith but not in ",
+        stop("The following ", scenith_sample_col, " value(s) appear in fcs_join_obj$scenith but not in ",
              "fcs_join_obj$metadata: ", paste(missing_ids, collapse = ", "),
-             ". Ensure both data sources share the same patient_ID values.")
+             ". Ensure both data sources share the same ", scenith_sample_col, " values.")
       }
     } else {
-      warning("fcs_join_obj$metadata does not contain a 'patient_ID' column; ",
-              "cannot verify scenith / metadata patient_ID alignment.")
+      warning("fcs_join_obj$metadata does not contain the specified scenith_sample_col ('", scenith_sample_col, "'); ",
+              "cannot verify scenith / metadata alignment.")
     }
 
     # Add cluster assignments from the full (pre-downsample) dataset
@@ -289,9 +332,281 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
     message("SCENITH: data validated and cluster assignments added (pre-downsample).")
     message(paste0("  SCENITH rows (all cells, not downsampled): ", nrow(fcs_join_obj$scenith)))
     message(paste0("  Puromycin intensity column: '", puro_col, "'"))
-    message("  Columns: patient_ID, ", puro_col, ", inhibitor, cluster")
+    message("  Columns: ", scenith_sample_col, ", ", puro_col, ", inhibitor, cluster")
+
+    # ---- Precalculate SCENITH centers if requested ----
+    if (precalculate_scenith_centers) {
+      message("[fcs_prepare_fcview_object] Precalculating SCENITH centers...")
+      if (isTRUE(scenith_verbose)) {
+        message("[fcs_prepare_fcview_object] SCENITH precalc sample column: '",
+                scenith_sample_col, "'")
+      }
+
+      # Helper function to compute all four center estimators for an inhibitor
+      compute_inhibitor_centers <- function(scenith_df, puro_col_name) {
+        # scenith_df: filtered data.frame for one inhibitor, with columns:
+        #   scenith_sample_col, {puro_col_name}, cluster
+        # Returns: list(mean, median, geomean, hl), each a sample x cluster matrix
+
+        samples <- unique(scenith_df[[scenith_sample_col]])
+        clusters <- unique(scenith_df$cluster)
+
+        if (isTRUE(scenith_verbose)) {
+          message("[fcs_prepare_fcview_object]   ", length(samples), " sample unit(s), ",
+                  length(clusters), " cluster(s)")
+        }
+
+        # Initialize result matrices
+        centers <- list(
+          mean    = matrix(NA, nrow = length(samples), ncol = length(clusters),
+                           dimnames = list(samples, as.character(clusters))),
+          median  = matrix(NA, nrow = length(samples), ncol = length(clusters),
+                           dimnames = list(samples, as.character(clusters))),
+          geomean = matrix(NA, nrow = length(samples), ncol = length(clusters),
+                           dimnames = list(samples, as.character(clusters))),
+          hl      = matrix(NA, nrow = length(samples), ncol = length(clusters),
+                           dimnames = list(samples, as.character(clusters)))
+        )
+
+        for (sample in samples) {
+          sample_df <- scenith_df[scenith_df[[scenith_sample_col]] == sample, ]
+
+          if (isTRUE(scenith_verbose)) {
+            message("[fcs_prepare_fcview_object]   sample '", sample, "' (", nrow(sample_df),
+                    " row(s))")
+          }
+
+          for (cluster_id in clusters) {
+            entity_vals <- sample_df[[puro_col_name]][sample_df$cluster == cluster_id]
+
+            if (length(entity_vals) > 0) {
+              if (isTRUE(scenith_verbose)) {
+                message("[fcs_prepare_fcview_object]     cluster '", cluster_id, "': ",
+                        length(entity_vals), " cell(s)")
+              }
+
+              # Mean
+              centers$mean[sample, as.character(cluster_id)] <- mean(entity_vals, na.rm = TRUE)
+
+              # Median
+              centers$median[sample, as.character(cluster_id)] <- median(entity_vals, na.rm = TRUE)
+
+              # Geometric mean
+              valid_vals <- entity_vals[entity_vals > 0]
+              if (length(valid_vals) > 0) {
+                centers$geomean[sample, as.character(cluster_id)] <- exp(mean(log(valid_vals)))
+              }
+
+              # Hodges-Lehmann (approximate via Wilcoxon)
+              if (length(entity_vals) >= 2) {
+                tryCatch({
+                  # Subsample to 5000 cells for speed (same as app.R logic)
+                  HL_N_MAX <- 5000L
+                  entity_vals_hl <- if (length(entity_vals) > HL_N_MAX) {
+                    set.seed(123); sample(entity_vals, HL_N_MAX)
+                  } else {
+                    entity_vals
+                  }
+                  centers$hl[sample, as.character(cluster_id)] <-
+                    as.numeric(wilcox.test(entity_vals_hl, conf.int = TRUE, exact = FALSE)$estimate)
+                }, error = function(e) {
+                  # If Wilcoxon fails, leave as NA
+                  NA
+                })
+              }
+            }
+          }
+        }
+
+        centers
+      }
+
+      # Compute centers for all inhibitors
+      scenith_centers <- list()
+      inhibitors <- unique(fcs_join_obj$scenith$inhibitor)
+
+      if (isTRUE(scenith_verbose)) {
+        message("[fcs_prepare_fcview_object] Inhibitors to process: ",
+                paste(inhibitors, collapse = ", "))
+      }
+
+      for (inh_idx in seq_along(inhibitors)) {
+        inh <- inhibitors[[inh_idx]]
+        if (isTRUE(scenith_verbose)) {
+          message("[fcs_prepare_fcview_object] Processing inhibitor ", inh_idx, "/",
+                  length(inhibitors), ": '", inh, "'")
+        }
+        inh_df <- fcs_join_obj$scenith[fcs_join_obj$scenith$inhibitor == inh, ]
+        scenith_centers[[inh]] <- compute_inhibitor_centers(inh_df, puro_col)
+        if (isTRUE(scenith_verbose)) {
+          message("[fcs_prepare_fcview_object] Finished inhibitor '", inh, "'")
+        }
+      }
+
+      # Store in the object (will be included if keep_fields contains "scenith_centers")
+      fcs_join_obj$scenith_centers <- scenith_centers
+      fcs_join_obj$scenith_centers_sample_col <- scenith_sample_col
+      keep_fields <- union(keep_fields, "scenith_centers")
+      keep_fields <- union(keep_fields, "scenith_centers_sample_col")
+
+      message("[fcs_prepare_fcview_object] SCENITH centers precalculation complete.")
+    }
   }
   # ---- end SCENITH block ----
+
+  # ---- MFI: precalculate per-marker sample × cluster center matrices BEFORE downsampling ----
+  if (precalculate_mfi) {
+    mfi_stats <- match.arg(mfi_stats, choices = c("mean", "median"), several.ok = TRUE)
+    if (length(mfi_stats) == 0) {
+      stop("mfi_stats must contain at least one of 'mean' or 'median'")
+    }
+
+    # Determine which markers to compute (from data slot)
+    if (is.null(mfi_markers)) {
+      mfi_markers <- colnames(fcs_join_obj$data)
+    } else {
+      missing_markers <- setdiff(mfi_markers, colnames(fcs_join_obj$data))
+      if (length(missing_markers) > 0) {
+        stop("The following mfi_markers are not columns in fcs_join_obj$data: ",
+             paste(missing_markers, collapse = ", "))
+      }
+    }
+
+    # Get source and cluster vectors (full, pre-downsample)
+    source_vec <- fcs_join_obj$source
+    cluster_vec <- fcs_join_obj[[selected_algo]]$clusters
+    samples <- unique(source_vec)
+    clusters <- sort(unique(cluster_vec))
+    n_samples <- length(samples)
+    n_clusters <- length(clusters)
+
+    # ---- Helper: compute MFI for a given expression matrix and a set of markers ----
+    compute_mfi_layer <- function(expr_mat, markers, source_vec, cluster_vec,
+                                  mfi_stats, samples, clusters, n_samples, n_clusters,
+                                  layer_label) {
+      message(sprintf("[fcs_prepare_fcview_object] Computing MFI from %s data...", layer_label))
+      message("  Markers: ", length(markers))
+      message("  Statistics: ", paste(mfi_stats, collapse = ", "))
+
+      mfi_layer <- list()
+      for (stat in mfi_stats) {
+        mfi_layer[[stat]] <- list()
+      }
+
+      for (marker in markers) {
+        marker_vals <- expr_mat[, marker]
+
+        df <- data.frame(
+          sample  = source_vec,
+          cluster = as.character(cluster_vec),
+          value   = as.numeric(marker_vals),
+          stringsAsFactors = FALSE
+        )
+
+        # ---- Mean ----
+        if ("mean" %in% mfi_stats) {
+          sum_mat <- xtabs(value ~ sample + cluster, data = df)
+          cnt_mat <- xtabs(~ sample + cluster, data = df)
+          cnt_mat[cnt_mat == 0] <- NA
+          mean_mat <- sum_mat / cnt_mat
+          storage.mode(mean_mat) <- "double"
+
+          mean_mat_full <- matrix(NA_real_, nrow = n_samples, ncol = n_clusters,
+                                  dimnames = list(samples, as.character(clusters)))
+          for (s in rownames(mean_mat)) {
+            for (c in colnames(mean_mat)) {
+              if (!is.na(mean_mat[s, c])) {
+                mean_mat_full[s, c] <- mean_mat[s, c]
+              }
+            }
+          }
+          mfi_layer[["mean"]][[marker]] <- mean_mat_full
+        }
+
+        # ---- Median ----
+        if ("median" %in% mfi_stats) {
+          med_agg <- aggregate(value ~ sample + cluster, data = df, FUN = median, na.rm = TRUE)
+          median_mat_full <- matrix(NA_real_, nrow = n_samples, ncol = n_clusters,
+                                    dimnames = list(samples, as.character(clusters)))
+          for (r in seq_len(nrow(med_agg))) {
+            s <- as.character(med_agg$sample[r])
+            c <- as.character(med_agg$cluster[r])
+            median_mat_full[s, c] <- med_agg$value[r]
+          }
+          mfi_layer[["median"]][[marker]] <- median_mat_full
+        }
+      }
+
+      message(sprintf("[fcs_prepare_fcview_object] %s data MFI complete: %d marker(s) × %d statistic(s)",
+                      layer_label, length(markers), length(mfi_stats)))
+      mfi_layer
+    }
+
+    # ---- Compute MFI from transformed (data) slot ----
+    mfi_list <- list()
+    message("[fcs_prepare_fcview_object] Precalculating MFI matrices...")
+    message("  Computation on full (undownsampled) dataset: ", n_cells, " cells")
+
+    mfi_list[["data"]] <- compute_mfi_layer(
+      expr_mat    = fcs_join_obj$data,
+      markers     = mfi_markers,
+      source_vec  = source_vec,
+      cluster_vec = cluster_vec,
+      mfi_stats   = mfi_stats,
+      samples     = samples,
+      clusters    = clusters,
+      n_samples   = n_samples,
+      n_clusters  = n_clusters,
+      layer_label = "transformed"
+    )
+
+    # ---- Conditionally compute MFI from raw slot ----
+    has_raw <- !is.null(fcs_join_obj$raw) &&
+               !identical(fcs_join_obj$raw, NA) &&
+               is.matrix(fcs_join_obj$raw)
+
+    if (has_raw) {
+      # Determine if raw is actually different from data (transformations were applied)
+      raw_differs <- !identical(fcs_join_obj$raw, fcs_join_obj$data)
+
+      if (raw_differs) {
+        # Use intersection of markers present in both raw and data
+        raw_markers <- intersect(mfi_markers, colnames(fcs_join_obj$raw))
+        if (length(raw_markers) > 0) {
+          message("[fcs_prepare_fcview_object] Raw data slot detected and differs from data. ",
+                  "Computing MFI for ", length(raw_markers), " shared marker(s).")
+          mfi_list[["raw"]] <- compute_mfi_layer(
+            expr_mat    = fcs_join_obj$raw,
+            markers     = raw_markers,
+            source_vec  = source_vec,
+            cluster_vec = cluster_vec,
+            mfi_stats   = mfi_stats,
+            samples     = samples,
+            clusters    = clusters,
+            n_samples   = n_samples,
+            n_clusters  = n_clusters,
+            layer_label = "untransformed (raw)"
+          )
+        } else {
+          message("[fcs_prepare_fcview_object] Raw data slot present but no shared markers with data. ",
+                  "Skipping raw MFI computation.")
+        }
+      }
+    }
+
+    # Store in the object
+    fcs_join_obj$mfi <- mfi_list
+    keep_fields <- union(keep_fields, "mfi")
+
+    message("[fcs_prepare_fcview_object] MFI precalculation complete.")
+    message("  Sources: ", paste(names(mfi_list), collapse = ", "))
+    for (src_name in names(mfi_list)) {
+      n_markers <- length(mfi_list[[src_name]][["mean"]])
+      message(sprintf("  [%s] %d marker(s) × %d statistic(s), %d samples × %d clusters",
+                      src_name, n_markers, length(mfi_stats), n_samples, n_clusters))
+    }
+  }
+  # ---- end MFI block ----
 
   if (length(fcs_join_obj$source) != n_cells) {
     stop("source length must equal nrow(data)")
@@ -480,6 +795,24 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
   if (scenith_compatible && "scenith" %in% names(prepared_obj)) {
     message(paste0("  SCENITH data: present (", nrow(prepared_obj$scenith),
                    " rows \u00d7 ", ncol(prepared_obj$scenith), " columns, undownsampled)"))
+    if ("scenith_centers" %in% names(prepared_obj)) {
+      n_inh <- length(prepared_obj$scenith_centers)
+      message(paste0("  SCENITH precalc centers: present (", n_inh, " inhibitor(s), 4 estimators each)"))
+      if ("scenith_centers_sample_col" %in% names(prepared_obj)) {
+        message(paste0("  SCENITH precalc sample column: '", prepared_obj$scenith_centers_sample_col, "'"))
+      }
+    }
+  }
+  if ("mfi" %in% names(prepared_obj)) {
+    sources <- names(prepared_obj$mfi)
+    for (src_name in sources) {
+      n_markers <- length(prepared_obj$mfi[[src_name]][["mean"]])
+      n_stats <- length(prepared_obj$mfi[[src_name]])
+      stat_names <- paste(names(prepared_obj$mfi[[src_name]]), collapse = ", ")
+      source_label <- if (src_name == "data") "Transformed" else if (src_name == "raw") "Untransformed" else src_name
+      message(paste0("  MFI [", source_label, "]: present (", n_markers, " marker(s), ",
+                     n_stats, " statistic(s): ", stat_names, ")"))
+    }
   }
 
   # Save to file if output_dir and file_name are provided
