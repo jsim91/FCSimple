@@ -95,11 +95,11 @@ fcs_pca <- function(fcs_join_obj, pca_method = c("prcomp"), variance_threshold =
   if('batch_correction' %in% names(fcs_join_obj)) {
     cordat <- TRUE
     obj_data <- as.matrix(fcs_join_obj[['batch_correction']][['data']])
-    print("batch_correction found in fcs_join_obj list. Using fcs_join_obj[['batch_correction']][['data']] for clustering.")
+    print("batch_correction found in fcs_join_obj list. Using fcs_join_obj[['batch_correction']][['data']] for PCA.")
   } else {
     cordat <- FALSE
     obj_data <- as.matrix(fcs_join_obj[["data"]])
-    print("batch_correction not found in fcs_join_obj. Using fcs_join_obj[['data']] for clustering.")
+    print("batch_correction not found in fcs_join_obj. Using fcs_join_obj[['data']] for PCA")
   }
   if(pca_method[1]=="prcomp") {
     set.seed(123) # not really needed

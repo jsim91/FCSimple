@@ -8,13 +8,15 @@ fcs_subset(
   fcs_join_obj,
   subset_by = c("cluster", "source"),
   subset_cluster_algorithm = NA,
-  subset_values
+  subset_values,
+  keep_slots = NULL
 )
 }
 \arguments{
 \item{fcs_join_obj}{A list returned by FCSimple::fcs_join(), optionally processed by
-FCSimple::fcs_cluster() or other functions. Should include at least
-\code{data} (numeric matrix) and \code{source} (vector of sample identifiers).}
+FCSimple::fcs_cluster(), FCSimple::fcs_reduce_dimensions(), or other
+functions. Should include at least \code{data} (numeric matrix) and
+\code{source} (vector of sample identifiers).}
 
 \item{subset_by}{Character; one of \code{"source"} or \code{"cluster"}. Determines whether to subset
 by sample names (\code{source}) or by cluster membership (\code{cluster}).
@@ -27,6 +29,23 @@ element in \code{fcs_join_obj} (e.g. \code{"leiden"}, \code{"flowsom"}). Ignored
 \item{subset_values}{Vector; the values to retain. If \code{subset_by = "source"}, a character
 vector of sample names. If \code{subset_by = "cluster"}, a numeric or character
 vector of cluster IDs.}
+
+\item{keep_slots}{Character vector or \code{NULL} (default). Names of additional slots in
+\code{fcs_join_obj} to subset and retain in the output. Supported slot types:
+\itemize{
+\item Clustering results: \code{"leiden"}, \code{"louvain"}, \code{"flowsom"},
+\code{"phenograph"} — subsets the \verb{$clusters} vector.
+\item Dimension reduction results: \code{"umap"}, \code{"tsne"} — subsets the
+\verb{$coordinates} matrix.
+\item Simple per-cell vectors: any top-level element that is an atomic
+vector or factor of length \code{nrow(fcs_join_obj$data)}.
+\item Named list slots containing \verb{$clusters} or \verb{$coordinates}
+(detected automatically).
+}
+Slots \code{"pca"} and \code{"batch_correction"} are intentionally excluded and
+will produce a warning if requested (these should be re-computed on the
+subsetted object). Non-existent or non-subsettable slots are skipped with
+a warning.}
 }
 \value{
 A list with elements:
@@ -34,13 +53,18 @@ A list with elements:
 \item \code{data}: numeric matrix of selected events × parameters
 \item \code{source}: character vector of sample IDs for selected events
 \item \code{run_date}: character vector of acquisition dates (if original had it)
-\item \code{subset_on}: list recording subsetting criteria and indices
+\item \code{raw}: numeric matrix of untransformed selected events (if original had it)
+\item \code{subset_on}: list recording subsetting criteria, indices, and kept slots
+\item Plus any additional slots requested via \code{keep_slots} (subsetted).
 }
 }
 \description{
 Creates a new FCSimple-style object containing only the events that match
-specified sample names or cluster IDs. Records the subsetting criteria and
-original indices in a \code{subset_on} element for provenance.
+specified sample names or cluster IDs. Can optionally retain per-cell
+slots such as clustering assignments, dimension reduction coordinates,
+and custom user vectors via the \code{keep_slots} argument. Records the
+subsetting criteria and original indices in a \code{subset_on} element for
+provenance.
 }
 \details{
 \itemize{
@@ -51,12 +75,14 @@ recommending \code{FCSimple::fcs_audit()}.
 \item When subsetting by \code{"cluster"}, the function extracts
 \code{fcs_join_obj[[subset_cluster_algorithm]]$clusters} and retains rows
 matching \code{subset_values}.
-\item The returned object contains only the selected \code{data}, \code{source}, and
-(if present) \code{run_date} entries.
+\item The returned object always contains the subsetted \code{data}, \code{source}, and
+(if present) \code{run_date} entries. The \code{raw} slot, if present, is also
+automatically subset and retained.
 \item A new list element \code{subset_on} records:
 \itemize{
-\item \code{subset_by}, \code{subset_cluster_algorithm}, \code{subset_values}, and
-\code{source_object_indices} (the row indices kept).
+\item \code{subset_by}, \code{subset_cluster_algorithm}, \code{subset_values},
+\code{source_object_indices} (the row indices kept), and
+\code{kept_slots} (names of additional slots that were subset).
 }
 }
 }
@@ -70,13 +96,25 @@ sel1 <- FCSimple::fcs_subset(
   subset_values = c("SampleA","SampleC")
 )
 
-# Subset by Leiden clusters
+# Subset by Leiden clusters, keep clustering and UMAP
 clustered <- FCSimple::fcs_cluster(joined, algorithm = "leiden")
+reduced <- FCSimple::fcs_reduce_dimensions(clustered, algorithm = "umap")
 sel2 <- FCSimple::fcs_subset(
-  clustered,
+  reduced,
   subset_by = "cluster",
   subset_cluster_algorithm = "leiden",
-  subset_values = c(1, 3, 5)
+  subset_values = c(1, 3, 5),
+  keep_slots = c("leiden", "umap")
+)
+
+# Keep a custom per-cell vector
+reduced$cell_score <- runif(nrow(reduced$data))
+sel3 <- FCSimple::fcs_subset(
+  reduced,
+  subset_by = "cluster",
+  subset_cluster_algorithm = "leiden",
+  subset_values = c(2),
+  keep_slots = c("leiden", "umap", "cell_score")
 )
 }
 
