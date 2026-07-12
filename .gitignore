@@ -4,3 +4,5 @@
 .Ruserdata
 R/test_cases.R
 sccomp_draws_files/
+inst/analysis/
+inst/temp_files/
