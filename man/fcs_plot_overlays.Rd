@@ -40,7 +40,9 @@ all columns in the selected data matrix are plotted.}
 \item{outdir}{Character; path to an existing directory where the PDF will be saved.
 Defaults to \code{getwd()}.}
 
-\item{sample_size}{Integer; maximum number of events to sample per parameter before plotting
+\item{sample_size}{Integer; maximum number of events to sample before plotting. Sampling is
+performed \strong{once} on the common set of cells so that all parameter panels
+display exactly the same events, enabling direct cross‐marker comparison
 (default 50000).}
 
 \item{point_size}{Numeric; point size for the rasterized scatter (\code{geom_point_rast})
@@ -48,10 +50,12 @@ Defaults to \code{getwd()}.}
 
 \item{point_alpha}{Numeric; point transparency (alpha) for scatter (default 0.1).}
 
-\item{trim_outliers}{Logical; if \code{TRUE} (default), trims the lower and upper
-\code{trim_quantile} fraction of observations before sampling.}
+\item{trim_outliers}{Logical; if \code{TRUE} (default), expression values beyond
+\code{trim_quantile} are winsorized (clamped) to the quantile boundaries
+rather than removing rows, so that every panel retains the identical
+set of cells.}
 
-\item{trim_quantile}{Numeric; quantile threshold for outlier trimming (default 0.01).}
+\item{trim_quantile}{Numeric; quantile threshold for outlier winsorization (default 0.01).}
 
 \item{force_xlim}{Numeric vector of length 2 to fix the x‐axis limits, or \code{FALSE}
 (default) to use the data range.}
@@ -77,10 +81,12 @@ in 2×2 grids and written to disk.
 \item Extracts UMAP or tSNE coordinates from
 \code{fcs_join_obj[[ tolower(reduction) ]][["coordinates"]]}.
 \item Selects the requested \code{parameters} (all by default).
+\item \strong{Downsamples once} to a common set of up to \code{sample_size} cells so
+that every parameter panel shows the identical cell population.
 \item For each parameter:
 \itemize{
-\item Trims outliers at the specified quantiles.
-\item Subsamples up to \code{sample_size} points.
+\item Optionally winsorizes expression outliers at the specified quantiles
+(clamps values; no cells are removed).
 \item Creates a rasterized scatter plot colored by expression
 (\code{scale_color_viridis(option="D")}).
 \item Honors any fixed \code{force_xlim}/\code{force_ylim}.
