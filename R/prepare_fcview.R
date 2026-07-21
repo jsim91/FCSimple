@@ -706,6 +706,27 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
     selected_heatmap <- paste0(selected_algo, "_heatmap")
     if (selected_heatmap %in% names(fcs_join_obj)) {
       fcs_join_obj$cluster_heatmap <- fcs_join_obj[[selected_heatmap]]
+    } else {
+      # Fallback: for custom-named slots like 'leiden_res2', the heatmap may
+      # be stored under the base algorithm name (e.g., 'leiden_heatmap')
+      heatmap_candidates <- grep("_heatmap$", names(fcs_join_obj), value = TRUE)
+      if (length(heatmap_candidates) > 0) {
+        # Prefer a heatmap whose base name is a prefix of the selected algorithm
+        best_match <- NULL
+        for (cand in heatmap_candidates) {
+          candidate_base <- sub("_heatmap$", "", cand)
+          if (grepl(paste0("^", candidate_base), selected_algo)) {
+            best_match <- cand
+            break
+          }
+        }
+        if (is.null(best_match)) {
+          best_match <- heatmap_candidates[1]
+        }
+        fcs_join_obj$cluster_heatmap <- fcs_join_obj[[best_match]]
+        message("  Using heatmap from '", best_match,
+                "' (no '", selected_heatmap, "' found)")
+      }
     }
   }
 
@@ -717,8 +738,8 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
   }
 
   # Remove all other clustering algorithm slots (standard + custom), keeping only
-  # the selected algorithm (which was already renamed to "cluster" above)
-  algos_to_remove <- setdiff(present_algos, selected_algo)
+  # "cluster" (the selected algorithm was already copied/renamed to "cluster" above)
+  algos_to_remove <- setdiff(present_algos, "cluster")
   for (algo in algos_to_remove) {
     if (algo %in% names(fcs_join_obj)) {
       fcs_join_obj[[algo]] <- NULL
