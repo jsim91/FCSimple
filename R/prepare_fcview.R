@@ -218,27 +218,52 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
     stop("Missing required fields: ", paste(missing_required, collapse = ", "))
   }
 
-  all_cluster_algos <- c("leiden", "flowsom", "louvain", "phenograph", "cluster")
-  present_algos <- c()
-  for (algo in all_cluster_algos) {
-    if (algo %in% names(fcs_join_obj)) {
-      if (is.list(fcs_join_obj[[algo]]) && "clusters" %in% names(fcs_join_obj[[algo]])) {
-        present_algos <- c(present_algos, algo)
-      }
+  standard_algos <- c("leiden", "flowsom", "louvain", "phenograph", "cluster")
+
+  # Helper to check if a slot has valid clustering structure
+  is_valid_cluster_slot <- function(slot_val) {
+    is.list(slot_val) && "clusters" %in% names(slot_val)
+  }
+
+  # Detect standard algorithm names first (preserves legacy order for auto-selection)
+  present_std_algos <- c()
+  for (algo in standard_algos) {
+    if (algo %in% names(fcs_join_obj) && is_valid_cluster_slot(fcs_join_obj[[algo]])) {
+      present_std_algos <- c(present_std_algos, algo)
     }
   }
 
+  # Detect any other slots that look like clustering results
+  all_obj_names <- setdiff(names(fcs_join_obj), standard_algos)
+  present_custom_algos <- c()
+  for (nm in all_obj_names) {
+    if (is_valid_cluster_slot(fcs_join_obj[[nm]])) {
+      present_custom_algos <- c(present_custom_algos, nm)
+    }
+  }
+
+  # Combine: standard names first, then custom (alphabetically sorted for stability)
+  present_algos <- c(present_std_algos, sort(present_custom_algos))
+
   if (length(present_algos) == 0) {
-    stop("No clustering algorithm found in fcs_join_obj. Expected one of: ",
-         paste(all_cluster_algos, collapse = ", "))
+    stop("No clustering algorithm found in fcs_join_obj. Each clustering slot must be a list containing at least a 'clusters' element.")
   }
 
   if (!is.null(clustering_algorithm)) {
-    if (!clustering_algorithm %in% present_algos) {
+    if (!clustering_algorithm %in% names(fcs_join_obj)) {
       stop("Specified clustering_algorithm '", clustering_algorithm,
-           "' not found in object. Available: ", paste(present_algos, collapse = ", "))
+           "' not found in fcs_join_obj. Available: ", paste(present_algos, collapse = ", "))
+    }
+    if (!is_valid_cluster_slot(fcs_join_obj[[clustering_algorithm]])) {
+      stop("Specified clustering_algorithm '", clustering_algorithm,
+           "' exists in fcs_join_obj but does not have valid clustering structure ",
+           "(must be a list with a 'clusters' element).")
     }
     selected_algo <- clustering_algorithm
+    if (!clustering_algorithm %in% present_algos) {
+      # User specified a valid slot we didn't auto-detect; add it
+      present_algos <- c(present_algos, clustering_algorithm)
+    }
   } else {
     selected_algo <- present_algos[1]
     if (length(present_algos) > 1) {
@@ -691,7 +716,9 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
     stop("cluster$counts is missing. Run fcs_calculate_abundance() before preparing the FCView object.")
   }
 
-  algos_to_remove <- setdiff(all_cluster_algos, "cluster")
+  # Remove all other clustering algorithm slots (standard + custom), keeping only
+  # the selected algorithm (which was already renamed to "cluster" above)
+  algos_to_remove <- setdiff(present_algos, selected_algo)
   for (algo in algos_to_remove) {
     if (algo %in% names(fcs_join_obj)) {
       fcs_join_obj[[algo]] <- NULL
