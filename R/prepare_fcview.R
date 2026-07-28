@@ -30,6 +30,16 @@
 #'   If `NULL` (default), uses the first detected algorithm.
 #'   selected algorithm will be renamed to `"cluster"` for FCView compatibility.
 #'
+#' @param heatmap_slot
+#'   Character or `NULL`; name of the heatmap slot to use for the prepared
+#'   object. When specified (e.g., `"leiden_heatmap_res3"`), this slot is
+#'   directly used and renamed to `"cluster_heatmap"`, bypassing the automatic
+#'   regex‑based matching. If `NULL` (default), the heatmap slot is auto‑detected
+#'   by stripping `_heatmap` from each slot name and checking if the result
+#'   matches `clustering_algorithm`. This is useful when the naming convention
+#'   yields ambiguous matches or when the heatmap slot is named entirely
+#'   differently from the clustering algorithm.
+#'
 #' @param output_dir
 #'   Character or `NULL`; path to directory where the .RData file will be saved.
 #'   Must exist. If `NULL` (default), the object is not saved to disk.
@@ -188,6 +198,7 @@
 fcs_prepare_fcview_object <- function(fcs_join_obj,
                                       downsample_size = NULL,
                                       clustering_algorithm = NULL,
+                                      heatmap_slot = NULL,
                                       output_dir = NULL,
                                       file_name = NULL,
                                       scenith_compatible = FALSE,
@@ -703,29 +714,34 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
   # full-dataset frequency and counts tables as-is)
   if (selected_algo != "cluster") {
     fcs_join_obj$cluster <- fcs_join_obj[[selected_algo]]
-    selected_heatmap <- paste0(selected_algo, "_heatmap")
-    if (selected_heatmap %in% names(fcs_join_obj)) {
-      fcs_join_obj$cluster_heatmap <- fcs_join_obj[[selected_heatmap]]
+
+    # Find the heatmap slot corresponding to the chosen clustering algorithm.
+    if (!is.null(heatmap_slot)) {
+      # User explicitly specified the heatmap slot — use it directly
+      if (!heatmap_slot %in% names(fcs_join_obj)) {
+        stop("Specified heatmap_slot '", heatmap_slot,
+             "' not found in fcs_join_obj. Available slots: ",
+             paste(names(fcs_join_obj), collapse = ", "))
+      }
+      fcs_join_obj$cluster_heatmap <- fcs_join_obj[[heatmap_slot]]
+      message("  Using heatmap from explicitly specified slot: '", heatmap_slot, "'")
     } else {
-      # Fallback: for custom-named slots like 'leiden_res2', the heatmap may
-      # be stored under the base algorithm name (e.g., 'leiden_heatmap')
-      heatmap_candidates <- grep("_heatmap$", names(fcs_join_obj), value = TRUE)
-      if (length(heatmap_candidates) > 0) {
-        # Prefer a heatmap whose base name is a prefix of the selected algorithm
-        best_match <- NULL
-        for (cand in heatmap_candidates) {
-          candidate_base <- sub("_heatmap$", "", cand)
-          if (grepl(paste0("^", candidate_base), selected_algo)) {
-            best_match <- cand
-            break
-          }
+      # Auto-detect heatmap by stripping "_heatmap" and matching against selected_algo.
+      # Supports two naming conventions:
+      #   {algo}_heatmap     (e.g., leiden_res3_heatmap)
+      #   {base}_heatmap_{suffix} (e.g., leiden_heatmap_res3)
+      # In either case, stripping "_heatmap" yields the clustering slot name.
+      heatmap_candidates <- grep("_heatmap", names(fcs_join_obj), value = TRUE)
+      best_match <- NULL
+      for (cand in heatmap_candidates) {
+        without_heatmap <- gsub("_heatmap", "", cand)
+        if (without_heatmap == selected_algo) {
+          best_match <- cand
+          break
         }
-        if (is.null(best_match)) {
-          best_match <- heatmap_candidates[1]
-        }
+      }
+      if (!is.null(best_match)) {
         fcs_join_obj$cluster_heatmap <- fcs_join_obj[[best_match]]
-        message("  Using heatmap from '", best_match,
-                "' (no '", selected_heatmap, "' found)")
       }
     }
   }
@@ -744,9 +760,12 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
     if (algo %in% names(fcs_join_obj)) {
       fcs_join_obj[[algo]] <- NULL
     }
-    heatmap_name <- paste0(algo, "_heatmap")
-    if (heatmap_name %in% names(fcs_join_obj)) {
-      fcs_join_obj[[heatmap_name]] <- NULL
+    # Remove heatmap slots matching this algorithm under either naming convention:
+    #   {algo}_heatmap  or  {base}_heatmap_{suffix}
+    for (nm in names(fcs_join_obj)) {
+      if (grepl("_heatmap", nm) && gsub("_heatmap", "", nm) == algo) {
+        fcs_join_obj[[nm]] <- NULL
+      }
     }
   }
 

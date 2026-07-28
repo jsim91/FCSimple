@@ -8,6 +8,7 @@ fcs_prepare_fcview_object(
   fcs_join_obj,
   downsample_size = NULL,
   clustering_algorithm = NULL,
+  heatmap_slot = NULL,
   output_dir = NULL,
   file_name = NULL,
   scenith_compatible = FALSE,
@@ -44,6 +45,15 @@ UMAP/tSNE coordinates) accordingly.}
 prepared object (e.g., \code{"leiden"}, \code{"flowsom"}, \code{"louvain"}, \code{"phenograph"}).
 If \code{NULL} (default), uses the first detected algorithm.
 selected algorithm will be renamed to \code{"cluster"} for FCView compatibility.}
+
+\item{heatmap_slot}{Character or \code{NULL}; name of the heatmap slot to use for the prepared
+object. When specified (e.g., \code{"leiden_heatmap_res3"}), this slot is
+directly used and renamed to \code{"cluster_heatmap"}, bypassing the automatic
+regex‑based matching. If \code{NULL} (default), the heatmap slot is auto‑detected
+by stripping \verb{_heatmap} from each slot name and checking if the result
+matches \code{clustering_algorithm}. This is useful when the naming convention
+yields ambiguous matches or when the heatmap slot is named entirely
+differently from the clustering algorithm.}
 
 \item{output_dir}{Character or \code{NULL}; path to directory where the .RData file will be saved.
 Must exist. If \code{NULL} (default), the object is not saved to disk.}
