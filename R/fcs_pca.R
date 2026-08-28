@@ -54,6 +54,7 @@
 #' @return
 #'   The original `fcs_join_obj` augmented with a new element `pca`, a list with:
 #'   - `pca_data`: numeric matrix (events x selected PCs)
+#'   - `features`: character vector of the feature names used as PCA input
 #'   - `pca_stats`: a list containing:
 #'     - `PCs`: integer number of PCs retained
 #'     - `cumulative_variance`: numeric vector of cumulative variance explained
@@ -89,8 +90,8 @@
 #' @export
 fcs_pca <- function(fcs_join_obj, pca_method = c("prcomp"), variance_threshold = 0.975, num_pc = NULL, apply_scaling = TRUE)
 {
-  require(stringr)
-  require(ggplot2)
+  if (!require(stringr, quietly = TRUE)) stop("Package 'stringr' is required but could not be loaded.")
+  if (!require(ggplot2, quietly = TRUE)) stop("Package 'ggplot2' is required but could not be loaded.")
 
   if('batch_correction' %in% names(fcs_join_obj)) {
     cordat <- TRUE
@@ -101,6 +102,7 @@ fcs_pca <- function(fcs_join_obj, pca_method = c("prcomp"), variance_threshold =
     obj_data <- as.matrix(fcs_join_obj[["data"]])
     print("batch_correction not found in fcs_join_obj. Using fcs_join_obj[['data']] for PCA")
   }
+  pca_features <- .fcs_features(obj_data)
   if(pca_method[1]=="prcomp") {
     set.seed(123) # not really needed
     if(apply_scaling) {
@@ -163,6 +165,7 @@ fcs_pca <- function(fcs_join_obj, pca_method = c("prcomp"), variance_threshold =
 
   print("storing PCA information in $pca")
   fcs_join_obj[['pca']] <- list(pca_data = pc_data,
+                                features = pca_features,
                                 pca_stats = list(PCs = npc, cumulative_variance = cvar,
                                                  pca_method = pca_method, elbow_plot = cvar_plt))
   if(!'object_history' %in% names(fcs_join_obj)) {

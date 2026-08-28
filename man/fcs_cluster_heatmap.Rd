@@ -94,6 +94,7 @@ CATALYST:::.scale_exprs.
 \item \code{heatmap}: the Heatmap object
 \item \code{heatmap_tile_data}: the numeric matrix used
 \item \code{population_size}: cluster event counts
+\item \code{features}: character vector of the channel names included
 \item \code{rep_used}: “with batch correction” or “without batch correction”
 }
 \item Appends a timestamped entry to \code{object_history}.

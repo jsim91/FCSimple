@@ -12,6 +12,7 @@ fcs_reduce_dimensions(
   umap_nn = 30,
   umap_min_dist = 0.1,
   tsne_perplexity = 30,
+  n_components = 2,
   num_cores = ceiling(parallel::detectCores()/2),
   seed = NA
 )
@@ -42,7 +43,10 @@ Default is \code{c("tsne","umap")} (selects first).
 \item{language}{Character; runtime environment for the chosen algorithm.
 \itemize{
 \item \code{"R"} (default): calls uwot::umap or Rtsne::Rtsne.
-\item \code{"Python"}: writes a CSV, invokes the package’s Python script, and reads back results.
+\item \code{"Python"}: writes a CSV, invokes the package’s Python script, and reads
+back results. For t‐SNE, the Python backend runs the opt‐SNE
+implementation (omiq‐ai Multicore‐opt‐SNE) in automated‐parameter mode,
+or falls back to openTSNE automatically when opt‐SNE is not importable.
 }}
 
 \item{umap_nn}{Numeric; number of neighbors for UMAP (default 30).}
@@ -50,6 +54,10 @@ Default is \code{c("tsne","umap")} (selects first).
 \item{umap_min_dist}{Numeric; minimum distance parameter for UMAP (default 0.1).}
 
 \item{tsne_perplexity}{Numeric; perplexity parameter for t‐SNE (default 30).}
+
+\item{n_components}{Integer; number of output dimensions for the reduction. Default \code{2}
+(standard 2D embedding). Set \code{3} for a 3D embedding suitable for
+interactive visualization with FCSimple::fcs_plot_reduction_3d().}
 
 \item{num_cores}{Integer; number of CPU threads for parallel computation (default \code{ceiling(parallel::detectCores()/2)}).}
 
@@ -63,7 +71,8 @@ The input \code{fcs_join_obj}, with a new element named by the
 lower‐case \code{algorithm}:
 \itemize{
 \item \verb{$<algorithm>$coordinates}: numeric matrix (cells × 2).
-\item \verb{$<algorithm>$settings}: list of parameters passed.
+\item \verb{$<algorithm>$settings}: list of parameters passed, including a
+\code{features} element naming the features used for the reduction.
 \item \code{object_history} updated with the reduction event.
 }
 }
@@ -84,8 +93,10 @@ regardless of \code{use_rep}. Otherwise, \code{use_rep} selects raw data or PCA.
 }
 \item For t‐SNE:
 \itemize{
-\item R: calls \code{Rtsne::Rtsne()} with \code{tsne_perplexity}, \code{num_cores}, and fixed settings.
-\item Python: similar CSV → script → import workflow via \code{run_tsne.py}.
+\item R: calls \code{Rtsne::Rtsne()} with \code{tsne_perplexity}, \code{num_cores}, and
+fixed settings; an advisory message reports opt‐SNE readiness.
+\item Python: runs opt‐SNE (auto-parameterized t‐SNE) via \code{run_optsne.py}
+when available, otherwise falls back to openTSNE via \code{run_tsne.py}.
 }
 \item The resulting 2‐column matrix is stored as
 \code{fcs_join_obj$umap$coordinates} or \verb{$tsne$coordinates}, and the
@@ -105,7 +116,7 @@ parameters used are recorded under
     language  = "R"
   )
 
-  # t-SNE using PCA coordinates and Python backend
+  # t-SNE (opt-SNE) using PCA coordinates and Python backend
   pca_obj <- FCSimple::fcs_pca(joined)
   out_tsne <- FCSimple::fcs_reduce_dimensions(
     pca_obj,
@@ -118,5 +129,6 @@ parameters used are recorded under
 
 }
 \seealso{
-uwot::umap, Rtsne::Rtsne, FCSimple::fcs_pca, FCSimple::fcs_batch_correction
+uwot::umap, Rtsne::Rtsne, FCSimple::fcs_pca, FCSimple::fcs_batch_correction.
+opt‐SNE: https://github.com/omiq-ai/Multicore-opt-SNE
 }

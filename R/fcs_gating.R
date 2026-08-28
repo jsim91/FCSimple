@@ -100,8 +100,8 @@ fcs_gate_cells <- function(object,
                            # downsample_and_infer_gate_members = FALSE, # implement method (and benchmark run time) that allows for RANN knn=1? to identify gate membership from downsampled data; there should be an existing package for this.
                            drop_nearest = 1,
                            drop_farthest = 1) {
-  require(mclust)
-  require(sp)
+  if (!require(mclust, quietly = TRUE)) stop("Package 'mclust' is required but could not be loaded.")
+  if (!require(sp, quietly = TRUE)) stop("Package 'sp' is required but could not be loaded.")
   if(regexpr(pattern = '(\\+|\\-)', text = gate_name)!=-1) {
     stop("'gate_name' should not include '+' or '-'")
   }
@@ -242,8 +242,8 @@ fcs_plot_cells <- function(object,
                            gate_tree,
                            gate_name = 'cells',
                            downsample_size = 100000) {
-  require(ggplot2)
-  require(rlang)
+  if (!require(ggplot2, quietly = TRUE)) stop("Package 'ggplot2' is required but could not be loaded.")
+  if (!require(rlang, quietly = TRUE)) stop("Package 'rlang' is required but could not be loaded.")
 
   if(class(object)!='fcs_gating_object') {
     stop("input object should be of class: fcs_gating_object")
@@ -347,7 +347,7 @@ fcs_gate_singlets <- function(object,
                               trim_frac = 0.01,   # drop extreme 1% when fitting
                               curvature_eps = 0.001
 ) {
-  require(MASS)
+  if (!require(MASS, quietly = TRUE)) stop("Package 'MASS' is required but could not be loaded.")
   if(regexpr(pattern = '(\\+|\\-)', text = gate_name)!=-1) {
     stop("'gate_name' should not include '+' or '-'")
   }
@@ -496,8 +496,8 @@ fcs_plot_singlets <- function(object,
                               alpha = 0.25,
                               psize = 0.6,
                               downsample_size = 100000) {
-  require(ggplot2)
-  require(scales)
+  if (!require(ggplot2, quietly = TRUE)) stop("Package 'ggplot2' is required but could not be loaded.")
+  if (!require(scales, quietly = TRUE)) stop("Package 'scales' is required but could not be loaded.")
 
   a <- object[['gate_trees']][[tree_name]][[gate_name]][['feature_a']]
   h <- object[['gate_trees']][[tree_name]][[gate_name]][['feature_h']]
@@ -1127,8 +1127,8 @@ fcs_plot_quadrants <- function(df,
                                psize = 0.6,
                                n = 100,
                                bins = 12) {
-  require(ggplot2)
-  require(scales)
+  if (!require(ggplot2, quietly = TRUE)) stop("Package 'ggplot2' is required but could not be loaded.")
+  if (!require(scales, quietly = TRUE)) stop("Package 'scales' is required but could not be loaded.")
 
   downsample_size <- 100000
   if(nrow(df)>downsample_size) {

@@ -101,8 +101,8 @@ fcs_select_islands <- function(fcs_join_obj,
                                dbscan_eps = 0.5,
                                outdir = getwd())
 {
-  require(dbscan)
-  require(RANN)
+  if (!require(dbscan, quietly = TRUE)) stop("Package 'dbscan' is required but could not be loaded.")
+  if (!require(RANN, quietly = TRUE)) stop("Package 'RANN' is required but could not be loaded.")
 
   if(!tolower(dbscan_reduction) %in% names(fcs_join_obj)) {
     stop(paste0("Cannot find specified reduction ",dbscan_reduction," to cluster on. Have you run 'fcs_reduce_dimensions' yet?"))

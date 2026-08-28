@@ -685,22 +685,12 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
         }
       }
 
-      if ("umap" %in% names(fcs_join_obj)) {
-        if (is.list(fcs_join_obj$umap) && "coordinates" %in% names(fcs_join_obj$umap)) {
-          if (is.data.frame(fcs_join_obj$umap$coordinates) || is.matrix(fcs_join_obj$umap$coordinates)) {
-            if (nrow(fcs_join_obj$umap$coordinates) == n_cells) {
-              fcs_join_obj$umap$coordinates <- fcs_join_obj$umap$coordinates[keep_idx, , drop = FALSE]
-            }
-          }
-        }
-      }
-
-      if ("tsne" %in% names(fcs_join_obj)) {
-        if (is.list(fcs_join_obj$tsne) && "coordinates" %in% names(fcs_join_obj$tsne)) {
-          if (is.data.frame(fcs_join_obj$tsne$coordinates) || is.matrix(fcs_join_obj$tsne$coordinates)) {
-            if (nrow(fcs_join_obj$tsne$coordinates) == n_cells) {
-              fcs_join_obj$tsne$coordinates <- fcs_join_obj$tsne$coordinates[keep_idx, , drop = FALSE]
-            }
+      # Downsample reduction coordinates across all dimensional slots
+      for (red_slot in grep("^(umap|tsne)(_[23]d)?$", names(fcs_join_obj), value = TRUE)) {
+        if (is.list(fcs_join_obj[[red_slot]]) && "coordinates" %in% names(fcs_join_obj[[red_slot]])) {
+          coords <- fcs_join_obj[[red_slot]]$coordinates
+          if ((is.data.frame(coords) || is.matrix(coords)) && nrow(coords) == n_cells) {
+            fcs_join_obj[[red_slot]]$coordinates <- coords[keep_idx, , drop = FALSE]
           }
         }
       }
@@ -774,6 +764,12 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
     keep_fields <- union(keep_fields, "scenith")
   }
 
+  # Auto-detect dimensional reduction slots so they survive keep_fields filter.
+  # After filtering, the normalization block below converts umap_2d→umap, etc.
+  for (red_slot in grep("^(umap|tsne)(_[23]d)?$", names(fcs_join_obj), value = TRUE)) {
+    keep_fields <- union(keep_fields, red_slot)
+  }
+
   prepared_obj <- list()
   for (field in names(fcs_join_obj)) {
     if (field %in% keep_fields) {
@@ -796,15 +792,23 @@ fcs_prepare_fcview_object <- function(fcs_join_obj,
     prepared_obj$data <- as.matrix(prepared_obj$data)
   }
 
-  if ("umap" %in% names(prepared_obj) && !is.null(prepared_obj$umap$coordinates)) {
-    if (is.matrix(prepared_obj$umap$coordinates)) {
-      prepared_obj$umap$coordinates <- as.data.frame(prepared_obj$umap$coordinates)
+  # Normalize reduction slots to 2D and rename to FCView-compatible flat names
+  for (red in c("umap", "tsne")) {
+    slot_2d <- paste0(red, "_2d")
+    # Prefer dimensional slot, fall back to legacy flat name
+    if (slot_2d %in% names(prepared_obj)) {
+      prepared_obj[[red]] <- prepared_obj[[slot_2d]]
+      prepared_obj[[slot_2d]] <- NULL
     }
-  }
+    # Remove any 3D slots — FCView is 2D only
+    slot_3d <- paste0(red, "_3d")
+    prepared_obj[[slot_3d]] <- NULL
 
-  if ("tsne" %in% names(prepared_obj) && !is.null(prepared_obj$tsne$coordinates)) {
-    if (is.matrix(prepared_obj$tsne$coordinates)) {
-      prepared_obj$tsne$coordinates <- as.data.frame(prepared_obj$tsne$coordinates)
+    # Convert matrix coordinates to data.frame
+    if (red %in% names(prepared_obj) && !is.null(prepared_obj[[red]]$coordinates)) {
+      if (is.matrix(prepared_obj[[red]]$coordinates)) {
+        prepared_obj[[red]]$coordinates <- as.data.frame(prepared_obj[[red]]$coordinates)
+      }
     }
   }
 

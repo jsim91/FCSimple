@@ -7,6 +7,7 @@
 fcs_install_python_dependencies(
   install = FALSE,
   precompile = FALSE,
+  build_optsne = FALSE,
   python = "python"
 )
 }
@@ -15,6 +16,9 @@ fcs_install_python_dependencies(
 
 \item{precompile}{Logical; if TRUE, run a one-time single-threaded precompile
 of numba/umap to warm the JIT cache (optional).}
+
+\item{build_optsne}{Logical; if TRUE, build and install the bundled opt-SNE
+(MulticoreTSNE) package from source. Requires cmake and a C++ compiler.}
 
 \item{python}{Character; path or command name for the Python interpreter.}
 }

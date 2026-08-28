@@ -2,7 +2,12 @@
 .Rhistory
 .RData
 .Ruserdata
-R/test_cases.R
+inst/scripts/test_cases.R
 sccomp_draws_files/
 inst/analysis/
 inst/temp_files/
+vignette_outs/
+inst/python/optsne/build/
+*.egg-info/
+__pycache__/
+*.pyc

@@ -1,6 +1,7 @@
 # Define server logic ----
 function(input,output) {
-  Data <- read.csv(file = paste0(system.file(package = "FCSimple"),"/temp_files/tmp_data.csv"), check.names = FALSE)
+  temp_dir <- getOption("FCSimple.temp_dir", file.path(tempdir(), "FCSimple"))
+  Data <- read.csv(file = file.path(temp_dir, "tmp_data.csv"), check.names = FALSE)
   Data_dynamic <- Data
   param_df <- as.data.frame(matrix(data = NA,nrow=9,ncol=ncol(Data)))
   colnames(param_df) <- colnames(Data)
@@ -252,7 +253,7 @@ function(input,output) {
     }
   })
   app_return <- function() {
-    list_obj <- readRDS(paste0(system.file(package = "FCSimple"),"/temp_files/tmp_list_obj.rds"))
+    list_obj <- readRDS(file.path(temp_dir, "tmp_list_obj.rds"))
     Data_full <- list_obj[["data"]]
     for(i in 1:ncol(param_settings$reactive_data)) {
       use_algo <- param_settings$reactive_data[1,i]
@@ -279,7 +280,7 @@ function(input,output) {
         Data_full[,col_index] <- eval(hyperlog_fun)(Data_full)
       }
     }
-    temp_files <- list.files(path = paste0(system.file(package = "FCSimple"),"/temp_files/"), full.names = TRUE, recursive = TRUE)
+    temp_files <- list.files(path = temp_dir, full.names = TRUE, recursive = TRUE)
     if(length(temp_files)!=0) { # remove any files present here, make sure folder stays clean
       file.remove(temp_files)
     }

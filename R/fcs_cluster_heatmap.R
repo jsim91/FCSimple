@@ -77,6 +77,7 @@
 #'     - `heatmap`: the Heatmap object
 #'     - `heatmap_tile_data`: the numeric matrix used
 #'     - `population_size`: cluster event counts
+#'     - `features`: character vector of the channel names included
 #'     - `rep_used`: “with batch correction” or “without batch correction”
 #' - Appends a timestamped entry to `object_history`.
 #'
@@ -125,10 +126,10 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
     stop("error in argument 'algorithm': algorithm not found in fcs_join_obj. Try 'View(fcs_join_obj)'")
   }
 
-  require(CATALYST)
-  require(ComplexHeatmap)
-  require(circlize)
-  require(grid)
+  if (!require(CATALYST, quietly = TRUE)) stop("Package 'CATALYST' is required but could not be loaded.")
+  if (!require(ComplexHeatmap, quietly = TRUE)) stop("Package 'ComplexHeatmap' is required but could not be loaded.")
+  if (!require(circlize, quietly = TRUE)) stop("Package 'circlize' is required but could not be loaded.")
+  if (!require(grid, quietly = TRUE)) stop("Package 'grid' is required but could not be loaded.")
 
   if('batch_correction' %in% names(fcs_join_obj)) {
     if(override_correction) {
@@ -218,6 +219,7 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
   fcs_join_obj[[paste0(tolower(algorithm),"_heatmap")]] <- list(heatmap = heatmap_output,
                                                                 heatmap_tile_data = backend.matrix,
                                                                 population_size = pop.freq,
+                                                                features = include_channels,
                                                                 rep_used = ifelse(cordat,"with batch correction","without batch correction"))
   if(!'object_history' %in% names(fcs_join_obj)) {
     print("Consider running FCSimple::fcs_audit() on the object.")
@@ -277,8 +279,8 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
 #' @export
 fcs_plot_heatmap <- function(fcs_join_obj, algorithm, outdir = getwd(), add_timestamp = TRUE, append_file_string = NA)
 {
-  require(ggplot2)
-  require(ComplexHeatmap)
+  if (!require(ggplot2, quietly = TRUE)) stop("Package 'ggplot2' is required but could not be loaded.")
+  if (!require(ComplexHeatmap, quietly = TRUE)) stop("Package 'ComplexHeatmap' is required but could not be loaded.")
 
   if(tolower(algorithm)=="dbscan") {
     fname <- paste0(outdir,"/",tolower(algorithm),"_cluster_heatmap_dbscan.pdf")

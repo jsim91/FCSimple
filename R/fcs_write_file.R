@@ -102,7 +102,7 @@ fcs_write.FCS <- function(fcs_join_obj,
                           outdir = getwd(),
                           include_timestamp = TRUE)
 {
-  require(flowCore)
+  if (!require(flowCore, quietly = TRUE)) stop("Package 'flowCore' is required but could not be loaded.")
 
   # --- outdir validation ---
   if (!dir.exists(outdir)) {

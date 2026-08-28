@@ -181,12 +181,12 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
                                cluster_substitute_names = NA, add_timestamp = TRUE, annotation_method = 'shadowtext')
 {
   # use annotate_text_size = NA to produce a plot without cluster annotations
-  require(ggplot2)
-  require(ggrastr)
-  require(ggpubr)
-  require(shadowtext)
+  if (!require(ggplot2, quietly = TRUE)) stop("Package 'ggplot2' is required but could not be loaded.")
+  if (!require(ggrastr, quietly = TRUE)) stop("Package 'ggrastr' is required but could not be loaded.")
+  if (!require(ggpubr, quietly = TRUE)) stop("Package 'ggpubr' is required but could not be loaded.")
+  if (!require(shadowtext, quietly = TRUE)) stop("Package 'shadowtext' is required but could not be loaded.")
 
-  reduction_coords <- fcs_join_obj[[tolower(reduction)]][["coordinates"]]
+  reduction_coords <- fcs_join_obj[[.resolve_reduction_slot(fcs_join_obj, reduction, 2L)]][["coordinates"]]
   cluster_numbers <- as.character(fcs_join_obj[[tolower(algorithm)]][["clusters"]])
   if(!is.na(cluster_substitute_names[1])) {
     if(mean(names(cluster_substitute_names) %in% unique(cluster_numbers))!=1) {
@@ -197,123 +197,6 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
     }
   }
   uclus <- unique(cluster_numbers)[order(unique(cluster_numbers))]
-
-  # Helper: generate a perceptually-balanced categorical palette matching
-  # sc0rch's approach — RColorBrewer Set2 (≤8), Paired (≤12), then
-  # farthest-point sampling in CIE Lab for larger n.
-  fcs_color_palette <- function(n) {
-    if (n <= 8L)  return(RColorBrewer::brewer.pal(max(3L, n), "Set2")[seq_len(n)])
-    if (n <= 12L) return(RColorBrewer::brewer.pal(max(3L, n), "Paired")[seq_len(n)])
-
-    # Farthest-point sampling in CIE Lab over an HCL candidate grid
-    h_vals <- seq(0, 355, by = 5)
-    c_vals <- seq(40, 100, by = 10)
-    l_vals <- seq(40, 85,  by = 5)
-    grid   <- expand.grid(H = h_vals, C = c_vals, L = l_vals)
-    hex    <- grDevices::hcl(h = grid$H, c = grid$C, l = grid$L, fixup = FALSE)
-    ok     <- !is.na(hex)
-    hex    <- hex[ok]
-    if (length(hex) < n) return(scales::hue_pal()(n))
-
-    rgb_m <- t(grDevices::col2rgb(hex)) / 255
-    lab   <- grDevices::convertColor(rgb_m, from = "sRGB", to = "Lab")
-
-    sel      <- integer(n)
-    sel[1L]  <- which.max(lab[, 2L]^2 + lab[, 3L]^2)   # seed: most chromatic
-    min_d    <- sqrt(rowSums(sweep(lab, 2, lab[sel[1L], ])^2))
-    for (i in seq.int(2L, n)) {
-      sel[i] <- which.max(min_d)
-      min_d  <- pmin(min_d, sqrt(rowSums(sweep(lab, 2, lab[sel[i], ])^2)))
-    }
-    hex[sel]
-  }
-
-  # Helper: assign colors so spatially nearby clusters get maximally different
-  # colors via a DSatur (degree-of-saturation) greedy algorithm using full
-  # CIE Lab perceptual distance.
-  #   1) Build a k-nearest-neighbor graph (k=4) on cluster centroids.
-  #   2) At each step pick the uncolored cluster with the most already-colored
-  #      neighbors (DSatur) — breaking ties by the minimum spatial distance to
-  #      any already-colored cluster.
-  #   3) Assign the unused palette color whose minimum CIE Lab perceptual
-  #      distance to those already-colored neighbors is greatest.
-  optimize_cluster_colors <- function(xval, yval, base_colors) {
-    n_clusters   <- length(xval)
-    n_colors     <- length(base_colors)
-    cluster_names <- names(xval)
-
-    # Euclidean distance matrix between cluster centroids
-    dist_matrix <- as.matrix(stats::dist(cbind(xval, yval), method = "euclidean"))
-
-    # Build k-NN graph on centroids (k = 4, or fewer for small n)
-    k <- min(4L, n_clusters - 1L)
-    neighbors <- t(apply(dist_matrix, 1L, function(d) order(d)[seq_len(k + 1L)][-1L]))
-    rownames(neighbors) <- cluster_names
-
-    # Convert base_colors to CIE Lab once for perceptual distance calculations
-    rgb_m    <- t(grDevices::col2rgb(base_colors)) / 255
-    lab_cols <- grDevices::convertColor(rgb_m, from = "sRGB", to = "Lab")
-    rownames(lab_cols) <- seq_len(n_colors)
-
-    color_assignment <- integer(n_clusters)
-    names(color_assignment) <- cluster_names
-    color_used <- logical(n_colors)
-
-    # Seed: cluster closest to the global centroid
-    start_cluster <- names(which.min(sqrt((xval - mean(xval))^2 + (yval - mean(yval))^2)))
-    color_assignment[start_cluster] <- 1L
-    color_used[1L] <- TRUE
-    colored_set <- start_cluster
-
-    while (length(colored_set) < n_clusters) {
-      uncolored <- setdiff(cluster_names, colored_set)
-
-      # DSatur: count already-colored neighbors for each uncolored cluster
-      saturation <- sapply(uncolored, function(uc) {
-        sum(neighbors[uc, ] %in% colored_set)
-      })
-
-      # Break ties by minimum distance to any already-colored cluster
-      min_dist_to_colored <- sapply(uncolored, function(uc) {
-        min(dist_matrix[uc, colored_set])
-      })
-
-      # Pick the uncolored cluster with most colored neighbors;
-      # ties broken by smallest minimum distance to a colored cluster
-      best_idx <- which.max(saturation - min_dist_to_colored / max(dist_matrix))
-      next_cluster <- uncolored[best_idx]
-
-      # Gather colors already used by this cluster's already-colored neighbors
-      nbr_colored <- intersect(neighbors[next_cluster, ], colored_set)
-      nbr_col_idx <- color_assignment[nbr_colored]
-
-      available <- which(!color_used)
-
-      if (length(available) > 0L && length(nbr_col_idx) > 0L) {
-        # Choose the available color whose minimum Lab distance
-        # to any neighbor color is maximized
-        scores <- sapply(available, function(ci) {
-          min(sapply(nbr_col_idx, function(ni) {
-            sqrt(sum((lab_cols[ci, ] - lab_cols[ni, ])^2))
-          }))
-        })
-        best_color <- available[which.max(scores)]
-      } else if (length(available) > 0L) {
-        best_color <- available[1L]
-      } else {
-        # All colors used — pick the first color (edge case)
-        best_color <- 1L
-      }
-
-      color_assignment[next_cluster] <- best_color
-      color_used[best_color] <- TRUE
-      colored_set <- c(colored_set, next_cluster)
-    }
-
-    result        <- base_colors[color_assignment]
-    names(result) <- cluster_names
-    result
-  }
 
   # Calculate cluster centers (median for color optimization, mean for annotation)
   xval <- rep(NA, length(uclus)); names(xval) <- uclus
@@ -326,14 +209,19 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
     ymean[i] <- mean(reduction_coords[, 2][cluster_numbers == names(ymean)[i]])
   }
 
-  # Assign cluster colors
-  base_colors <- fcs_color_palette(length(uclus))
+  # Assign cluster colors using shared utilities (utils_colors.R).
+  # Colour mapping is derived from the first-created reduction so that
+  # 2D and 3D plots of the same clusters share identical colours.
+  primary_slot <- .get_primary_reduction_slot(fcs_join_obj)
   if (randomize_colors) {
+    base_colors <- fcs_color_palette(length(uclus))
     set.seed(color_random_seed)
     colorby        <- base_colors
     names(colorby) <- sample(uclus, length(uclus), replace = FALSE)
   } else {
-    colorby <- optimize_cluster_colors(xval, yval, base_colors)
+    colorby <- .compute_cluster_color_mapping(
+      fcs_join_obj, cluster_numbers, primary_slot
+    )
   }
 
   plt_input <- cbind(reduction_coords,data.frame(cluster = cluster_numbers))
@@ -373,7 +261,7 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
             inherit.aes = FALSE
           )
         } else if(ameth=='repel') {
-          require(ggrepel)
+          if (!require(ggrepel, quietly = TRUE)) stop("Package 'ggrepel' is required but could not be loaded.")
           color_text_add <- data.frame(valx = xanno, valy = yanno, cluster = names(xanno))
           mypl <- mypl + ggrepel::geom_text_repel(data = color_text_add,
                                                   mapping = aes(x = valx, y = valy, label = cluster),
@@ -444,7 +332,7 @@ fcs_plot_reduction <- function(fcs_join_obj, algorithm, reduction, point_alpha =
         inherit.aes = FALSE
       )
     } else if(!is.na(annotation_method) && annotation_method=='repel') {
-      require(ggrepel)
+      if (!require(ggrepel, quietly = TRUE)) stop("Package 'ggrepel' is required but could not be loaded.")
       color_text_add <- data.frame(UMAP1 = xmean, UMAP2 = ymean, cluster = names(xmean))
       plt_reduction <- plt_reduction + ggrepel::geom_text_repel(data = color_text_add, force = 0, force_pull = Inf,
                                                                 mapping = aes(x = UMAP1, y = UMAP2, label = cluster), color = "white",

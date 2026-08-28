@@ -49,7 +49,8 @@
 #'
 #' @return
 #' The input `fcs_join_obj` augmented with:
-#' - `batch_correction`: a list containing corrected data, method, and metadata.
+#' - `batch_correction`: a list containing corrected data, method, and metadata,
+#'   including a `features` element naming the features that were corrected.
 #' - `object_history`: appended entry recording the batch correction event.
 #'
 #' @examples
@@ -100,7 +101,7 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
   }
   if(correction_method[1]=="cyCombine") {
     cmeth <- "cyCombine"
-    require(cyCombine)
+    if (!require(cyCombine, quietly = TRUE)) stop("Package 'cyCombine' is required but could not be loaded.")
     exp_data <- as.data.frame(rep_data)
     if(correction_markers[1]=="all") {
       marks <- cyCombine::get_markers(x = exp_data)
@@ -122,7 +123,7 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
       # if(rl!="y") {
       #   stop("please update current working directory so that cyCombine::detect_batch_effect will be saved appropriately.")
       # }
-      require(outliers)
+      if (!require(outliers, quietly = TRUE)) stop("Package 'outliers' is required but could not be loaded.")
       print("...detecting batch effects before correction...")
       cyCombine::detect_batch_effect(df = exp_data, out_dir = cyc_outdir1, norm_method = "scale",
                                      xdim = cyCombine_SOMx, ydim = cyCombine_SOMy, seed = 123, batch_col = "batch",
@@ -149,6 +150,7 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
     fcs_join_obj[['batch_correction']] <- list(data = exprs_data_corrected,
                                                source = corrected_source,
                                                method = cmeth,
+                                               features = marks,
                                                other = list(markers_corrected = marks,
                                                             batches_corrected = unique(exp_data$batch),
                                                             norm_method = "scale",
@@ -158,7 +160,7 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
                                                             datetime = Sys.time(),
                                                             session_info = sessionInfo()))
   } else if(correction_method[1]=="harmony") {
-    require(harmony)
+    if (!require(harmony, quietly = TRUE)) stop("Package 'harmony' is required but could not be loaded.")
     cmeth <- "harmony"
     harmony_covars <- unique(harmony_covars)
     harm_in <- as.matrix(rep_data)
@@ -203,6 +205,7 @@ fcs_batch_correction <- function(fcs_join_obj, use_rep = "data", correction_meth
     fcs_join_obj[['batch_correction']] <- list(data = harm_out,
                                                harmony_meta = harm_meta,
                                                method = cmeth,
+                                               features = .fcs_features(harm_in),
                                                other = list(covariates_used = keep_covars, 
                                                             unique_covariate_values = n_unique[keep_covars], 
                                                             lambda = harmony_lambda,

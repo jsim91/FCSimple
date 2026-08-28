@@ -42,6 +42,7 @@ If \code{FALSE}, passes \code{center = FALSE} and \code{scale. = FALSE} to \code
 The original \code{fcs_join_obj} augmented with a new element \code{pca}, a list with:
 \itemize{
 \item \code{pca_data}: numeric matrix (events x selected PCs)
+\item \code{features}: character vector of the feature names used as PCA input
 \item \code{pca_stats}: a list containing:
 \itemize{
 \item \code{PCs}: integer number of PCs retained

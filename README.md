@@ -138,24 +138,56 @@ my_object$app_transforms  # inspect the applied settings
 
 # Python Dependencies (optional)
 
-The clustering and dimension reduction steps offer methods to run calculations through Python. No Python knowledge is required — functions call Python in the background and return results to R. The reticulate package is not required. Python scripts are located at `inst/python` and may be edited to alter default behaviour.
+Several clustering and dimension-reduction steps can run their calculations through
+Python. No Python knowledge is required — FCSimple calls Python in the background and
+returns results to R, and the `reticulate` package is not required. Python helper scripts
+live in `inst/python` and may be edited to alter default behaviour.
 
-To take advantage of Python-supported methods, install the following:
+## Quickest path
 
-- [Python](https://www.python.org/downloads/) — check "Add to PATH" during installation; pip is included
-- [FlowKit](https://pypi.org/project/FlowKit/) — **required** for hyperlog transformation when using a FlowJo workspace diagnostics file with `fcs_join()` (not needed for the standard `transform = "hyperlog"` argument)
-- [umap](https://github.com/lmcinnes/umap) — UMAP via Python
-- [pynndescent](https://github.com/lmcinnes/pynndescent) — required for Python UMAP
-- [leidenalg](https://github.com/vtraag/leidenalg) — Leiden clustering via Python
-- [scipy](https://pypi.org/project/scipy/)
-- [numpy](https://pypi.org/project/numpy/)
-- [pandas](https://pypi.org/project/pandas/)
-- [igraph](https://pypi.org/project/igraph/) — Louvain clustering via Python
-- [openTSNE](https://github.com/pavlin-policar/openTSNE) — tSNE via Python
-
-To install or verify all Python dependencies run:
+Install [Python](https://www.python.org/downloads/) (check **"Add python.exe to PATH"**
+during installation, or ensure `python` is on your `PATH`), then run in R:
 
 ```r
-FCSimple::fcs_install_python_dependencies()
-# or: ?FCSimple::fcs_install_python_dependencies
+FCSimple::fcs_install_python_dependencies(install = TRUE, precompile = TRUE)
 ```
+
+This installs/verifies every Python package FCSimple uses through pip, in one step:
+`pandas`, `numpy`, `scipy`, `scikit-learn`, `umap-learn`, `numba`, `pynndescent`,
+`tqdm`, `cffi`, `openTSNE`, `igraph`, `leidenalg`, and `flowkit`. The
+`precompile = TRUE` flag optionally warms the numba/UMAP JIT cache.
+
+For t-SNE specifically, FCSimple prefers the auto-parameterized **opt-SNE** backend and
+automatically falls back to **openTSNE** if opt-SNE has not been built. To also build
+opt-SNE (recommended for higher-quality embeddings):
+
+```r
+FCSimple::fcs_install_python_dependencies(install = TRUE, build_optsne = TRUE)
+```
+
+Building opt-SNE requires [cmake](https://cmake.org/) and a C++ compiler (plus the `cffi`
+Python package). On Windows, the compiler can be
+[Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
+(the "Desktop development with C++" workload) or
+[MinGW-w64](https://www.mingw-w64.org/). If `cmake` is missing, the installer attempts
+`pip install cmake` automatically. If opt-SNE is not built, the t-SNE Python path still
+works via the openTSNE fallback.
+
+## Manual dependency reference
+
+If you prefer to install packages yourself, the Python components used by FCSimple are:
+
+- [flowkit](https://pypi.org/project/flowkit/) — hyperlog transformation when using a
+  FlowJo workspace diagnostics file with `fcs_join()` (not needed for the standard
+  `transform = "hyperlog"` argument)
+- [umap-learn](https://github.com/lmcinnes/umap) and
+  [pynndescent](https://github.com/lmcinnes/pynndescent) — UMAP via Python
+- [leidenalg](https://github.com/vtraag/leidenalg) — Leiden clustering via Python
+- [igraph](https://pypi.org/project/igraph/) — Louvain/Leiden graph handling via Python
+- [openTSNE](https://github.com/pavlin-policar/openTSNE) — fallback t-SNE via Python
+- [opt-SNE](https://github.com/omiq-ai/Multicore-opt-SNE) — primary t-SNE via Python
+  (bundled; built with `build_optsne = TRUE`)
+- [scipy](https://pypi.org/project/scipy/),
+  [numpy](https://pypi.org/project/numpy/),
+  [pandas](https://pypi.org/project/pandas/), and
+  [scikit-learn](https://pypi.org/project/scikit-learn/)

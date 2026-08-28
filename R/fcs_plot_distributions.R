@@ -106,9 +106,9 @@ fcs_plot_distribution <- function(fcs_join_obj,
                                   trim_quantile = NULL,
                                   add_timestamp = TRUE)
 {
-  require(ggpubr)
-  require(ggplot2)
-  require(ggridges)
+  if (!require(ggpubr, quietly = TRUE)) stop("Package 'ggpubr' is required but could not be loaded.")
+  if (!require(ggplot2, quietly = TRUE)) stop("Package 'ggplot2' is required but could not be loaded.")
+  if (!require(ggridges, quietly = TRUE)) stop("Package 'ggridges' is required but could not be loaded.")
   
   if('batch_correction' %in% names(fcs_join_obj)) {
     if(override_correction) {

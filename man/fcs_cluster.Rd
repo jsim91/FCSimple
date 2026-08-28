@@ -54,9 +54,11 @@ algorithms via R packages, \code{"Python"} calls out to bundled Python scripts f
 \value{
 The original \code{fcs_join_obj} augmented with:
 \itemize{
-\item For \code{"search_only"}: an \code{adjacency_matrix} or \code{search} element.
+\item For \code{"search_only"}: an \code{adjacency_matrix} or \code{search} element plus a
+\code{search_features} element recording the features used for the search.
 \item For clustering algorithms: an element named by \code{algorithm} containing
-\code{clusters} (factor/integer vector) and \code{settings} (list).
+\code{clusters} (factor/integer vector) and \code{settings} (list); \code{settings}
+records the clustered \code{features}.
 \item Updated \code{object_history} with timestamped entry.
 }
 }

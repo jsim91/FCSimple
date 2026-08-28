@@ -188,14 +188,14 @@ fcs_test_clusters <- function(fcs_join_obj, compare_list = NA, color_list = NA, 
   # as.formula(object = paste0(" ~ ",primary_term," + ", # primary_term constructor
   #                            paste(fixed_terms, collapse = "+"),# fixed_terms constructor
   #                            glue::glue(" + (1|{mixed_effect_terms})"))) # mixed_effect_terms constructor
-  require(ggplot2)
-  require(ggpubr)
-  require(ggplot2)
-  require(ggpubr)
-  require(formattable)
-  require(grid)
-  require(ComplexHeatmap)
-  require(circlize)
+  if (!require(ggplot2, quietly = TRUE)) stop("Package 'ggplot2' is required but could not be loaded.")
+  if (!require(ggpubr, quietly = TRUE)) stop("Package 'ggpubr' is required but could not be loaded.")
+  if (!require(ggplot2, quietly = TRUE)) stop("Package 'ggplot2' is required but could not be loaded.")
+  if (!require(ggpubr, quietly = TRUE)) stop("Package 'ggpubr' is required but could not be loaded.")
+  if (!require(formattable, quietly = TRUE)) stop("Package 'formattable' is required but could not be loaded.")
+  if (!require(grid, quietly = TRUE)) stop("Package 'grid' is required but could not be loaded.")
+  if (!require(ComplexHeatmap, quietly = TRUE)) stop("Package 'ComplexHeatmap' is required but could not be loaded.")
+  if (!require(circlize, quietly = TRUE)) stop("Package 'circlize' is required but could not be loaded.")
 
   if(length(test_method)>1) {
     test_method <- 'wilcox'

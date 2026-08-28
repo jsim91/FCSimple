@@ -1,3 +1,10 @@
 ^.*\.Rproj$
 ^\.Rproj\.user$
-^R/test_cases\.R$
+^inst/scripts/test_cases\.R$
+^\.RData$
+^\.Rhistory$
+^vignette_outs
+^inst/analysis
+^inst/temp_files
+^inst/python/optsne/build
+^inst/python/optsne/.*egg-info

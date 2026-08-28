@@ -1,0 +1,106 @@
+FCSimple Third-Party Notices
+============================
+
+FCSimple wraps and/or bundles the following third-party algorithms. Where code
+is bundled and redistributed by FCSimple, the corresponding license text is
+included alongside it. Where a component is declared as a dependency and
+installed separately at runtime, it is listed here for attribution and
+transparency only, and FCSimple does not redistribute that component's code.
+
+--------------------------------------------------------------------------------
+1. opt-SNE (bundled, redistributed)
+--------------------------------------------------------------------------------
+  Component:   Multicore-opt-SNE (opt-SNE)
+  Authors:     Anna C. Belkina, Christopher O. Ciccolella, Rina Anno,
+               Josef Spidlen, Richard Halpert, Jennifer Snyder-Cappione (Omiq)
+  Repository:  https://github.com/omiq-ai/Multicore-opt-SNE
+  License:     BSD 3-Clause (see inst/python/optsne/LICENSE.txt)
+  Notes:
+    - opt-SNE is a fork of Multicore-TSNE (see below), which is in turn a
+      multicore modification of Barnes-Hut t-SNE (bhtsne, below).
+    - Automated optimal parameters for t-distributed stochastic neighbor
+      embedding improve visualization and allow analysis of large datasets
+      (2018). bioRxiv 451690; doi: https://doi.org/10.1101/451690
+
+--------------------------------------------------------------------------------
+2. Multicore-TSNE (bundled as part of opt-SNE, redistributed)
+--------------------------------------------------------------------------------
+  Component:   Multicore-TSNE
+  Author:      Dmitry Ulyanov
+  Repository:  https://github.com/DmitryUlyanov/Multicore-TSNE
+  License:     BSD-style (permissive)
+  Notes:
+    - The MulticoreTSNE Python wrapper and multicore_tsne C++ sources are
+      vendored under inst/python/optsne/.
+    - Ulyanov, D. (2016). Multicore-TSNE. GitHub repository,
+      https://github.com/DmitryUlyanov/Multicore-TSNE
+
+--------------------------------------------------------------------------------
+3. Barnes-Hut t-SNE (bhtsne)
+--------------------------------------------------------------------------------
+  Component:   bhtsne / t-SNE (Barnes-Hut implementation)
+  Author:      Laurens van der Maaten (Delft University of Technology)
+  Repository:  https://github.com/lvdmaaten/bhtsne
+  License:     BSD 4-Clause
+
+  Required acknowledgement (clause 3 of the BSD 4-Clause license):
+      This product includes software developed by the Delft University of Technology.
+
+--------------------------------------------------------------------------------
+4. Rtsne (R dependency, usage only)
+--------------------------------------------------------------------------------
+  Component:   Rtsne
+  Author:      Jesse Krijthe
+  License:     BSD-style; the core bhtsne sources are BSD 4-Clause
+               (see van der Maaten above)
+  Notes:
+    - Used as the R-language t-SNE backend in FCSimple. FCSimple does not
+      redistribute Rtsne source.
+
+--------------------------------------------------------------------------------
+5. Other FCSimple R dependencies (usage only, for attribution/transparency)
+--------------------------------------------------------------------------------
+  Package          License
+  ---------------- ----------------
+  uwot             GPL (>= 3)
+  igraph           GPL (>= 2)
+  mclust           GPL (>= 2)
+  MASS             GPL-2 | GPL-3
+  CATALYST         GPL (>= 2)
+  harmony          GPL-3
+  cytoMEM          GPL-3
+  flowWorkspace    AGPL-3.0-only
+  Rphenograph      Artistic-2.0
+  cyCombine        MIT
+
+  Note: these components are installed separately via Imports/Suggests and are
+  not bundled with FCSimple. AGPL-3.0-only (flowWorkspace) is used as a
+  separate, unmodified dependency; its network/copyleft obligations would only
+  apply if its code were bundled, modified, or statically linked.
+
+--------------------------------------------------------------------------------
+6. Python runtime dependencies (installed via pip at runtime, not bundled)
+--------------------------------------------------------------------------------
+  Component       License (approximate)
+  --------------  --------------------------------
+  openTSNE        BSD 3-Clause
+  umap-learn      BSD 3-Clause
+  numba           BSD 2-Clause
+  pynndescent     BSD 2-Clause
+  leidenalg       GPL-3
+  python-igraph   GPL-2
+  flowkit         BSD 3-Clause
+  scikit-learn    BSD 3-Clause
+  pandas          BSD 3-Clause
+  numpy           BSD 3-Clause
+  scipy           BSD 3-Clause
+  tqdm            MPL-2.0
+  cffi            MIT
+
+--------------------------------------------------------------------------------
+General note
+--------------------------------------------------------------------------------
+FCSimple itself is distributed under the MIT License (see the top-level LICENSE
+file). License identification above is based on the canonical SPDX / package
+metadata at the time of writing; refer to each project's repository for the
+authoritative license text.

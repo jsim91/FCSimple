@@ -149,10 +149,9 @@ fcs_join <- function(files,
                      transform_per_channel = FALSE,
                      downsample_size = NA,
                      batch_pattern = "[0-9]+\\-[A-Za-z]+\\-[0-9]+") {
-  require(flowCore)
-  # oo <- options(scipen = 100000000000)
-  # on.exit(options(oo))
-  options(scipen = 1000000)
+  if (!require(flowCore, quietly = TRUE)) stop("Package 'flowCore' is required but could not be loaded.")
+  oo <- options(scipen = 1000000)
+  on.exit(options(oo), add = TRUE)
   if(any(length(files)==0,class(files[1])!="character")) {
     stop("'files' should be a vector of file names of .fcs or .csv files to be used in the analysis")
   }
@@ -182,7 +181,7 @@ fcs_join <- function(files,
     # Auto-detect instrument type based on data
     detected_instrument <- if(min(csv, na.rm = TRUE) >= 0) "cytof" else "flow"
 
-    return(list(data = csv_ds,
+    return(list(data = csv,
                 raw = NA,
                 source = src,
                 run_date = rd,
@@ -232,7 +231,7 @@ fcs_join <- function(files,
     rd <- stringr::str_extract(string = src, pattern = batch_pattern)
     if(sum(is.na(rd))!=0) {
       warning('One or more run_date is NA. Returning placeholder run_date values. Consider adjusting batch_pattern.')
-      rd <- rep('placeholder')
+      rd <- rep('placeholder', length(src))
     }
     meta <- data.frame(patient_ID = src, run_date = rd); meta <- meta[!duplicated(meta$patient_ID),]
 
@@ -304,6 +303,8 @@ fcs_join <- function(files,
       full_panel <- infcs@parameters@data
       tmp_raw <- raw_data
       tmp_data <- raw_data
+      hyp_temp_dir <- .fcs_temp_dir()
+      on.exit(unlink(hyp_temp_dir, recursive = TRUE, force = TRUE), add = TRUE)
       for(j in 1:ncol(tmp_data)) {
         if(!toupper(colnames(tmp_data)[j]) %in% toupper(param_data$desc)) {
           next
@@ -315,7 +316,7 @@ fcs_join <- function(files,
         }
         if(use_fun=="hyperlog") {
           print(paste0("using hyperlog for ",colnames(tmp_data)[j]))
-          capture_dir <- system.file(package = "FCSimple")
+          hyp_script <- system.file("python", "transf_hyperlog.py", package = "FCSimple")
           hyper_t = as.numeric(gsub("T=","",hyperparams[grep("T=",hyperparams)]))
           hyper_w = as.numeric(gsub("W=","",hyperparams[grep("W=",hyperparams)]))
           hyper_m = as.numeric(gsub("M=","",hyperparams[grep("M=",hyperparams)]))
@@ -323,16 +324,14 @@ fcs_join <- function(files,
           if(hyper_a > (hyper_m - (2*hyper_w))) {
             hyper_a <- hyper_m - (2*hyper_w)
           }
-          write.csv(x = tmp_data[,j], file = paste0(capture_dir,"/temp_files/__python_hyp_df__.csv"), row.names = FALSE)
-          system(command = paste0("python ",paste0(capture_dir,"/python/transf_hyperlog.py")," ",paste0(capture_dir,"/temp_files/__python_hyp_df__.csv")," ",capture_dir,"/temp_files ",
-                                  hyper_t," ",hyper_w," ",hyper_m," ",hyper_a))
-          read_exprs <- read.csv(paste0(capture_dir,"/temp_files/__tmp_exprs__.csv"), check.names = FALSE)
-          if(file.exists(paste0(capture_dir,"/temp_files/__tmp_exprs__.csv"))) {
-            file.remove(paste0(capture_dir,"/temp_files/__tmp_exprs__.csv"))
-          }
-          if(file.exists(paste0(capture_dir,"/temp_files/__python_hyp_df__.csv"))) {
-            file.remove(paste0(capture_dir,"/temp_files/__python_hyp_df__.csv"))
-          }
+          hyp_in <- file.path(hyp_temp_dir, "__python_hyp_df__.csv")
+          hyp_out <- file.path(hyp_temp_dir, "__tmp_exprs__.csv")
+          write.csv(x = tmp_data[,j], file = hyp_in, row.names = FALSE)
+          hyp_exit <- system(command = paste("python", shQuote(hyp_script), shQuote(hyp_in), shQuote(hyp_temp_dir),
+                                             hyper_t, hyper_w, hyper_m, hyper_a))
+          if(!identical(hyp_exit, 0L)) stop("Python hyperlog transform failed with exit code ", hyp_exit)
+          if(!file.exists(hyp_out)) stop("Python hyperlog transform did not produce an output file.")
+          read_exprs <- read.csv(hyp_out, check.names = FALSE)
           tmp_data[,j] <- read_exprs[,1]
           # transform_fun <- flowCore::hyperlogtGml2(parameters = as.character(colnames(tmp_data)[j]),
           #                                          'T' = hyper_t,
@@ -364,7 +363,7 @@ fcs_join <- function(files,
       rd <- stringr::str_extract(string = src, pattern = batch_pattern)
       if(sum(is.na(rd))!=0) {
         warning('One or more run_date is NA. Returning placeholder run_date values. Consider adjusting batch_pattern.')
-        rd <- rep('placeholder')
+        rd <- rep('placeholder', length(src))
       }
       meta <- data.frame(patient_ID = src, run_date = rd); meta <- meta[!duplicated(meta$patient_ID),]
 
@@ -412,7 +411,7 @@ fcs_join <- function(files,
       rd <- stringr::str_extract(string = src, pattern = batch_pattern)
       if(sum(is.na(rd))!=0) {
         warning('One or more run_date is NA. Returning placeholder run_date values. Consider adjusting batch_pattern.')
-        rd <- rep('placeholder')
+        rd <- rep('placeholder', length(src))
       }
       meta <- data.frame(patient_ID = src, run_date = rd); meta <- meta[!duplicated(meta$patient_ID),]
 
@@ -438,7 +437,7 @@ fcs_join <- function(files,
           }
         }
       } else if(transform_type=="biexp") {
-        require(flowWorkspace)
+        if (!require(flowWorkspace, quietly = TRUE)) stop("Package 'flowWorkspace' is required but could not be loaded.")
         if(any(!is.numeric(biexp_transform_pos), !is.numeric(biexp_transform_neg), !is.numeric(biexp_transform_width))) {
           stop("error in argument(s) 'biexp_transform_.': values must be numeric")
         }
@@ -501,7 +500,7 @@ fcs_join <- function(files,
         rd <- stringr::str_extract(string = src, pattern = batch_pattern)
         if(sum(is.na(rd))!=0) {
           warning('One or more run_date is NA. Returning placeholder run_date values. Consider adjusting batch_pattern.')
-          rd <- rep('placeholder')
+          rd <- rep('placeholder', length(src))
         }
         meta <- data.frame(patient_ID = src, run_date = rd); meta <- meta[!duplicated(meta$patient_ID),]
 
@@ -540,25 +539,24 @@ fcs_join <- function(files,
         print("Unable to find descriptive column names. Using original names.")
       }
     }
-    temp_files_dir <- paste0(system.file(package = "FCSimple"),"/temp_files/")
-    if(!dir.exists(temp_files_dir)) {
-      dir.create(temp_files_dir, recursive = TRUE)
-    }
-    temp_files <- list.files(path = temp_files_dir, full.names = TRUE, recursive = TRUE)
-    if(length(temp_files)!=0) {
-      file.remove(temp_files)
-    }
+    temp_files_dir <- .fcs_temp_dir()
+    on.exit(unlink(temp_files_dir, recursive = TRUE, force = TRUE), add = TRUE)
     if(nrow(tmp_data)>50000) {
       set.seed(123)
       write.csv(x = tmp_data[sample(1:nrow(tmp_data),size=50000,replace=F),],
-                file = paste0(temp_files_dir,"tmp_data.csv"), row.names = FALSE)
+                file = file.path(temp_files_dir, "tmp_data.csv"), row.names = FALSE)
     } else {
-      write.csv(x = tmp_data,file = paste0(temp_files_dir,"tmp_data.csv"), row.names = FALSE)
+      write.csv(x = tmp_data, file = file.path(temp_files_dir, "tmp_data.csv"), row.names = FALSE)
     }
     saveRDS(object = list(data = tmp_data,
-                          source = rep(x = flowCore::sampleNames(fs),times = as.numeric(flowCore::fsApply(fs,nrow)))),
-            file = paste0(temp_files_dir,"tmp_list_obj.rds"))
-    require(shiny)
+                          source = rep(x = flowCore::sampleNames(fs), times = as.numeric(flowCore::fsApply(fs, nrow)))),
+            file = file.path(temp_files_dir, "tmp_list_obj.rds"))
+    if(!require(shiny, quietly = TRUE)) {
+      stop("Package 'shiny' is required but could not be loaded.")
+    }
+    old_temp_dir <- getOption("FCSimple.temp_dir")
+    options(FCSimple.temp_dir = temp_files_dir)
+    on.exit(options(FCSimple.temp_dir = old_temp_dir), add = TRUE)
     shiny::runApp(appDir = file.path(system.file(package = "FCSimple"), "transform_app"))
   }
 }

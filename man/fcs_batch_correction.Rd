@@ -56,7 +56,8 @@ prevent overcorrection (default 1).}
 \value{
 The input \code{fcs_join_obj} augmented with:
 \itemize{
-\item \code{batch_correction}: a list containing corrected data, method, and metadata.
+\item \code{batch_correction}: a list containing corrected data, method, and metadata,
+including a \code{features} element naming the features that were corrected.
 \item \code{object_history}: appended entry recording the batch correction event.
 }
 }

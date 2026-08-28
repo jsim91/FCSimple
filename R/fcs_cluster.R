@@ -61,9 +61,11 @@
 #'
 #' @return  
 #'   The original `fcs_join_obj` augmented with:  
-#'   - For `"search_only"`: an `adjacency_matrix` or `search` element.  
-#'   - For clustering algorithms: an element named by `algorithm` containing  
-#'     `clusters` (factor/integer vector) and `settings` (list).  
+#'   - For `"search_only"`: an `adjacency_matrix` or `search` element plus a
+#'     `search_features` element recording the features used for the search.
+#'   - For clustering algorithms: an element named by `algorithm` containing
+#'     `clusters` (factor/integer vector) and `settings` (list); `settings`
+#'     records the clustered `features`.
 #'   - Updated `object_history` with timestamped entry.
 #'
 #' @examples
@@ -132,21 +134,22 @@ fcs_cluster <- function(fcs_join_obj,
       }
     }
   }
+  cl_features <- .fcs_features(cl_data)
   capture_dir <- system.file(package = "FCSimple")
   if(any(length(language)!=1, !tolower(language) %in% c("r","python"))) {
     stop("error in argument 'language': use 'R' or 'Python'")
   }
   
   if(tolower(algorithm) %in% c("leiden","louvain")) {
-    require(Matrix)
+    if (!require(Matrix, quietly = TRUE)) stop("Package 'Matrix' is required but could not be loaded.")
     if("adjacency_matrix" %in% names(fcs_join_obj)) {
       print("Adjacency matrix found, skipping nearest neighbor step.")
       sm <- fcs_join_obj[["adjacency_matrix"]]
     } else {
-      require(RANN)
-      require(parallel)
-      require(future)
-      require(future.apply)
+      if (!require(RANN, quietly = TRUE)) stop("Package 'RANN' is required but could not be loaded.")
+      if (!require(parallel, quietly = TRUE)) stop("Package 'parallel' is required but could not be loaded.")
+      if (!require(future, quietly = TRUE)) stop("Package 'future' is required but could not be loaded.")
+      if (!require(future.apply, quietly = TRUE)) stop("Package 'future.apply' is required but could not be loaded.")
 
         if(num_cores > parallel::detectCores()) {
           warning(paste0(num_cores," specified but only ",parallel::detectCores()," available. Proceeding with max available cores."))
@@ -230,6 +233,7 @@ fcs_cluster <- function(fcs_join_obj,
       } else if(output_as=="search"){
         fcs_join_obj[["search"]] <- nn_idx
       }
+      fcs_join_obj[["search_features"]] <- cl_features
       if(search_only) {
         if(!'object_history' %in% names(fcs_join_obj)) {
           print("Consider running FCSimple::fcs_audit() on the object.")
@@ -239,27 +243,29 @@ fcs_cluster <- function(fcs_join_obj,
       }
     }
     if(tolower(language)=="python") {
-      capture_dir <- system.file(package = "FCSimple") # points to package location
-      Matrix::writeMM(obj = sm, file = paste0(capture_dir,"/temp_files/__python_cl_input__.mtx"))
+      temp_dir <- .fcs_temp_dir()
+      on.exit(unlink(temp_dir, recursive = TRUE, force = TRUE), add = TRUE)
+      cl_script <- system.file("python", "run_cluster.py", package = "FCSimple")
+      cl_in <- file.path(temp_dir, "__python_cl_input__.mtx")
+      cl_out <- file.path(temp_dir, "__tmp_cl__.csv")
+      Matrix::writeMM(obj = sm, file = cl_in)
 
-      system(command = paste0("python ",paste0(capture_dir,"/python/run_cluster.py")," ",
-                              paste0(capture_dir,"/temp_files/__python_cl_input__.mtx")," ",capture_dir,"/temp_files ",tolower(algorithm)," ",leiden_louvain_resolution))
-      read_clus <- read.csv(paste0(capture_dir,"/temp_files/__tmp_cl__.csv"), check.names = FALSE)
-      if(file.exists(paste0(capture_dir,"/temp_files/__tmp_cl__.csv"))) {
-        file.remove(paste0(capture_dir,"/temp_files/__tmp_cl__.csv"))
-      }
-      if(file.exists(paste0(capture_dir,"/temp_files/__python_cl_input__.mtx"))) {
-        file.remove(paste0(capture_dir,"/temp_files/__python_cl_input__.mtx"))
-      }
+      cl_exit <- system(command = paste("python", shQuote(cl_script), shQuote(cl_in), shQuote(temp_dir),
+                                        tolower(algorithm), leiden_louvain_resolution))
+      if(!identical(cl_exit, 0L)) stop("Python clustering failed with exit code ", cl_exit)
+      if(!file.exists(cl_out)) stop("Python clustering did not produce an output file.")
+      read_clus <- read.csv(cl_out, check.names = FALSE)
       cluster_numbers <- read_clus[,1]
       if(algorithm=="leiden") {
         fcs_join_obj[["leiden"]] <- list(clusters = cluster_numbers,
                                          settings = list(method = 'la.RBConfigurationVertexPartition',
                                                          resolution_parameter = leiden_louvain_resolution,
+                                                         features = cl_features,
                                                          seed = 123, language = language))
       } else if(tolower(algorithm)=="louvain") {
         fcs_join_obj[["louvain"]] <- list(clusters = cluster_numbers,
                                           settings = list(function_call = "graph_obj.community_multilevel()",
+                                                          features = cl_features,
                                                           language = language)) # left off here
       }
       if(!'object_history' %in% names(fcs_join_obj)) {
@@ -268,7 +274,7 @@ fcs_cluster <- function(fcs_join_obj,
       try(expr = fcs_join_obj[['object_history']] <- append(fcs_join_obj[['object_history']], paste0(tolower(algorithm)," on ",use_rep,": ",Sys.time())), silent = TRUE)
       return(fcs_join_obj)
     } else if(tolower(language)=="r") {
-      require(igraph)
+      if (!require(igraph, quietly = TRUE)) stop("Package 'igraph' is required but could not be loaded.")
       # Symmetrize the sparse matrix for undirected graph
       sm <- sm + Matrix::t(sm)
       G <- igraph::graph.adjacency(adjmatrix = sm, mode = "undirected")
@@ -277,30 +283,34 @@ fcs_cluster <- function(fcs_join_obj,
         leid <- igraph::cluster_leiden(graph = G, objective_function = "modularity", weights = NA, resolution_parameter = leiden_louvain_resolution)
         fcs_join_obj[["leiden"]] <- list(clusters = factor(leid$membership),
                                          settings = list(resolution_parameter = leiden_louvain_resolution,
-                                                         weights = NA, seed = 123, language = language))
+                                                         weights = NA, seed = 123, language = language,
+                                                         features = cl_features))
       } else if(tolower(algorithm)=="louvain") {
         set.seed(123)
         louv <- igraph::cluster_louvain(graph = G, weights = NA, resolution = leiden_louvain_resolution)
         fcs_join_obj[["louvain"]] <- list(clusters = factor(louv$membership),
                                           settings = list(resolution = leiden_louvain_resolution,
-                                                          weights = NA, seed = 123, language = language))
+                                                          weights = NA, seed = 123, language = language,
+                                                          features = cl_features))
       }
     }
   } else {
     if(tolower(algorithm)=="flowsom") {
-      require(FlowSOM)
-      require(flowCore)
+      if (!require(FlowSOM, quietly = TRUE)) stop("Package 'FlowSOM' is required but could not be loaded.")
+      if (!require(flowCore, quietly = TRUE)) stop("Package 'flowCore' is required but could not be loaded.")
       som_fcs <- new(Class = "flowFrame", exprs = cl_data)
       som <- FlowSOM::FlowSOM(input = som_fcs, compensate = FALSE, transform = FALSE, silent = TRUE, nClus = flowsom_nClus)
       som_meta <- FlowSOM::GetMetaclusters(fsom = som)
       fcs_join_obj[["flowsom"]] <- list(clusters = som_meta,
                                         settings = list(compensate = FALSE, transform = FALSE,
-                                                        silent = TRUE, nClus = flowsom_nClus))
+                                                        silent = TRUE, nClus = flowsom_nClus,
+                                                        features = cl_features))
       } else if(tolower(algorithm)=="phenograph") {
-        require(Rphenograph)
+        if (!require(Rphenograph, quietly = TRUE)) stop("Package 'Rphenograph' is required but could not be loaded.")
         phenog <- Rphenograph::Rphenograph(data = cl_data, k = phenograph_k)
         phcl <- membership(phenog[[2]])
-        fcs_join_obj[["phenograph"]] <- list(clusters = phcl, settings = list(k = phenograph_k))
+        fcs_join_obj[["phenograph"]] <- list(clusters = phcl, settings = list(k = phenograph_k,
+                                                                             features = cl_features))
       }
   }
   if(!'object_history' %in% names(fcs_join_obj)) {

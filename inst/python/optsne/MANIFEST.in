@@ -1,0 +1,3 @@
+recursive-include   .                 CMakeLists.txt
+recursive-include   multicore_tsne    *.cpp *.h
+include   *.txt *.md

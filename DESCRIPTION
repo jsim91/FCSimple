@@ -5,28 +5,31 @@ Version: 1.1.1
 Authors@R: person("Joshua", "D.", "Simmons", email = "joshua.d.simmons@vumc.org", role = c("aut", "cre"))
 Description: Streamlined functions for loading, joining, and analyzing high-dimensional flow cytometry data.
 License: MIT + file LICENSE
+Config/Third-Party-Notices: inst/THIRD_PARTY_NOTICES
 Encoding: UTF-8
 LazyData: true
 Roxygen: list(markdown = TRUE)
 Imports:
-    uwot, Rtsne, Matrix, igraph, circlize, 
-    grid, ggplot2, ggpubr, ggrastr, ggridges, dbscan, 
-    ggrepel, viridis, gridExtra, RColorBrewer, shiny, 
-    shinythemes, metR, harmony, outliers, future.apply, 
-    RANN, shadowtext, stringr, formattable, ComplexHeatmap, 
-    CATALYST, flowWorkspace, cytoMEM, scales, mclust, sp, 
-    rlang, MASS, pracma, mixtools, cyCombine, data.table, 
-    Rphenograph
+    uwot, Rtsne, Matrix, igraph, circlize, concaveman,
+    grid, ggplot2, ggpubr, ggrastr, ggforce, ggridges, dbscan,
+    ggrepel, viridis, gridExtra, RColorBrewer, shiny,
+    shinythemes, metR, harmony, outliers, future, future.apply,
+    RANN, reshape2, shadowtext, stringr, formattable, ComplexHeatmap,
+    CATALYST, flowCore, FlowSOM, flowWorkspace, cytoMEM, scales, mclust, sp,
+    rlang, MASS, pracma, mixtools, cyCombine, data.table,
+    Rphenograph, plotly, htmlwidgets
 Suggests:
     roxygen2 (>= 7.3.2),
     devtools,
     BiocStyle,
     knitr,
-    rmarkdown
+    rmarkdown,
+    testthat (>= 3.0.0)
 Remotes:
     biosurf/cyCombine,
     JinmiaoChenLab/Rphenograph
 RoxygenNote: 7.3.3
+Config/testthat/edition: 3
 Config:
   roxygen:
     markdown: true
