@@ -12,6 +12,7 @@ fcs_cluster_heatmap(
   cluster_groups = NULL,
   cluster_group_colors = NULL,
   show_row_dend = TRUE,
+  show_row_title = TRUE,
   heatmap_color_palette = rev(RColorBrewer::brewer.pal(11, "RdYlBu")),
   transpose_heatmap = FALSE,
   cluster_row = TRUE,
@@ -57,6 +58,9 @@ names must match the group names in \code{cluster_groups}. When \code{NULL}
 
 \item{show_row_dend}{Logical; whether to draw row dendrograms (one per slice when
 \code{cluster_groups} is provided). Default \code{TRUE}.}
+
+\item{show_row_title}{Logical; whether to show the slice titles (the group names) when
+\code{cluster_groups} is provided. Default \code{TRUE}.}
 
 \item{heatmap_color_palette}{Character vector of colors (length ≥ 2) for the heatmap palette.
 Default uses a reversed “RdYlBu” from RColorBrewer.}
@@ -120,7 +124,8 @@ CATALYST:::.scale_exprs.
 (one per list element, in list order); within each slice rows are ordered
 by hierarchical clustering (per \code{cluster_row}), and a color bar annotation
 named “group” is added adjacent to the heatmap (closer to the heatmap
-than the cluster-size annotations).
+than the cluster-size annotations). Slice titles (the group names) are
+shown by default; hide them with \code{show_row_title = FALSE}.
 \item Appends a timestamped entry to \code{object_history}.
 }
 }

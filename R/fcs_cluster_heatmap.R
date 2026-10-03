@@ -42,6 +42,10 @@
 #'   Logical; whether to draw row dendrograms (one per slice when
 #'   `cluster_groups` is provided). Default `TRUE`.
 #'
+#' @param show_row_title
+#'   Logical; whether to show the slice titles (the group names) when
+#'   `cluster_groups` is provided. Default `TRUE`.
+#'
 #' @param heatmap_color_palette
 #'   Character vector of colors (length ≥ 2) for the heatmap palette.
 #'   Default uses a reversed “RdYlBu” from RColorBrewer.
@@ -102,7 +106,8 @@
 #'   (one per list element, in list order); within each slice rows are ordered
 #'   by hierarchical clustering (per `cluster_row`), and a color bar annotation
 #'   named “group” is added adjacent to the heatmap (closer to the heatmap
-#'   than the cluster-size annotations).
+#'   than the cluster-size annotations). Slice titles (the group names) are
+#'   shown by default; hide them with `show_row_title = FALSE`.
 #' - Appends a timestamped entry to `object_history`.
 #'
 #' @return
@@ -141,6 +146,7 @@
 #' @export
 fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "all", include_clusters = "all",
                                 cluster_groups = NULL, cluster_group_colors = NULL, show_row_dend = TRUE,
+                                show_row_title = TRUE,
                                 heatmap_color_palette = rev(RColorBrewer::brewer.pal(11, "RdYlBu")),
                                 transpose_heatmap = FALSE, cluster_row = TRUE, cluster_col = TRUE,
                                 override_correction = TRUE, return_heatmap_data = FALSE,
@@ -306,6 +312,12 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
   if(!is.null(group_split)) {
     heatmap_args$row_split <- group_split
     heatmap_args$cluster_row_slices <- FALSE
+  }
+  if(!show_row_title) {
+    # suppress the per-slice group name titles; c() is used because it keeps a
+    # NULL-valued element in the list ($<- NULL would delete the element, and
+    # list(NULL) would pass a length-1 list rather than NULL)
+    heatmap_args <- c(heatmap_args, list(row_title = NULL))
   }
   heatmap_output <- do.call(Heatmap, heatmap_args)
   if(!is.null(ranno_group)) {
