@@ -4,7 +4,7 @@ Tools for the analysis of .fcs data sets. Pair with [FCView](https://github.com/
 
 ## Installation
 
-Install FCSimple using BiocManager to ensure all dependencies (including Bioconductor packages) are properly installed:
+In an R session, install FCSimple using BiocManager to ensure all dependencies (including Bioconductor packages) are properly installed:
 
 ```r
 # Install BiocManager if not already installed
