@@ -9,6 +9,9 @@ fcs_cluster_heatmap(
   algorithm,
   include_parameters = "all",
   include_clusters = "all",
+  cluster_groups = NULL,
+  cluster_group_colors = NULL,
+  show_row_dend = TRUE,
   heatmap_color_palette = rev(RColorBrewer::brewer.pal(11, "RdYlBu")),
   transpose_heatmap = FALSE,
   cluster_row = TRUE,
@@ -39,6 +42,21 @@ If \code{"all"}, uses all columns of the expression matrix.}
 
 \item{include_clusters}{Character vector of cluster IDs to include (default \code{"all"}).
 If \code{"all"}, includes every cluster.}
+
+\item{cluster_groups}{Optional named list mapping group names to vectors of cluster names, e.g.
+\code{list(CD4 = c(1,2,3), CD8 = c(4,9,0), B = c(5,6,7), DC = c(8))}. When
+provided, heatmap rows are split into slices (one per list element, in
+list order) and each slice is ordered by hierarchical clustering.
+Cluster names are coerced with \code{as.character()} before matching; clusters
+not listed in any group are collected in a final \code{"Other"} slice.
+Default \code{NULL} (no slicing).}
+
+\item{cluster_group_colors}{Optional named character vector of colors for the group annotation bar;
+names must match the group names in \code{cluster_groups}. When \code{NULL}
+(default), colors are assigned automatically (RColorBrewer "Set1").}
+
+\item{show_row_dend}{Logical; whether to draw row dendrograms (one per slice when
+\code{cluster_groups} is provided). Default \code{TRUE}.}
 
 \item{heatmap_color_palette}{Character vector of colors (length ≥ 2) for the heatmap palette.
 Default uses a reversed “RdYlBu” from RColorBrewer.}
@@ -95,8 +113,14 @@ CATALYST:::.scale_exprs.
 \item \code{heatmap_tile_data}: the numeric matrix used
 \item \code{population_size}: cluster event counts
 \item \code{features}: character vector of the channel names included
+\item \code{cluster_groups}: the grouping list used to split rows (or \code{NULL})
 \item \code{rep_used}: “with batch correction” or “without batch correction”
 }
+\item When \code{cluster_groups} is provided, heatmap rows are split into slices
+(one per list element, in list order); within each slice rows are ordered
+by hierarchical clustering (per \code{cluster_row}), and a color bar annotation
+named “group” is added adjacent to the heatmap (closer to the heatmap
+than the cluster-size annotations).
 \item Appends a timestamped entry to \code{object_history}.
 }
 }

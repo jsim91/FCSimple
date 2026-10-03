@@ -24,6 +24,24 @@
 #'   Character vector of cluster IDs to include (default `"all"`).
 #'   If `"all"`, includes every cluster.
 #'
+#' @param cluster_groups
+#'   Optional named list mapping group names to vectors of cluster names, e.g.
+#'   `list(CD4 = c(1,2,3), CD8 = c(4,9,0), B = c(5,6,7), DC = c(8))`. When
+#'   provided, heatmap rows are split into slices (one per list element, in
+#'   list order) and each slice is ordered by hierarchical clustering.
+#'   Cluster names are coerced with `as.character()` before matching; clusters
+#'   not listed in any group are collected in a final `"Other"` slice.
+#'   Default `NULL` (no slicing).
+#'
+#' @param cluster_group_colors
+#'   Optional named character vector of colors for the group annotation bar;
+#'   names must match the group names in `cluster_groups`. When `NULL`
+#'   (default), colors are assigned automatically (RColorBrewer "Set1").
+#'
+#' @param show_row_dend
+#'   Logical; whether to draw row dendrograms (one per slice when
+#'   `cluster_groups` is provided). Default `TRUE`.
+#'
 #' @param heatmap_color_palette
 #'   Character vector of colors (length ≥ 2) for the heatmap palette.
 #'   Default uses a reversed “RdYlBu” from RColorBrewer.
@@ -78,7 +96,13 @@
 #'     - `heatmap_tile_data`: the numeric matrix used
 #'     - `population_size`: cluster event counts
 #'     - `features`: character vector of the channel names included
+#'     - `cluster_groups`: the grouping list used to split rows (or `NULL`)
 #'     - `rep_used`: “with batch correction” or “without batch correction”
+#' - When `cluster_groups` is provided, heatmap rows are split into slices
+#'   (one per list element, in list order); within each slice rows are ordered
+#'   by hierarchical clustering (per `cluster_row`), and a color bar annotation
+#'   named “group” is added adjacent to the heatmap (closer to the heatmap
+#'   than the cluster-size annotations).
 #' - Appends a timestamped entry to `object_history`.
 #'
 #' @return
@@ -116,6 +140,7 @@
 #' @importFrom grid unit gpar
 #' @export
 fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "all", include_clusters = "all",
+                                cluster_groups = NULL, cluster_group_colors = NULL, show_row_dend = TRUE,
                                 heatmap_color_palette = rev(RColorBrewer::brewer.pal(11, "RdYlBu")),
                                 transpose_heatmap = FALSE, cluster_row = TRUE, cluster_col = TRUE,
                                 override_correction = TRUE, return_heatmap_data = FALSE,
@@ -196,30 +221,104 @@ fcs_cluster_heatmap <- function(fcs_join_obj, algorithm, include_parameters = "a
   ranno2 <- rowAnnotation(frequency=anno_text(paste0(size_anno_nums,"%"),
                                               gp=gpar(fontsize=10,fontface="bold")))
   backend.matrix <- backend.matrix[order(row.names(backend.matrix)),]
+
+  # -- Optional cluster grouping: split rows into named slices ----------------
+  group_split <- NULL
+  ranno_group <- NULL
+  if(!is.null(cluster_groups)) {
+    if(transpose_heatmap) {
+      stop("'cluster_groups' cannot be combined with 'transpose_heatmap = TRUE': row slices would no longer correspond to clusters.")
+    }
+    if(!is.list(cluster_groups) || is.null(names(cluster_groups)) ||
+       any(!nzchar(names(cluster_groups))) || anyDuplicated(names(cluster_groups))) {
+      stop("'cluster_groups' must be a named list of cluster name vectors, e.g. list(CD4 = c(1,2,3), CD8 = c(4,9,0))")
+    }
+    group_members <- lapply(cluster_groups, as.character)
+    if(anyDuplicated(unlist(group_members, use.names = FALSE))) {
+      stop("'cluster_groups': a cluster may only appear in one group")
+    }
+    rn <- row.names(backend.matrix)
+    listed <- unique(unlist(group_members, use.names = FALSE))
+    missing_clus <- setdiff(listed, rn)
+    if(length(missing_clus)!=0) {
+      warning("'cluster_groups' contains cluster(s) not present in the heatmap: ",
+              paste(missing_clus, collapse = ", "))
+    }
+    grp <- rep(NA_character_, length(rn))
+    for(nm in names(group_members)) {
+      grp[rn %in% group_members[[nm]]] <- nm
+    }
+    grp[is.na(grp)] <- "Other"
+    levels_used <- names(group_members)[names(group_members) %in% unique(grp)]
+    if(any(grp=="Other")) {
+      levels_used <- c(levels_used, "Other")
+    }
+    group_split <- factor(grp, levels = levels_used)
+
+    # colors for the group bar annotation
+    set1 <- RColorBrewer::brewer.pal(9, "Set1")
+    n_grp <- length(levels_used)
+    auto_cols <- if(n_grp <= 9) set1[seq_len(n_grp)] else grDevices::colorRampPalette(set1)(n_grp)
+    names(auto_cols) <- levels_used
+    if(!is.null(cluster_group_colors)) {
+      if(is.null(names(cluster_group_colors))) {
+        stop("'cluster_group_colors' must be a named character vector with names matching the group names")
+      }
+      extra_cols <- setdiff(names(cluster_group_colors), levels_used)
+      if(length(extra_cols)!=0) {
+        warning("'cluster_group_colors' contains color(s) for group(s) not present: ",
+                paste(extra_cols, collapse = ", "))
+      }
+      auto_cols[names(cluster_group_colors)] <- cluster_group_colors
+    }
+    ranno_group <- rowAnnotation(group = group_split,
+                                 col = list(group = auto_cols),
+                                 annotation_name_gp = gpar(fontsize = 10, fontface = "bold"))
+  }
+
   if(transpose_heatmap) {
     backend.matrix <- t(backend.matrix)
   }
   if(return_heatmap_data) {
     return(backend.matrix)
   }
-  heatmap_output <- Heatmap(backend.matrix,col=color.map.fun,
-                            row_names_side="left",
-                            name="median\nscaled\nexpression",
-                            heatmap_legend_param=list(at=c(0,0.2,0.4,0.6,0.8,1),legend_height=unit(3,"cm"),
-                                                      grid_width=unit(0.6,"cm"),title_position="topleft",
-                                                      labels_gp=gpar(fontsize=legend_text_size),
-                                                      title_gp=gpar(fontsize=legend_text_size)),
-                            row_names_gp=gpar(fontsize=row_text_size,fontface="bold"),
-                            column_names_gp=gpar(fontsize=column_text_size,fontface="bold"),
-                            rect_gp = gpar(lwd = heatmap_linewidth, col = "black"), border = "black",
-                            cluster_columns = ifelse(cluster_col,TRUE,FALSE), cluster_rows = ifelse(cluster_row,TRUE,FALSE),
-                            row_gap=unit(1,"mm"),column_gap=unit(1,"mm"),row_dend_gp=gpar(lwd=1.2),row_dend_width=unit(1,"cm"),
-                            column_dend_gp = gpar(lwd=1.2), column_dend_height = unit(1,"cm")) +
-    ranno1 + ranno2
+  heatmap_args <- list(matrix = backend.matrix,
+                       col = color.map.fun,
+                       row_names_side = "left",
+                       name = "median\nscaled\nexpression",
+                       heatmap_legend_param = list(at = c(0,0.2,0.4,0.6,0.8,1), legend_height = unit(3,"cm"),
+                                                   grid_width = unit(0.6,"cm"), title_position = "topleft",
+                                                   labels_gp = gpar(fontsize = legend_text_size),
+                                                   title_gp = gpar(fontsize = legend_text_size)),
+                       row_names_gp = gpar(fontsize = row_text_size, fontface = "bold"),
+                       column_names_gp = gpar(fontsize = column_text_size, fontface = "bold"),
+                       rect_gp = gpar(lwd = heatmap_linewidth, col = "black"),
+                       border = "black",
+                       cluster_columns = ifelse(cluster_col, TRUE, FALSE),
+                       cluster_rows = ifelse(cluster_row, TRUE, FALSE),
+                       show_row_dend = show_row_dend,
+                       row_gap = unit(1, "mm"),
+                       column_gap = unit(1, "mm"),
+                       row_dend_gp = gpar(lwd = 1.2),
+                       row_dend_width = unit(1, "cm"),
+                       column_dend_gp = gpar(lwd = 1.2),
+                       column_dend_height = unit(1, "cm"))
+  if(!is.null(group_split)) {
+    heatmap_args$row_split <- group_split
+    heatmap_args$cluster_row_slices <- FALSE
+  }
+  heatmap_output <- do.call(Heatmap, heatmap_args)
+  if(!is.null(ranno_group)) {
+    # prepended so the group bar sits closest to the heatmap body, with the
+    # cluster-size barplot and frequency text further out
+    heatmap_output <- heatmap_output + ranno_group
+  }
+  heatmap_output <- heatmap_output + ranno1 + ranno2
   fcs_join_obj[[paste0(tolower(algorithm),"_heatmap")]] <- list(heatmap = heatmap_output,
                                                                 heatmap_tile_data = backend.matrix,
                                                                 population_size = pop.freq,
                                                                 features = include_channels,
+                                                                cluster_groups = cluster_groups,
                                                                 rep_used = ifelse(cordat,"with batch correction","without batch correction"))
   if(!'object_history' %in% names(fcs_join_obj)) {
     print("Consider running FCSimple::fcs_audit() on the object.")
